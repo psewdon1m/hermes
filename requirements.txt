@@ -1,0 +1,11 @@
+# Python dependencies for P2P Call App
+
+# Telegram Bot Framework
+aiogram==3.2.0
+
+# HTTP Client for API requests
+aiohttp==3.9.0
+
+# Environment variables support
+python-dotenv==1.0.0
+

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Call</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>P2P Call</h1>
+            <div class="room-info">
+                <span id="room-id">Загрузка...</span>
+                <button id="copy-link" class="btn-secondary">Копировать ссылку</button>
+            </div>
+        </div>
+        
+        <div class="video-container">
+            <div class="local-video">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="video-label">Вы</div>
+            </div>
+            
+            <div id="remoteVideos" class="remote-videos">
+                <!-- Remote videos will be added here -->
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="toggleVideo" class="control-btn video-btn active">
+                📹 Видео
+            </button>
+            <button id="toggleAudio" class="control-btn audio-btn active">
+                🎤 Микрофон
+            </button>
+            <button id="toggleScreen" class="control-btn screen-btn">
+                Экран
+            </button>
+            <button id="hangUp" class="control-btn hangup-btn">
+                Завершить
+            </button>
+        </div>
+        
+        <div class="status">
+            <div id="connection-status" class="status-item">
+                <span class="status-indicator"></span>
+                <span>Подключение...</span>
+            </div>
+            <div id="participant-count" class="status-item">
+                <span>👥 Участников: 1</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/webrtc.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
+

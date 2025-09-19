@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - DOMAIN=${DOMAIN:-localhost:3000}
+      - SERVER_URL=${SERVER_URL:-http://localhost:3000}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      - redis
+    volumes:
+      - ./public:/app/public
+      - ./server:/app/server
+      - ./bot:/app/bot
+      - ./requirements.txt:/app/requirements.txt
+    restart: unless-stopped
+    command: sh -c "npm run dev & python3 bot/bot.py & wait"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_dev_data:
+    driver: local
