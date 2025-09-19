@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Join the room
     webrtcManager.joinRoom(roomId);
     
+    // Auto-copy link if coming from Telegram bot (check URL parameters)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('auto_copy') === 'true') {
+        setTimeout(() => {
+            webrtcManager.copyLink();
+        }, 1000);
+    }
+    
     // Handle page visibility changes
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {

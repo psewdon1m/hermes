@@ -49,6 +49,33 @@ body {
     flex-wrap: wrap;
 }
 
+.room-participants {
+    background: linear-gradient(45deg, #2ed573, #1e90ff);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(46, 213, 115, 0.3);
+}
+
+.room-timer {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
 #room-id {
     font-family: 'Courier New', monospace;
     background: #f8f9fa;

@@ -144,6 +144,7 @@ class WebRTCManager {
         this.socket.on('user-joined', (userId) => {
             console.log('User joined:', userId);
             this.createPeerConnection(userId);
+            // Update participants count will be handled by room-status event
         });
         
         this.socket.on('user-left', (userId) => {
@@ -181,6 +182,7 @@ class WebRTCManager {
         this.socket.on('room-status', (status) => {
             console.log('Room status:', status);
             this.updateRoomStatus(status);
+            this.updateParticipantsCount(status.participantCount);
         });
     }
     
@@ -215,6 +217,9 @@ class WebRTCManager {
         this.roomId = roomId;
         this.socket.emit('join-room', roomId);
         document.getElementById('room-id').textContent = roomId;
+        
+        // Start room timer (participants count will be updated via room-status event)
+        this.startRoomTimer();
     }
     
     async createPeerConnection(userId) {
@@ -513,6 +518,61 @@ class WebRTCManager {
         }).catch(() => {
             this.showToast('Ошибка копирования', 'error');
         });
+    }
+    
+    startRoomTimer() {
+        // Fetch room info and start timer
+        fetch(`/api/rooms/${this.roomId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.isActive) {
+                    this.updateRoomTimer(data.timeLeft);
+                    this.updateParticipantsCount(data.participantCount);
+                    this.timerInterval = setInterval(() => {
+                        const newTimeLeft = data.expiresAt - Date.now();
+                        if (newTimeLeft > 0) {
+                            this.updateRoomTimer(newTimeLeft);
+                        } else {
+                            this.showToast('Время звонка истекло', 'warning');
+                            clearInterval(this.timerInterval);
+                        }
+                    }, 1000);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching room info:', error);
+            });
+    }
+    
+    updateRoomTimer(timeLeft) {
+        const minutes = Math.floor(timeLeft / 60000);
+        const seconds = Math.floor((timeLeft % 60000) / 1000);
+        const timerElement = document.getElementById('room-timer');
+        
+        if (timerElement) {
+            timerElement.textContent = `⏰ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Change color when time is running low
+            if (timeLeft < 300000) { // Less than 5 minutes
+                timerElement.style.background = 'linear-gradient(45deg, #ff4757, #ff3838)';
+            } else if (timeLeft < 600000) { // Less than 10 minutes
+                timerElement.style.background = 'linear-gradient(45deg, #ffa502, #ff6348)';
+            }
+        }
+    }
+    
+    updateParticipantsCount(count) {
+        const participantsElement = document.getElementById('room-participants');
+        if (participantsElement) {
+            participantsElement.textContent = `👥 ${count}/2`;
+            
+            // Change color when room is full
+            if (count >= 2) {
+                participantsElement.style.background = 'linear-gradient(45deg, #ff4757, #ff3838)';
+            } else {
+                participantsElement.style.background = 'linear-gradient(45deg, #2ed573, #1e90ff)';
+            }
+        }
     }
     
     updateConnectionStatus(status) {
