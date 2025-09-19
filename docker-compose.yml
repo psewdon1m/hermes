@@ -42,7 +42,7 @@ services:
       - TURN_SECRET=${TURN_SECRET:-your-secret-key}
     volumes:
       - ./turnserver.conf:/etc/coturn/turnserver.conf
-      - ./ssl:/etc/ssl
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     command: ["-c", "/etc/coturn/turnserver.conf"]
     restart: unless-stopped
     networks:
@@ -55,7 +55,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - app
     restart: unless-stopped

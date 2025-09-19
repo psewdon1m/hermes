@@ -14,14 +14,15 @@ COPY server/ ./server/
 COPY public/ ./public/
 
 # Python stage for bot
-FROM python:3.11-slim AS python-builder
+FROM python:3.11-alpine AS python-builder
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies for Alpine
+RUN apk add --no-cache \
     gcc \
-    && rm -rf /var/lib/apt/lists/*
+    musl-dev \
+    python3-dev
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
@@ -50,8 +51,7 @@ COPY --from=python-builder /usr/local/bin /usr/local/bin
 COPY --from=python-builder /app/bot ./bot
 COPY --from=python-builder /app/requirements.txt ./
 
-# Install Python dependencies using pip with system packages override
-RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
+# Python dependencies already installed in python-builder stage
 
 # Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
