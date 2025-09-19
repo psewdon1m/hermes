@@ -52,7 +52,7 @@ P2P Call App - это современная система для видеоз�
 
 ### 1. Клонирование проекта
 ```bash
-git clone https://github.com/YOUR_USERNAME/calltg.git
+git clone https://github.com/psewdon1m/hermes.git
 cd calltg
 ```
 
