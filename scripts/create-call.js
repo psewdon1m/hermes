@@ -18,24 +18,29 @@ try {
 // Configuration
 const CONFIG = {
     // Change this to your domain
-    domain: process.env.DOMAIN || 'tgcall.space',
+    domain: process.env.DOMAIN || 'tgcall.us',
     // Backend API endpoint
-    apiEndpoint: '/api/create',
+    apiEndpoint: '/create',
     // Use HTTPS in production
     useHttps: process.env.NODE_ENV === 'production' || process.env.USE_HTTPS === 'true'
 };
 
 class CallLinkGenerator {
     constructor() {
-        this.baseUrl = CONFIG.useHttps ? 
-            `https://${CONFIG.domain}` : 
-            `http://${CONFIG.domain}`;
+        // For local development, use localhost with backend port
+        if (CONFIG.domain === 'tgcall.us' || CONFIG.domain === 'localhost') {
+            this.baseUrl = `http://localhost:3001`;
+        } else {
+            this.baseUrl = CONFIG.useHttps ? 
+                `https://${CONFIG.domain}` : 
+                `http://${CONFIG.domain}`;
+        }
     }
 
     async createCall() {
         return new Promise((resolve, reject) => {
             const url = `${this.baseUrl}${CONFIG.apiEndpoint}`;
-            const protocol = CONFIG.useHttps ? https : http;
+            const protocol = this.baseUrl.startsWith('https') ? https : http;
             
             const options = {
                 method: 'POST',
