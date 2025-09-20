@@ -95,7 +95,7 @@ app.get('/health', (req, res) => {
 app.post('/create', async (req, res) => {
   try {
     const call = await callManager.createCall();
-    const domain = process.env.DOMAIN || 'tgcall.space';
+    const domain = process.env.DOMAIN || 'tgcall.us';
     res.json({
       callId: call.id,
       url: `https://${domain}/call?${call.id}`,
@@ -119,7 +119,7 @@ app.get('/join', async (req, res) => {
       return res.status(404).json({ error: 'Call not found or expired' });
     }
 
-    const domain = process.env.DOMAIN || 'tgcall.space';
+    const domain = process.env.DOMAIN || 'tgcall.us';
     res.json({
       callId: call.id,
       status: call.status,

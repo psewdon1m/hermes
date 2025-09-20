@@ -1,6 +1,6 @@
 # Nginx Configuration Files
 
-Эта директория содержит конфигурационные файлы nginx для проекта tgcall.space.
+Эта директория содержит конфигурационные файлы nginx для проекта tgcall.us.
 
 ## Структура файлов
 
@@ -9,9 +9,9 @@ nginx/
 ├── nginx.conf                    # Основной конфигурационный файл nginx
 ├── fastcgi.conf                  # Конфигурация FastCGI
 ├── sites-available/
-│   └── tgcall.space.conf        # Конфигурация сайта (доступная)
+│   └── tgcall.us.conf           # Конфигурация сайта (доступная)
 ├── sites-enabled/
-│   └── tgcall.space.conf        # Конфигурация сайта (активная)
+│   └── tgcall.us.conf           # Конфигурация сайта (активная)
 └── snippets/
     ├── fastcgi-php.conf         # Фрагмент для PHP FastCGI
     └── snakeoil.conf            # Фрагмент для самоподписанных SSL сертификатов
@@ -26,7 +26,7 @@ nginx/
 - Настройки логирования
 - Включение конфигураций сайтов
 
-### tgcall.space.conf
+### tgcall.us.conf
 Конфигурация сайта включает:
 - **HTTP → HTTPS редирект** (порт 80 → 443)
 - **SSL/TLS настройки** с Let's Encrypt сертификатами
@@ -45,8 +45,8 @@ sudo cp nginx/nginx.conf /etc/nginx/
 sudo cp nginx/fastcgi.conf /etc/nginx/
 
 # Скопировать конфигурацию сайта
-sudo cp nginx/sites-available/tgcall.space.conf /etc/nginx/sites-available/
-sudo cp nginx/sites-enabled/tgcall.space.conf /etc/nginx/sites-enabled/
+sudo cp nginx/sites-available/tgcall.us.conf /etc/nginx/sites-available/
+sudo cp nginx/sites-enabled/tgcall.us.conf /etc/nginx/sites-enabled/
 
 # Скопировать фрагменты
 sudo cp nginx/snippets/* /etc/nginx/snippets/
@@ -68,7 +68,7 @@ sudo systemctl reload nginx
 sudo apt install certbot python3-certbot-nginx
 
 # Получить сертификат
-sudo certbot --nginx -d tgcall.space -d www.tgcall.space
+sudo certbot --nginx -d tgcall.us -d www.tgcall.us
 ```
 
 ## Важные настройки
@@ -92,12 +92,12 @@ sudo certbot --nginx -d tgcall.space -d www.tgcall.space
 ## Мониторинг
 
 ### Логи
-- Access log: `/var/log/nginx/tgcall.space.access.log`
-- Error log: `/var/log/nginx/tgcall.space.error.log`
+- Access log: `/var/log/nginx/tgcall.us.access.log`
+- Error log: `/var/log/nginx/tgcall.us.error.log`
 
 ### Health Check
 ```bash
-curl https://tgcall.space/health
+curl https://tgcall.us/health
 # Должен вернуть: healthy
 ```
 

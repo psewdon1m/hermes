@@ -97,7 +97,7 @@ TURN_PASSWORD=turnpass
 # TURN Server
 TURN_USERNAME=turnuser
 TURN_PASSWORD=turnpass
-TURN_REALM=tgcall.space
+TURN_REALM=tgcall.us
 ```
 
 ### Ports
