@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.exceptions import TelegramBadRequest, TelegramNetworkError
-from config import config
+from bot.config import config
 
 # Настройка логирования
 logging.basicConfig(

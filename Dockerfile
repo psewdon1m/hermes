@@ -36,8 +36,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install Python in Alpine
-RUN apk add --no-cache python3 py3-pip
+# Install Python in Alpine with all necessary libraries
+RUN apk add --no-cache python3 py3-pip python3-dev musl-dev gcc
 
 # Copy Node.js app from builder
 COPY --from=node-builder /app/node_modules ./node_modules
@@ -46,12 +46,11 @@ COPY --from=node-builder /app/public ./public
 COPY --from=node-builder /app/package*.json ./
 
 # Copy Python bot from builder
-COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=python-builder /usr/local/bin /usr/local/bin
 COPY --from=python-builder /app/bot ./bot
 COPY --from=python-builder /app/requirements.txt ./
 
-# Python dependencies already installed in python-builder stage
+# Install Python dependencies in Alpine environment
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
