@@ -17,12 +17,11 @@ async function joinCallHandler(req, res) {
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
-    } catch (jwtError) {
+    } catch {
       return res.status(401).json({ error: 'invalid_token' });
     }
 
     const { callId, role } = decoded;
-
     const callInfo = await getCallInfo(callId);
     if (!callInfo) {
       return res.status(404).json({ error: 'call_not_found' });
@@ -30,14 +29,12 @@ async function joinCallHandler(req, res) {
 
     const turnCredentials = await createTurnCredentials(callId);
 
-    const response = {
+    res.json({
       callId,
       role: role || 'participant',
       turnCredentials,
       status: 'joined'
-    };
-
-    res.json(response);
+    });
   } catch (error) {
     console.error('Join call error:', error);
     if (error instanceof z.ZodError) {
