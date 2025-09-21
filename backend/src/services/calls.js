@@ -1,6 +1,4 @@
-﻿import Redis from 'ioredis';
-
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+import redis from '../lib/redis.js';
 
 const callTimeoutMinutes = Number(process.env.CALL_TIMEOUT_MINUTES ?? 60);
 const defaultCallTtlSeconds = Number.isFinite(callTimeoutMinutes) && callTimeoutMinutes > 0
@@ -9,7 +7,7 @@ const defaultCallTtlSeconds = Number.isFinite(callTimeoutMinutes) && callTimeout
 const inactiveTtlSeconds = Number(process.env.INACTIVE_TTL_SECONDS ?? defaultCallTtlSeconds) || defaultCallTtlSeconds;
 
 export async function createCall(callId, callData) {
-  const key = `call:${callId}`;
+  const key = call:;
   const data = {
     ...callData,
     id: callId,
@@ -24,7 +22,7 @@ export async function createCall(callId, callData) {
 }
 
 export async function getCallInfo(callId) {
-  const key = `call:${callId}`;
+  const key = call:;
   const data = await redis.hgetall(key);
 
   if (!data || Object.keys(data).length === 0) {
@@ -35,7 +33,7 @@ export async function getCallInfo(callId) {
 }
 
 export async function updateCallStatus(callId, status) {
-  const key = `call:${callId}`;
+  const key = call:;
   await redis.hset(key, {
     status,
     updatedAt: new Date().toISOString()
@@ -49,6 +47,6 @@ export async function updateCallStatus(callId, status) {
 }
 
 export async function deleteCall(callId) {
-  const key = `call:${callId}`;
+  const key = call:;
   await redis.del(key);
 }

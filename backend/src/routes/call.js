@@ -7,48 +7,41 @@ import { createTurnCredentials } from '../services/turn.js';
 
 const router = express.Router();
 
-// Схема валидации для создания звонка
 const createCallSchema = z.object({
   initiator_telegram_id: z.string().min(1).max(100)
 });
 
-// Создание нового звонка
 router.post('/create', async (req, res) => {
   try {
     const { initiator_telegram_id } = createCallSchema.parse(req.body);
-    
+
     const callId = nanoid(12);
     const domain = process.env.DOMAIN || 'tgcall.us';
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    
-    // Создаем звонок в Redis
+
     await createCall(callId, {
       initiator_telegram_id,
       status: 'pending',
       createdAt: new Date().toISOString()
     });
 
-    // Создаем JWT токен для присоединения
     const joinToken = jwt.sign(
-      { 
-        callId, 
+      {
+        callId,
         role: 'initiator',
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 часа
+        exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60
       },
       process.env.JWT_SECRET || 'default-secret'
     );
 
-    // Создаем TURN credentials
     const turnCredentials = await createTurnCredentials(callId);
 
-    const response = {
+    res.json({
       callId,
-      joinUrl: `${protocol}://${domain}/call?token=${joinToken}`,
+      joinUrl: ${protocol}:///call?token=,
       turnCredentials,
       status: 'created'
-    };
-
-    res.json(response);
+    });
   } catch (error) {
     console.error('Create call error:', error);
     if (error instanceof z.ZodError) {
@@ -58,12 +51,11 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// Получение информации о звонке
 router.get('/info/:callId', async (req, res) => {
   try {
     const { callId } = req.params;
     const callInfo = await getCallInfo(callId);
-    
+
     if (!callInfo) {
       return res.status(404).json({ error: 'call_not_found' });
     }
