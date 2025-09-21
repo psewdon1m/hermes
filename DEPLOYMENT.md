@@ -20,7 +20,7 @@ TGCall - это система видеозвонков на базе WebRTC, с
 - 10GB свободного места на диске
 
 ### Сетевые требования
-- Открытые порты: 80, 443, 3478 (UDP), 5349
+- Открытые порты: 80, 443, 3479 (UDP), 5350
 - Домен tgcall.us должен указывать на IP сервера
 - SSL сертификаты (Let's Encrypt)
 
@@ -73,8 +73,8 @@ SIGNAL_PORT=3002
 REDIS_PORT=6379
 NGINX_HTTP_PORT=8080
 NGINX_HTTPS_PORT=8443
-TURN_UDP_PORT=3478
-TURN_TLS_PORT=5349
+TURN_UDP_PORT=3479
+TURN_TLS_PORT=5350
 
 # Redis
 REDIS_URL=redis://redis:6379
@@ -214,7 +214,7 @@ turnutils_stunclient tgcall.us
 
 ### Проблемы с WebRTC
 
-1. Проверьте, что порты 3478 (UDP) и 5349 открыты
+1. Проверьте, что порты 3479 (UDP) и 5350 открыты
 2. Убедитесь, что TURN сервер доступен
 3. Проверьте логи signal сервиса
 
@@ -238,8 +238,8 @@ docker system prune -a
    sudo ufw allow 22
    sudo ufw allow 80
    sudo ufw allow 443
-   sudo ufw allow 3478/udp
-   sudo ufw allow 5349
+   sudo ufw allow 3479/udp
+   sudo ufw allow 5350
    sudo ufw enable
    ```
 

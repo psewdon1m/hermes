@@ -4,8 +4,8 @@ import crypto from 'crypto';
 export async function createTurnCredentials(callId) {
   const turnSecret = process.env.TURN_SECRET || 'default-turn-secret';
   const turnDomain = process.env.TURN_DOMAIN || process.env.DOMAIN || 'tgcall.us';
-  const turnPort = process.env.TURN_PORT || '3478';
-  const turnTlsPort = process.env.TURN_TLS_PORT || '5349';
+  const turnPort = process.env.TURN_PORT || '3479';
+  const turnTlsPort = process.env.TURN_TLS_PORT || '5350';
   
   // Генерируем временные credentials для TURN сервера
   const username = `call_${callId}_${Date.now()}`;

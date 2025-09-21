@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "tgcall-frontend",
   "version": "1.0.0",
   "description": "WebRTC video call frontend",
@@ -8,9 +8,7 @@
     "dev": "webpack serve --mode=development",
     "start": "webpack serve --mode=development"
   },
-  "dependencies": {
-    "socket.io-client": "^4.7.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4",

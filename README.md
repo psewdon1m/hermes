@@ -1,8 +1,8 @@
-# TGCall - WebRTC Video Calling Platform
+﻿# TGCall - WebRTC Video Calling Platform
 
 A modern, secure video calling platform built with WebRTC, featuring P2P connections with TURN fallback, Docker containerization, and a beautiful user interface.
 
-## 🚀 Features
+## ðŸš€ Features
 
 - **P2P Video Calls**: Direct peer-to-peer connections for optimal performance
 - **TURN Fallback**: Automatic fallback to TURN server when P2P fails
@@ -13,29 +13,29 @@ A modern, secure video calling platform built with WebRTC, featuring P2P connect
 - **Auto-cleanup**: Calls expire after 60 minutes of inactivity
 - **Link Sharing**: Simple URL-based call joining
 
-## 🏗️ Architecture
+## ðŸ—ï¸ Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend       │    │   TURN Server   │
-│   (React SPA)   │◄──►│   (Node.js)     │◄──►│   (coturn)      │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Nginx         │    │   Redis         │    │   SSL Certs     │
-│   (Proxy)       │    │   (Storage)     │    │   (Security)    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚   Frontend      â”‚    â”‚   Backend       â”‚    â”‚   TURN Server   â”‚
+â”‚   (React SPA)   â”‚â—„â”€â”€â–ºâ”‚   (Node.js)     â”‚â—„â”€â”€â–ºâ”‚   (coturn)      â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚                       â”‚                       â”‚
+         â”‚                       â”‚                       â”‚
+         â–¼                       â–¼                       â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚   Nginx         â”‚    â”‚   Redis         â”‚    â”‚   SSL Certs     â”‚
+â”‚   (Proxy)       â”‚    â”‚   (Storage)     â”‚    â”‚   (Security)    â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
-## 📋 Prerequisites
+## ðŸ“‹ Prerequisites
 
 - Docker and Docker Compose
 - Node.js (for development)
 - SSL certificates (for production)
 
-## 🛠️ Installation
+## ðŸ› ï¸ Installation
 
 ### 1. Clone the Repository
 
@@ -59,7 +59,7 @@ cp .env.example .env
 docker-compose up -d
 ```
 
-## 🎯 Usage
+## ðŸŽ¯ Usage
 
 ### Creating a Call
 
@@ -78,11 +78,11 @@ node scripts/create-call.js
 
 ### API Endpoints
 
-- `POST /api/create` - Create a new call
-- `GET /api/join?call_id=<id>` - Check call status
-- WebSocket `/socket.io/` - Signaling server
+- `POST /api/call/create` - Create a new call link
+- `POST /api/join` - Exchange a join token for call info and TURN credentials
+- WebSocket `/ws` - Signaling server
 
-## 🔧 Configuration
+## ðŸ”§ Configuration
 
 ### Environment Variables
 
@@ -90,7 +90,7 @@ node scripts/create-call.js
 # Backend
 NODE_ENV=production
 REDIS_URL=redis://redis:6379
-TURN_SERVER=turn:coturn:3478
+TURN_SERVER=turn:coturn:3479
 TURN_USERNAME=turnuser
 TURN_PASSWORD=turnpass
 
@@ -104,11 +104,11 @@ TURN_REALM=tgcall.us
 
 - `80/443` - Nginx (HTTP/HTTPS)
 - `3001` - Backend API
-- `3478` - TURN/STUN (UDP/TCP)
-- `5349` - TURN TLS
+- `3479` - TURN/STUN (UDP/TCP)
+- `5350` - TURN TLS
 - `6379` - Redis
 
-## 🔒 Security
+## ðŸ”’ Security
 
 - HTTPS with SSL certificates
 - Security headers (HSTS, CSP, etc.)
@@ -116,14 +116,14 @@ TURN_REALM=tgcall.us
 - Input validation and sanitization
 - Secure WebSocket connections
 
-## 📱 Browser Support
+## ðŸ“± Browser Support
 
 - Chrome 56+
 - Firefox 52+
 - Safari 11+
 - Edge 79+
 
-## 🐛 Troubleshooting
+## ðŸ› Troubleshooting
 
 ### Common Issues
 
@@ -154,7 +154,7 @@ NODE_ENV=development docker-compose up
 npm run dev
 ```
 
-## 📊 Monitoring
+## ðŸ“Š Monitoring
 
 ### Health Checks
 
@@ -173,7 +173,7 @@ docker-compose logs -f backend
 docker-compose logs -f nginx
 ```
 
-## 🚀 Production Deployment
+## ðŸš€ Production Deployment
 
 ### 1. SSL Certificates
 
@@ -204,7 +204,7 @@ SSL_KEY_PATH=/etc/letsencrypt/live/yourdomain.com/privkey.pem
 docker-compose up -d
 ```
 
-## 🤝 Contributing
+## ðŸ¤ Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -212,11 +212,11 @@ docker-compose up -d
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📄 License
+## ðŸ“„ License
 
 MIT License - see LICENSE file for details
 
-## 🆘 Support
+## ðŸ†˜ Support
 
 For issues and questions:
 

@@ -26,6 +26,8 @@ services:
       - JWT_SECRET=${JWT_SECRET:-default-secret}
       - TURN_SECRET=${TURN_SECRET:-default-turn-secret}
       - TURN_DOMAIN=${TURN_DOMAIN:-tgcall.us}
+      - TURN_PORT=${TURN_UDP_PORT:-3479}
+      - TURN_TLS_PORT=${TURN_TLS_PORT:-5350}
     depends_on:
       - redis
     networks:
@@ -64,9 +66,9 @@ services:
   coturn:
     image: coturn/coturn:latest
     ports:
-      - "${TURN_UDP_PORT:-3478}:3478"
-      - "${TURN_UDP_PORT:-3478}:3478/udp"
-      - "${TURN_TLS_PORT:-5349}:5349"
+      - "${TURN_UDP_PORT:-3479}:3478"
+      - "${TURN_UDP_PORT:-3479}:3478/udp"
+      - "${TURN_TLS_PORT:-5350}:5349"
     environment:
       - TURN_USERNAME=${TURN_USERNAME:-turnuser}
       - TURN_PASSWORD=${TURN_PASSWORD:-turnpass}

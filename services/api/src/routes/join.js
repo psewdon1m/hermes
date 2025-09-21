@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { getCallInfo } from '../services/calls.js';
@@ -6,17 +6,14 @@ import { createTurnCredentials } from '../services/turn.js';
 
 const router = express.Router();
 
-// Схема валидации для присоединения к звонку
 const joinCallSchema = z.object({
   token: z.string().min(1)
 });
 
-// Присоединение к звонку
-router.post('/join', async (req, res) => {
+async function joinCallHandler(req, res) {
   try {
     const { token } = joinCallSchema.parse(req.body);
-    
-    // Проверяем JWT токен
+
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
@@ -25,14 +22,12 @@ router.post('/join', async (req, res) => {
     }
 
     const { callId, role } = decoded;
-    
-    // Проверяем, существует ли звонок
+
     const callInfo = await getCallInfo(callId);
     if (!callInfo) {
       return res.status(404).json({ error: 'call_not_found' });
     }
 
-    // Создаем TURN credentials
     const turnCredentials = await createTurnCredentials(callId);
 
     const response = {
@@ -50,6 +45,9 @@ router.post('/join', async (req, res) => {
     }
     res.status(500).json({ error: 'internal_error' });
   }
-});
+}
+
+router.post('/', joinCallHandler);
+router.post('/join', joinCallHandler);
 
 export { router as joinRouter };

@@ -1,65 +1,120 @@
-import io from 'socket.io-client';
-import './styles.css';
+﻿import './styles.css';
 
 class VideoCallApp {
     constructor() {
-        this.socket = null;
+        this.ws = null;
         this.peerConnection = null;
         this.localStream = null;
         this.remoteStream = null;
         this.callId = null;
+        this.joinToken = null;
+        this.peerId = this.generatePeerId();
+        this.remotePeerId = null;
+        this.isOfferer = false;
         this.isMuted = false;
         this.isVideoOff = false;
-        
-        // ICE servers configuration
-        this.iceServers = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                {
-                    urls: 'turn:38.180.153.25:3478',
-                    username: 'turnuser',
-                    credential: 'turnpass'
-                },
-                {
-                    urls: 'turns:38.180.153.25:5349',
-                    username: 'turnuser',
-                    credential: 'turnpass'
-                }
-            ]
-        };
+        this.pendingCandidates = [];
+        this.iceConfig = { iceServers: this.getDefaultIceServers() };
+        this.role = 'participant';
 
         this.init();
     }
 
+    generatePeerId() {
+        return 'peer_' + Math.random().toString(36).slice(2, 10);
+    }
+
+    getDefaultIceServers() {
+        return [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ];
+    }
+
     async init() {
-        this.setupEventListeners();
-        await this.getCallIdFromURL();
-        await this.initializeMedia();
-        this.connectToSignalingServer();
+        try {
+            this.setupEventListeners();
+            await this.extractTokenFromURL();
+            await this.joinCall();
+            await this.initializeMedia();
+            this.createPeerConnection();
+            this.connectToSignalingServer();
+        } catch (error) {
+            console.error('Initialization error:', error);
+            this.showError(error.message || 'Initialization failed');
+        }
     }
 
     setupEventListeners() {
-        // Control buttons
-        document.getElementById('muteBtn').addEventListener('click', () => this.toggleMute());
-        document.getElementById('videoBtn').addEventListener('click', () => this.toggleVideo());
-        document.getElementById('hangupBtn').addEventListener('click', () => this.hangup());
-        document.getElementById('retry-btn').addEventListener('click', () => this.retry());
-
-        // Window events
+        document.getElementById('muteBtn')?.addEventListener('click', () => this.toggleMute());
+        document.getElementById('videoBtn')?.addEventListener('click', () => this.toggleVideo());
+        document.getElementById('hangupBtn')?.addEventListener('click', () => this.hangup());
+        document.getElementById('retry-btn')?.addEventListener('click', () => this.retry());
         window.addEventListener('beforeunload', () => this.cleanup());
     }
 
-    async getCallIdFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        this.callId = urlParams.get('call_id') || urlParams.get('id');
-        
-        if (!this.callId) {
-            this.showError('No call ID provided in URL');
-            return;
+    async extractTokenFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        if (!token) {
+            throw new Error('No token provided in URL');
+        }
+        this.joinToken = token;
+    }
+
+    getApiBaseUrl() {
+        const { protocol, hostname, host, port } = window.location;
+        const isLocalDev = (hostname === 'localhost' || hostname === '127.0.0.1') &&
+            (!port || port === '3000' || port === '5173');
+        if (isLocalDev) {
+            return `http://${hostname}:3001`;
+        }
+        return `${protocol}//${host}`;
+    }
+
+    getWebSocketUrl() {
+        const { protocol, hostname, host, port } = window.location;
+        const wsProtocol = protocol === 'https:' ? 'wss' : 'ws';
+        const isLocalDev = (hostname === 'localhost' || hostname === '127.0.0.1') &&
+            (port === '3000' || port === '5173');
+        if (isLocalDev) {
+            return `${wsProtocol}://${hostname}:3002?callId=${encodeURIComponent(this.callId)}&peerId=${encodeURIComponent(this.peerId)}&token=${encodeURIComponent(this.joinToken)}`;
+        }
+        return `${wsProtocol}://${host}/ws?callId=${encodeURIComponent(this.callId)}&peerId=${encodeURIComponent(this.peerId)}&token=${encodeURIComponent(this.joinToken)}`;
+    }
+
+    async joinCall() {
+        const response = await fetch(`${this.getApiBaseUrl()}/api/join`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: this.joinToken })
+        });
+
+        if (!response.ok) {
+            let message = 'Failed to join call';
+            try {
+                const error = await response.json();
+                message = error?.error || message;
+            } catch (_) {}
+            throw new Error(message);
         }
 
-        document.getElementById('call-id').textContent = this.callId;
+        const data = await response.json();
+        this.callId = data.callId;
+        this.role = data.role || 'participant';
+
+        if (data.turnCredentials && Array.isArray(data.turnCredentials.iceServers) && data.turnCredentials.iceServers.length > 0) {
+            this.iceConfig = { iceServers: data.turnCredentials.iceServers };
+        } else {
+            this.iceConfig = { iceServers: this.getDefaultIceServers() };
+        }
+
+        const callIdElement = document.getElementById('call-id');
+        if (callIdElement) {
+            callIdElement.textContent = this.callId;
+        }
+
+        this.updateCallStatus(data.status || 'pending');
     }
 
     async initializeMedia() {
@@ -70,138 +125,233 @@ class VideoCallApp {
             });
 
             const localVideo = document.getElementById('localVideo');
-            localVideo.srcObject = this.localStream;
+            if (localVideo) {
+                localVideo.srcObject = this.localStream;
+            }
+
+            document.getElementById('loading')?.classList.add('hidden');
+            document.getElementById('error-screen')?.classList.add('hidden');
+            document.getElementById('main-interface')?.classList.remove('hidden');
 
             this.updateConnectionStatus('Media ready', 'connected');
         } catch (error) {
             console.error('Error accessing media devices:', error);
-            this.showError('Unable to access camera and microphone. Please check permissions.');
+            throw new Error('Unable to access camera and microphone. Please check permissions.');
         }
+    }
+
+    createPeerConnection() {
+        if (this.peerConnection) {
+            this.peerConnection.close();
+        }
+
+        this.peerConnection = new RTCPeerConnection(this.iceConfig);
+        this.remoteStream = new MediaStream();
+        const remoteVideo = document.getElementById('remoteVideo');
+        if (remoteVideo) {
+            remoteVideo.srcObject = this.remoteStream;
+        }
+
+        if (this.localStream) {
+            this.localStream.getTracks().forEach((track) => {
+                this.peerConnection.addTrack(track, this.localStream);
+            });
+        }
+
+        this.peerConnection.ontrack = (event) => {
+            event.streams[0]?.getTracks().forEach((track) => this.remoteStream.addTrack(track));
+        };
+
+        this.peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                if (this.remotePeerId && this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.sendSignal(this.remotePeerId, 'ice-candidate', event.candidate);
+                } else {
+                    this.pendingCandidates.push(event.candidate);
+                }
+            }
+        };
+
+        this.peerConnection.onconnectionstatechange = () => {
+            if (!this.peerConnection) {
+                return;
+            }
+            const state = this.peerConnection.connectionState;
+            if (state === 'connected') {
+                this.updateConnectionStatus('Peer connected', 'connected');
+            } else if (state === 'failed' || state === 'disconnected') {
+                this.updateConnectionStatus('Peer disconnected', 'error');
+            }
+        };
     }
 
     connectToSignalingServer() {
-        // Get domain from current location or use default
-        const domain = window.location.hostname === 'localhost' ? 
-            'localhost' : 
-            window.location.hostname;
-        
-        const backendUrl = window.location.protocol === 'https:' ? 
-            `https://${domain}` : 
-            `http://${domain}:3001`;
+        if (!this.callId || !this.joinToken) {
+            throw new Error('Missing call information for signaling');
+        }
 
-        this.socket = io(backendUrl, {
-            transports: ['websocket', 'polling']
-        });
+        const url = this.getWebSocketUrl();
+        this.updateConnectionStatus('Connecting to server...', '');
 
-        this.socket.on('connect', () => {
+        this.ws = new WebSocket(url);
+
+        this.ws.onopen = () => {
             console.log('Connected to signaling server');
             this.updateConnectionStatus('Connected to server', 'connected');
-            this.joinCall();
-        });
+            this.flushPendingCandidates();
+        };
 
-        this.socket.on('disconnect', () => {
-            console.log('Disconnected from signaling server');
+        this.ws.onmessage = (event) => {
+            try {
+                const message = JSON.parse(event.data);
+                this.handleSignalMessage(message);
+            } catch (error) {
+                console.error('Failed to parse signaling message:', error);
+            }
+        };
+
+        this.ws.onclose = () => {
             this.updateConnectionStatus('Disconnected', 'error');
-        });
+        };
 
-        this.socket.on('call-joined', (data) => {
-            console.log('Joined call:', data);
-            this.updateCallStatus(data.status);
-            this.initializePeerConnection();
-        });
-
-        this.socket.on('participant-joined', (data) => {
-            console.log('Participant joined:', data);
-            this.updateCallStatus(data.status);
-        });
-
-        this.socket.on('participant-left', (data) => {
-            console.log('Participant left:', data);
-            this.updateCallStatus(data.status);
-            this.handleParticipantLeft();
-        });
-
-        this.socket.on('offer', (data) => {
-            this.handleOffer(data.offer, data.from);
-        });
-
-        this.socket.on('answer', (data) => {
-            this.handleAnswer(data.answer, data.from);
-        });
-
-        this.socket.on('ice-candidate', (data) => {
-            this.handleIceCandidate(data.candidate, data.from);
-        });
-
-        this.socket.on('call-error', (data) => {
-            this.showError(data.message);
-        });
+        this.ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.updateConnectionStatus('Connection error', 'error');
+        };
     }
 
-    joinCall() {
-        if (this.socket && this.callId) {
-            this.socket.emit('join-call', { callId: this.callId });
+    handleSignalMessage(message) {
+        switch (message.type) {
+            case 'peers':
+                this.handlePeers(message.peers || []);
+                break;
+            case 'peer_joined':
+                this.handlePeerJoined(message.peerId);
+                break;
+            case 'peer_left':
+                this.handlePeerLeft(message.peerId);
+                break;
+            case 'offer':
+                this.handleOffer(message.payload, message.from);
+                break;
+            case 'answer':
+                this.handleAnswer(message.payload, message.from);
+                break;
+            case 'ice-candidate':
+                this.handleRemoteIceCandidate(message.payload);
+                break;
+            case 'room_full':
+            case 'room_expired':
+            case 'unauthorized':
+            case 'error':
+                this.showError('Unable to join call. Please try again later.');
+                break;
+            default:
+                break;
         }
     }
 
-    async initializePeerConnection() {
-        try {
-            this.peerConnection = new RTCPeerConnection(this.iceServers);
+    handlePeers(peers) {
+        if (!Array.isArray(peers) || peers.length === 0) {
+            this.remotePeerId = null;
+            this.isOfferer = false;
+            this.updateCallStatus('waiting');
+            return;
+        }
 
-            // Add local stream to peer connection
-            if (this.localStream) {
-                this.localStream.getTracks().forEach(track => {
-                    this.peerConnection.addTrack(track, this.localStream);
-                });
-            }
+        this.remotePeerId = peers[0];
+        this.isOfferer = true;
+        this.updateCallStatus('active');
+        this.flushPendingCandidates();
+        this.startNegotiation();
+    }
 
-            // Handle remote stream
-            this.peerConnection.ontrack = (event) => {
-                console.log('Received remote stream');
-                this.remoteStream = event.streams[0];
+    handlePeerJoined(peerId) {
+        if (!peerId) {
+            return;
+        }
+
+        this.updateCallStatus('active');
+
+        if (!this.remotePeerId) {
+            this.remotePeerId = peerId;
+        }
+
+        if (!this.isOfferer) {
+            this.flushPendingCandidates();
+            return;
+        }
+
+        if (this.remotePeerId === peerId) {
+            this.flushPendingCandidates();
+            this.startNegotiation();
+        }
+    }
+
+    handlePeerLeft(peerId) {
+        if (peerId && this.remotePeerId === peerId) {
+            this.remotePeerId = null;
+            this.isOfferer = false;
+            this.updateCallStatus('waiting');
+
+            if (this.remoteStream) {
+                this.remoteStream.getTracks().forEach((track) => track.stop());
+                this.remoteStream = new MediaStream();
                 const remoteVideo = document.getElementById('remoteVideo');
-                remoteVideo.srcObject = this.remoteStream;
-            };
-
-            // Handle ICE candidates
-            this.peerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    this.socket.emit('ice-candidate', {
-                        callId: this.callId,
-                        candidate: event.candidate
-                    });
+                if (remoteVideo) {
+                    remoteVideo.srcObject = this.remoteStream;
                 }
-            };
+            }
+        }
+    }
 
-            // Handle connection state changes
-            this.peerConnection.onconnectionstatechange = () => {
-                console.log('Connection state:', this.peerConnection.connectionState);
-                this.updateConnectionStatus(
-                    this.peerConnection.connectionState,
-                    this.peerConnection.connectionState === 'connected' ? 'connected' : 'error'
-                );
-            };
+    async startNegotiation() {
+        if (!this.peerConnection || !this.remotePeerId || !this.isOfferer) {
+            return;
+        }
 
+        try {
+            const offer = await this.peerConnection.createOffer();
+            await this.peerConnection.setLocalDescription(offer);
+            this.sendSignal(this.remotePeerId, 'offer', offer);
         } catch (error) {
-            console.error('Error initializing peer connection:', error);
-            this.showError('Failed to initialize peer connection');
+            console.error('Error starting negotiation:', error);
+        }
+    }
+
+    sendSignal(target, type, payload) {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            return;
+        }
+
+        this.ws.send(JSON.stringify({ target, type, payload }));
+    }
+
+    flushPendingCandidates() {
+        if (!this.remotePeerId || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            return;
+        }
+
+        while (this.pendingCandidates.length > 0) {
+            const candidate = this.pendingCandidates.shift();
+            this.sendSignal(this.remotePeerId, 'ice-candidate', candidate);
         }
     }
 
     async handleOffer(offer, from) {
         try {
+            this.isOfferer = false;
+            this.remotePeerId = from || this.remotePeerId;
+
             if (!this.peerConnection) {
-                await this.initializePeerConnection();
+                this.createPeerConnection();
             }
 
             await this.peerConnection.setRemoteDescription(offer);
             const answer = await this.peerConnection.createAnswer();
             await this.peerConnection.setLocalDescription(answer);
-
-            this.socket.emit('answer', {
-                callId: this.callId,
-                answer: answer
-            });
+            this.sendSignal(this.remotePeerId, 'answer', answer);
+            this.flushPendingCandidates();
         } catch (error) {
             console.error('Error handling offer:', error);
         }
@@ -209,26 +359,25 @@ class VideoCallApp {
 
     async handleAnswer(answer, from) {
         try {
+            if (!this.peerConnection) {
+                return;
+            }
+            this.remotePeerId = from || this.remotePeerId;
             await this.peerConnection.setRemoteDescription(answer);
+            this.flushPendingCandidates();
         } catch (error) {
             console.error('Error handling answer:', error);
         }
     }
 
-    async handleIceCandidate(candidate, from) {
+    async handleRemoteIceCandidate(candidate) {
         try {
-            if (this.peerConnection) {
+            if (this.peerConnection && candidate) {
                 await this.peerConnection.addIceCandidate(candidate);
             }
         } catch (error) {
-            console.error('Error handling ICE candidate:', error);
+            console.error('Error handling remote ICE candidate:', error);
         }
-    }
-
-    handleParticipantLeft() {
-        const remoteVideo = document.getElementById('remoteVideo');
-        remoteVideo.srcObject = null;
-        this.remoteStream = null;
     }
 
     toggleMute() {
@@ -237,9 +386,9 @@ class VideoCallApp {
             if (audioTrack) {
                 audioTrack.enabled = !audioTrack.enabled;
                 this.isMuted = !audioTrack.enabled;
-                
+
                 const muteBtn = document.getElementById('muteBtn');
-                muteBtn.classList.toggle('active', this.isMuted);
+                muteBtn?.classList.toggle('active', this.isMuted);
             }
         }
     }
@@ -250,9 +399,9 @@ class VideoCallApp {
             if (videoTrack) {
                 videoTrack.enabled = !videoTrack.enabled;
                 this.isVideoOff = !videoTrack.enabled;
-                
+
                 const videoBtn = document.getElementById('videoBtn');
-                videoBtn.classList.toggle('active', this.isVideoOff);
+                videoBtn?.classList.toggle('active', this.isVideoOff);
             }
         }
     }
@@ -264,52 +413,82 @@ class VideoCallApp {
 
     cleanup() {
         if (this.localStream) {
-            this.localStream.getTracks().forEach(track => track.stop());
+            this.localStream.getTracks().forEach((track) => track.stop());
+            this.localStream = null;
         }
-        
+
+        if (this.remoteStream) {
+            this.remoteStream.getTracks().forEach((track) => track.stop());
+            this.remoteStream = null;
+        }
+
         if (this.peerConnection) {
             this.peerConnection.close();
+            this.peerConnection = null;
         }
-        
-        if (this.socket) {
-            this.socket.disconnect();
+
+        if (this.ws) {
+            this.ws.onopen = null;
+            this.ws.onmessage = null;
+            this.ws.onclose = null;
+            this.ws.onerror = null;
+            this.ws.close();
+            this.ws = null;
         }
     }
 
     updateCallStatus(status) {
         const statusElement = document.getElementById('call-status');
+        if (!statusElement) {
+            return;
+        }
+
         const statusMap = {
-            'waiting': 'Waiting for participant...',
-            'active': 'Call active',
-            'ended': 'Call ended'
+            waiting: 'Waiting for participant...',
+            active: 'Call active',
+            ended: 'Call ended',
+            joined: 'Joining call...',
+            pending: 'Preparing call...'
         };
+
         statusElement.textContent = statusMap[status] || status;
     }
 
     updateConnectionStatus(message, type) {
         const statusElement = document.getElementById('connection-status');
+        if (!statusElement) {
+            return;
+        }
+
         const indicator = statusElement.querySelector('.status-indicator');
         const text = statusElement.querySelector('span');
-        
-        text.textContent = message;
-        indicator.className = `status-indicator ${type}`;
+
+        if (text) {
+            text.textContent = message;
+        }
+
+        if (indicator) {
+            indicator.className = type ? `status-indicator ${type}` : 'status-indicator';
+        }
     }
 
     showError(message) {
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('main-interface').classList.add('hidden');
-        document.getElementById('error-screen').classList.remove('hidden');
-        document.getElementById('error-message').textContent = message;
+        this.cleanup();
+        document.getElementById('loading')?.classList.add('hidden');
+        document.getElementById('main-interface')?.classList.add('hidden');
+        document.getElementById('error-screen')?.classList.remove('hidden');
+
+        const errorMessage = document.getElementById('error-message');
+        if (errorMessage) {
+            errorMessage.textContent = message;
+        }
     }
 
     retry() {
-        document.getElementById('error-screen').classList.add('hidden');
-        document.getElementById('loading').classList.remove('hidden');
-        this.init();
+        window.location.reload();
     }
 }
 
-// Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new VideoCallApp();
 });
