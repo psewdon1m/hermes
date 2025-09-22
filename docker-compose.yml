@@ -53,7 +53,9 @@
       - app-network
 
   redis:
-    image: redis:7-alpine
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
     ports:
       - ":6379"
     volumes:
