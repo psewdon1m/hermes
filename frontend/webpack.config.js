@@ -1,9 +1,7 @@
-﻿import path from 'path';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
+﻿const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-const __dirname = path.resolve();
-
-export default {
+module.exports = {
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'frontend', 'dist'),
