@@ -1,7 +1,7 @@
 ﻿services:
   frontend:
     build:
-      context: ./frontend
+      context: ./web
       dockerfile: Dockerfile
     ports:
       - ":80"
@@ -12,7 +12,7 @@
 
   api:
     build:
-      context: ./api
+      context: ./services/api
       dockerfile: Dockerfile
     ports:
       - ":3001"
@@ -34,7 +34,7 @@
 
   signal:
     build:
-      context: ./signal
+      context: ./services/signal
       dockerfile: Dockerfile
     ports:
       - ":3002"
@@ -73,7 +73,7 @@
       - TURN_PASSWORD=
       - TURN_REALM=
     volumes:
-      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
+      - ./infra/turnserver.conf:/et./infra/turnserver.conf
       - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - app-network
@@ -84,10 +84,10 @@
       - ":80"
       - ":443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/sites-enabled:/etc/nginx/sites-enabled
-      - ./nginx/snippets:/etc/nginx/snippets
-      - ./nginx/fastcgi.conf:/etc/nginx/fastcgi.conf
+      - ./infra/nginx/nginx.conf:/et./infra/nginx/nginx.conf
+      - ./infra/nginx/sites-enabled:/et./infra/nginx/sites-enabled
+      - ./infra/nginx/snippets:/et./infra/nginx/snippets
+      - ./infra/nginx/fastcgi.conf:/et./infra/nginx/fastcgi.conf
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - frontend
