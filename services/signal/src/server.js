@@ -1,4 +1,4 @@
-﻿import http from "http";
+import http from "http";
 import { WebSocketServer } from "ws";
 import Redis from "ioredis";
 import crypto from "node:crypto";

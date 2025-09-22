@@ -1,17 +1,16 @@
-﻿import express from "express";
+import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 
 import { callRouter } from "./routes/call.js";
 import { joinRouter } from "./routes/join.js";
 import { rateLimit, bruteCodeLimiter } from "./lib/ratelimit.js";
+import { ALLOW_ORIGIN } from "./lib/env.js";
 
 export function createApp() {
   const app = express();
 
-  const allowOrigin = process.env.API_ORIGIN ? [process.env.API_ORIGIN] : ["http://localhost:3000"];
-  app.use(cors({ origin: allowOrigin, credentials: false }));
-
+  app.use(cors({ origin: ALLOW_ORIGIN, credentials: false }));
   app.use(express.json({ limit: "100kb" }));
   app.use(morgan("tiny"));
 

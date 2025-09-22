@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../lib/env.js';
+import jwt from "jsonwebtoken";
+import { JWT_SECRET, JOIN_TOKEN_TTL_SECONDS } from "../lib/env.js";
 
-export function signToken(payload, ttlSec = 900) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: ttlSec }); // 15 минут по умолчанию
+export function signToken(payload, ttlSec = JOIN_TOKEN_TTL_SECONDS) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: ttlSec });
 }
 
 export function verifyToken(token) {

@@ -21,19 +21,19 @@ export function rateLimit({ windowSec, limit, keyFn, onBlocked }) {
       }
       return next();
     } catch (e) {
-      // не блокируем при сбое Redis — пропускаем
+      // Ð½Ðµ Ð±Ð»Ð¾ÐºÐ¸Ñ€ÑƒÐµÐ¼ Ð¿Ñ€Ð¸ ÑÐ±Ð¾Ðµ Redis â€” Ð¿Ñ€Ð¾Ð¿ÑƒÑÐºÐ°ÐµÐ¼
       return next();
     }
   };
 }
 
-// Специальный лимитер «анти-брут кода»: вешаем и на IP, и на сам код
+// Ð¡Ð¿ÐµÑ†Ð¸Ð°Ð»ÑŒÐ½Ñ‹Ð¹ Ð»Ð¸Ð¼Ð¸Ñ‚ÐµÑ€ Â«Ð°Ð½Ñ‚Ð¸-Ð±Ñ€ÑƒÑ‚ ÐºÐ¾Ð´Ð°Â»: Ð²ÐµÑˆÐ°ÐµÐ¼ Ð¸ Ð½Ð° IP, Ð¸ Ð½Ð° ÑÐ°Ð¼ ÐºÐ¾Ð´
 export function bruteCodeLimiter({ ipLimit = 30, codeLimit = 20, windowSec = 300 }) {
     return async (req, res, next) => {
       try {
         const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').toString().split(',')[0].trim();
         const code = (req.body?.code || '').toString().toUpperCase();
-        if (!code) return next(); // валидация пусть отработает отдельно
+        if (!code) return next(); // Ð²Ð°Ð»Ð¸Ð´Ð°Ñ†Ð¸Ñ Ð¿ÑƒÑÑ‚ÑŒ Ð¾Ñ‚Ñ€Ð°Ð±Ð¾Ñ‚Ð°ÐµÑ‚ Ð¾Ñ‚Ð´ÐµÐ»ÑŒÐ½Ð¾
   
         const h = await import('node:crypto');
         const codeHash = h.createHash('sha256').update(code).digest('hex').slice(0, 16);

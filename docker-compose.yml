@@ -1,10 +1,10 @@
-﻿services:
-  frontend:
+services:
+  web:
     build:
       context: ./web
       dockerfile: Dockerfile
     ports:
-      - ":80"
+      - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       - api
     networks:
@@ -15,18 +15,18 @@
       context: ./services/api
       dockerfile: Dockerfile
     ports:
-      - ":3001"
+      - "${API_PORT:-3001}:3001"
     environment:
-      - NODE_ENV=
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=3001
-      - REDIS_URL=
-      - API_ORIGIN=
-      - WS_PUBLIC=
-      - JWT_SECRET=
-      - TURN_DOMAIN=
-      - TURN_SECRET=
-      - TURN_TTL_SECONDS=
-      - JOIN_TOKEN_TTL_SECONDS=
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - API_ORIGIN=${API_ORIGIN:-https://example.com}
+      - WS_PUBLIC=${WS_PUBLIC:-wss://example.com/ws}
+      - JWT_SECRET=${JWT_SECRET:-change-me}
+      - TURN_DOMAIN=${TURN_DOMAIN:-example.com}
+      - TURN_SECRET=${TURN_SECRET:-change-me}
+      - TURN_TTL_SECONDS=${TURN_TTL_SECONDS:-600}
+      - JOIN_TOKEN_TTL_SECONDS=${JOIN_TOKEN_TTL_SECONDS:-86400}
     depends_on:
       - redis
     networks:
@@ -37,15 +37,15 @@
       context: ./services/signal
       dockerfile: Dockerfile
     ports:
-      - ":3002"
+      - "${SIGNAL_PORT:-3002}:3002"
     environment:
-      - NODE_ENV=
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=3002
-      - SIGNAL_PATH=
-      - REDIS_URL=
-      - JWT_SECRET=
-      - MAX_PEERS_PER_CALL=
-      - INACTIVE_TTL_SECONDS=
+      - SIGNAL_PATH=${SIGNAL_PATH:-/ws}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - JWT_SECRET=${JWT_SECRET:-change-me}
+      - MAX_PEERS_PER_CALL=${MAX_PEERS_PER_CALL:-2}
+      - INACTIVE_TTL_SECONDS=${INACTIVE_TTL_SECONDS:-3600}
     depends_on:
       - redis
     networks:
@@ -56,7 +56,7 @@
       context: ./redis
       dockerfile: Dockerfile
     ports:
-      - ":6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -65,15 +65,15 @@
   coturn:
     image: coturn/coturn:latest
     ports:
-      - ":3478"
-      - ":3478/udp"
-      - ":5349"
+      - "${TURN_UDP_PORT:-3478}:3478"
+      - "${TURN_UDP_PORT:-3478}:3478/udp"
+      - "${TURN_TLS_PORT:-5349}:5349"
     environment:
-      - TURN_USERNAME=
-      - TURN_PASSWORD=
-      - TURN_REALM=
+      - TURN_USERNAME=${TURN_USERNAME:-turnuser}
+      - TURN_PASSWORD=${TURN_PASSWORD:-turnpass}
+      - TURN_REALM=${TURN_REALM:-example.com}
     volumes:
-      - ./infra/turnserver.conf:/et./infra/turnserver.conf
+      - ./infra/turnserver.conf:/etc/coturn/turnserver.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - app-network
@@ -81,16 +81,16 @@
   nginx:
     image: nginx:alpine
     ports:
-      - ":80"
-      - ":443"
+      - "${NGINX_HTTP_PORT:-8080}:80"
+      - "${NGINX_HTTPS_PORT:-8443}:443"
     volumes:
-      - ./infra/nginx/nginx.conf:/et./infra/nginx/nginx.conf
-      - ./infra/nginx/sites-enabled:/et./infra/nginx/sites-enabled
-      - ./infra/nginx/snippets:/et./infra/nginx/snippets
-      - ./infra/nginx/fastcgi.conf:/et./infra/nginx/fastcgi.conf
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/sites-enabled:/etc/nginx/sites-enabled:ro
+      - ./infra/nginx/snippets:/etc/nginx/snippets:ro
+      - ./infra/nginx/fastcgi.conf:/etc/nginx/fastcgi.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
-      - frontend
+      - web
       - api
       - signal
     networks:
