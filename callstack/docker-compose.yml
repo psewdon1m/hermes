@@ -15,23 +15,21 @@ services:
     image: coturn/coturn:latest
     restart: unless-stopped
     network_mode: host
-    user: "0"   # ??????????: ?????????????????????? ???????????????????????? ?? ?????????????????????? ???????? ???????????? ???? root
+    user: "0"
     environment:
       - TURN_SECRET=${TURN_SECRET}
-    command:
-      [
-        "sh","-lc",
-        "set -e; \
-         mkdir -p /var/lib/coturn/tls; \
-         cp -f /tls/cert.crt /var/lib/coturn/tls/cert.crt; \
-         cp -f /tls/key.key  /var/lib/coturn/tls/key.key; \
-         chmod 0644 /var/lib/coturn/tls/cert.crt /var/lib/coturn/tls/key.key; \
-         exec turnserver -c /etc/turnserver.conf --static-auth-secret=\"$TURN_SECRET\""
-      ]
+    command: >
+      sh -lc "
+      set -e;
+      mkdir -p /var/lib/coturn/tls;
+      cp -f /tls/call.tgcall.us.crt /var/lib/coturn/tls/cert.crt;
+      cp -f /tls/call.tgcall.us.key /var/lib/coturn/tls/key.key;
+      chmod 0644 /var/lib/coturn/tls/cert.crt /var/lib/coturn/tls/key.key;
+      exec turnserver -c /etc/turnserver.conf --static-auth-secret=\"${TURN_SECRET}\"
+      "
     volumes:
       - ./infra/turnserver.conf:/etc/turnserver.conf:ro
-      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.us/call.tgcall.us.crt:/tls/cert.crt:ro
-      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.us/call.tgcall.us.key:/tls/key.key:ro
+      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.us:/tls:ro
 
   redis:
     image: redis:7-alpine
@@ -52,6 +50,7 @@ services:
     depends_on:
       - redis
 
+  
   signal:
     build: ./services/signal
     restart: unless-stopped
