@@ -1,10 +1,12 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+﻿import path from 'path';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 
-module.exports = {
+const __dirname = path.resolve();
+
+export default {
   entry: './src/index.js',
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'frontend', 'dist'),
     filename: 'bundle.js',
     clean: true
   },
@@ -22,13 +24,17 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html',
-      title: 'TGCall - Video Calls'
+      template: './src/index.html'
     })
   ],
   devServer: {
-    static: './dist',
+    static: path.resolve(__dirname, 'frontend', 'dist'),
+    host: '0.0.0.0',
     port: 3000,
-    hot: true
+    hot: true,
+    historyApiFallback: true
+  },
+  resolve: {
+    extensions: ['.js']
   }
 };

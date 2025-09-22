@@ -1,4 +1,4 @@
-import './styles.css';
+﻿import './styles.css';
 
 class VideoCallApp {
     constructor() {
@@ -64,27 +64,23 @@ class VideoCallApp {
 
     getApiBaseUrl() {
         const { protocol, hostname, host, port } = window.location;
-        const isLocalDev = (hostname === 'localhost' || hostname === '127.0.0.1') &&
-            (!port || port === '3000' || port === '5173');
+        const isLocalDev = (hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '3000' || port === '5173');
         if (isLocalDev) {
-            return `http://${hostname}:3001`;
+            return http://:3001;
         }
-        return `${protocol}//${host}`;
+        return ${protocol}//System.Management.Automation.Internal.Host.InternalHost;
     }
 
     getWebSocketUrl() {
         const { protocol, hostname, host, port } = window.location;
         const wsProtocol = protocol === 'https:' ? 'wss' : 'ws';
-        const isLocalDev = (hostname === 'localhost' || hostname === '127.0.0.1') &&
-            (port === '3000' || port === '5173');
-        if (isLocalDev) {
-            return `${wsProtocol}://${hostname}:3002?callId=${encodeURIComponent(this.callId)}&peerId=${encodeURIComponent(this.peerId)}&token=${encodeURIComponent(this.joinToken)}`;
-        }
-        return `${wsProtocol}://${host}/ws?callId=${encodeURIComponent(this.callId)}&peerId=${encodeURIComponent(this.peerId)}&token=${encodeURIComponent(this.joinToken)}`;
+        const isLocalDev = (hostname === 'localhost' || hostname === '127.0.0.1') && (port === '3000' || port === '5173');
+        const base = isLocalDev ? ${wsProtocol}://:3002 : ${wsProtocol}://System.Management.Automation.Internal.Host.InternalHost;
+        return ${base}/ws?callId=&peerId=&token=;
     }
 
     async joinCall() {
-        const response = await fetch(`${this.getApiBaseUrl()}/api/join`, {
+        const response = await fetch(${this.getApiBaseUrl()}/api/join, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: this.joinToken })
@@ -95,7 +91,9 @@ class VideoCallApp {
             try {
                 const error = await response.json();
                 message = error?.error || message;
-            } catch (_) {}
+            } catch (err) {
+                console.warn('Failed to parse join error payload', err);
+            }
             throw new Error(message);
         }
 
@@ -119,11 +117,7 @@ class VideoCallApp {
 
     async initializeMedia() {
         try {
-            this.localStream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            });
-
+            this.localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             const localVideo = document.getElementById('localVideo');
             if (localVideo) {
                 localVideo.srcObject = this.localStream;
@@ -173,9 +167,7 @@ class VideoCallApp {
         };
 
         this.peerConnection.onconnectionstatechange = () => {
-            if (!this.peerConnection) {
-                return;
-            }
+            if (!this.peerConnection) return;
             const state = this.peerConnection.connectionState;
             if (state === 'connected') {
                 this.updateConnectionStatus('Peer connected', 'connected');
@@ -267,12 +259,9 @@ class VideoCallApp {
     }
 
     handlePeerJoined(peerId) {
-        if (!peerId) {
-            return;
-        }
+        if (!peerId) return;
 
         this.updateCallStatus('active');
-
         if (!this.remotePeerId) {
             this.remotePeerId = peerId;
         }
@@ -386,9 +375,7 @@ class VideoCallApp {
             if (audioTrack) {
                 audioTrack.enabled = !audioTrack.enabled;
                 this.isMuted = !audioTrack.enabled;
-
-                const muteBtn = document.getElementById('muteBtn');
-                muteBtn?.classList.toggle('active', this.isMuted);
+                document.getElementById('muteBtn')?.classList.toggle('active', this.isMuted);
             }
         }
     }
@@ -399,9 +386,7 @@ class VideoCallApp {
             if (videoTrack) {
                 videoTrack.enabled = !videoTrack.enabled;
                 this.isVideoOff = !videoTrack.enabled;
-
-                const videoBtn = document.getElementById('videoBtn');
-                videoBtn?.classList.toggle('active', this.isVideoOff);
+                document.getElementById('videoBtn')?.classList.toggle('active', this.isVideoOff);
             }
         }
     }
@@ -468,7 +453,7 @@ class VideoCallApp {
         }
 
         if (indicator) {
-            indicator.className = type ? `status-indicator ${type}` : 'status-indicator';
+            indicator.className = type ? status-indicator  : 'status-indicator';
         }
     }
 

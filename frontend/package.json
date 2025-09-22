@@ -1,8 +1,8 @@
-{
+﻿{
   "name": "tgcall-frontend",
   "version": "1.0.0",
   "description": "WebRTC video call frontend",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "build": "webpack --mode=production",
     "dev": "webpack serve --mode=development",
@@ -17,8 +17,5 @@
     "css-loader": "^6.8.1",
     "style-loader": "^3.3.3",
     "file-loader": "^6.2.0"
-  },
-  "keywords": ["webrtc", "video", "call", "frontend"],
-  "author": "tgcall",
-  "license": "MIT"
+  }
 }
