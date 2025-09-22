@@ -15,7 +15,7 @@ services:
     image: coturn/coturn:latest
     restart: unless-stopped
     network_mode: host
-    user: "0"   # ВАЖНО: копирование сертификатов и выставление прав делаем от root
+    user: "0"   # ??????????: ?????????????????????? ???????????????????????? ?? ?????????????????????? ???????? ???????????? ???? root
     environment:
       - TURN_SECRET=${TURN_SECRET}
     command:
@@ -30,8 +30,8 @@ services:
       ]
     volumes:
       - ./infra/turnserver.conf:/etc/turnserver.conf:ro
-      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.space/call.tgcall.space.crt:/tls/cert.crt:ro
-      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.space/call.tgcall.space.key:/tls/key.key:ro
+      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.us/call.tgcall.us.crt:/tls/cert.crt:ro
+      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.us/call.tgcall.us.key:/tls/key.key:ro
 
   redis:
     image: redis:7-alpine
@@ -41,12 +41,12 @@ services:
     build: ./services/api
     restart: unless-stopped
     environment:
-      - DOMAIN=call.tgcall.space
-      - API_ORIGIN=https://call.tgcall.space
-      - WS_PUBLIC=wss://call.tgcall.space/ws
+      - DOMAIN=call.tgcall.us
+      - API_ORIGIN=https://call.tgcall.us
+      - WS_PUBLIC=wss://call.tgcall.us/ws
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=${JWT_SECRET}
-      - TURN_DOMAIN=call.tgcall.space
+      - TURN_DOMAIN=call.tgcall.us
       - TURN_SECRET=${TURN_SECRET}
       - TURN_TTL_SECONDS=600
     depends_on:
