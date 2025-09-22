@@ -24,7 +24,7 @@ services:
       - WS_PUBLIC=${WS_PUBLIC:-wss://example.com/ws}
       - JWT_SECRET=${JWT_SECRET:-change-me}
       - TURN_DOMAIN=${TURN_DOMAIN:-example.com}
-      - TURN_SECRET=${TURN_SECRET:-change-me}
+      - TURN_SECRET=${TURN_SECRET:-764b23ed948b875a76eed9ccf0633f314bfaa54148f8b742e21882505c7ea7a7}
       - TURN_TTL_SECONDS=${TURN_TTL_SECONDS:-600}
       - JOIN_TOKEN_TTL_SECONDS=${JOIN_TOKEN_TTL_SECONDS:-86400}
     depends_on:
@@ -72,6 +72,8 @@ services:
       - TURN_USERNAME=${TURN_USERNAME:-turnuser}
       - TURN_PASSWORD=${TURN_PASSWORD:-turnpass}
       - TURN_REALM=${TURN_REALM:-example.com}
+      - TURN_SECRET=${TURN_SECRET:-764b23ed948b875a76eed9ccf0633f314bfaa54148f8b742e21882505c7ea7a7}
+    command: ["sh", "-c", "turnserver -c /etc/coturn/turnserver.conf --static-auth-secret=${TURN_SECRET}"]
     volumes:
       - ./infra/turnserver.conf:/etc/coturn/turnserver.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro

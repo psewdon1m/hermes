@@ -4,7 +4,6 @@
     "type": "module",
     "dependencies": {
       "ioredis": "^5.4.1",
-      "jsonwebtoken": "^9.0.2",
       "nanoid": "^5.0.7",
       "ws": "^8.18.0"
     }
