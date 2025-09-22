@@ -1,0 +1,68 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  coturn:
+    image: coturn/coturn:latest
+    restart: unless-stopped
+    network_mode: host
+    user: "0"   # ВАЖНО: копирование сертификатов и выставление прав делаем от root
+    environment:
+      - TURN_SECRET=${TURN_SECRET}
+    command:
+      [
+        "sh","-lc",
+        "set -e; \
+         mkdir -p /var/lib/coturn/tls; \
+         cp -f /tls/cert.crt /var/lib/coturn/tls/cert.crt; \
+         cp -f /tls/key.key  /var/lib/coturn/tls/key.key; \
+         chmod 0644 /var/lib/coturn/tls/cert.crt /var/lib/coturn/tls/key.key; \
+         exec turnserver -c /etc/turnserver.conf --static-auth-secret=\"$TURN_SECRET\""
+      ]
+    volumes:
+      - ./infra/turnserver.conf:/etc/turnserver.conf:ro
+      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.space/call.tgcall.space.crt:/tls/cert.crt:ro
+      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.space/call.tgcall.space.key:/tls/key.key:ro
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  api:
+    build: ./services/api
+    restart: unless-stopped
+    environment:
+      - DOMAIN=call.tgcall.space
+      - API_ORIGIN=https://call.tgcall.space
+      - WS_PUBLIC=wss://call.tgcall.space/ws
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - TURN_DOMAIN=call.tgcall.space
+      - TURN_SECRET=${TURN_SECRET}
+      - TURN_TTL_SECONDS=600
+    depends_on:
+      - redis
+
+  signal:
+    build: ./services/signal
+    restart: unless-stopped
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - redis
+
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:
+    external: true

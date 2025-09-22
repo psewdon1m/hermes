@@ -1,0 +1,32 @@
+{
+}
+
+call.tgcall.space {
+  encode gzip
+  root * /srv
+
+  # WebSocket сигналинг
+  @ws path /ws /ws/*
+  handle @ws {
+    reverse_proxy signal:8081 {
+      transport http {
+        versions 1.1
+      }
+    }
+  }
+
+  # API
+  handle /api/* {
+    reverse_proxy api:8080
+  }
+
+  # SPA-роутинг: /join и всё под ним -> /index.html
+  @join path /join /join/*
+  handle @join {
+    rewrite * /index.html
+    file_server
+  }
+
+  # остальная статика
+  file_server
+}
