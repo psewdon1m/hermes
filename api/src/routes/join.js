@@ -1,50 +1,81 @@
-﻿import express from 'express';
-import jwt from 'jsonwebtoken';
+import express from 'express';
+import * as crypto from 'node:crypto';
 import { z } from 'zod';
-import { getCallInfo } from '../services/calls.js';
-import { createTurnCredentials } from '../services/turn.js';
+import { redis } from '../lib/redis.js';
 
-const router = express.Router();
+export const joinRouter = express.Router();
 
-const joinCallSchema = z.object({
-  token: z.string().min(1)
-});
+const {
+  DOMAIN = 'call.tgcall.space',
+  WS_PUBLIC = 'wss://call.tgcall.space/ws',
+  TURN_DOMAIN = 'call.tgcall.space',
+  TURN_SECRET,
+} = process.env;
 
-async function joinCallHandler(req, res) {
-  try {
-    const { token } = joinCallSchema.parse(req.body);
+if (!TURN_SECRET) throw new Error('TURN_SECRET is required');
 
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
-    } catch {
-      return res.status(401).json({ error: 'invalid_token' });
-    }
-
-    const { callId, role } = decoded;
-    const callInfo = await getCallInfo(callId);
-    if (!callInfo) {
-      return res.status(404).json({ error: 'call_not_found' });
-    }
-
-    const turnCredentials = await createTurnCredentials(callId);
-
-    res.json({
-      callId,
-      role: role || 'participant',
-      turnCredentials,
-      status: 'joined'
-    });
-  } catch (error) {
-    console.error('Join call error:', error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'invalid_request', details: error.errors });
-    }
-    res.status(500).json({ error: 'internal_error' });
-  }
+function nowSeconds(){ return Math.floor(Date.now()/1000); }
+function hmac(username){ // HMAC(username:timestamp) -> Base64 cred
+  return crypto.createHmac('sha1', TURN_SECRET).update(username).digest('base64');
 }
 
-router.post('/', joinCallHandler);
-router.post('/join', joinCallHandler);
+// === JWT verify (без сторонних пакетов) ===
+function jwtVerify(token, secret){
+  const [h, p, s] = token.split('.');
+  if (!h || !p || !s) throw new Error('bad_jwt');
+  const sig = crypto.createHmac('sha256', process.env.JWT_SECRET).update(`${h}.${p}`).digest('base64url');
+  if (sig !== s) throw new Error('bad_jwt_sig');
+  const payload = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'));
+  if (!payload || !payload.callId) throw new Error('bad_jwt_payload');
+  if (payload.exp && nowSeconds() > payload.exp) throw new Error('jwt_expired');
+  return payload;
+}
 
-export { router as joinRouter };
+const JoinSchema = z.object({
+  token: z.string().min(10),
+});
+
+// Возвращаем список ICE-серверов, включая TLS/TCP 5349
+function buildIceServers(){
+    const u = Math.floor(Date.now()/1000) + 600; // ttl 10 мин
+    const username = `${u}:user`;
+    const credential = hmac(username);
+    return [
+      { urls: [`stun:${TURN_DOMAIN}:3478`] },
+      { urls: [`turn:${TURN_DOMAIN}:3478?transport=udp`], username, credential },
+      { urls: [`turn:${TURN_DOMAIN}:3478?transport=tcp`], username, credential },
+      { urls: [`turns:${TURN_DOMAIN}:5349?transport=tcp`], username, credential },
+    ];
+  }
+  
+  // POST /api/join { token } -> { callId, role, iceServers, wsUrl }
+  joinRouter.post('/', async (req, res) => {
+    try {
+      const parse = JoinSchema.safeParse(req.body);
+      if (!parse.success) return res.status(400).json({ error: 'bad_request', details: parse.error.issues });
+  
+      const { token } = parse.data;
+      const payload = jwtVerify(token, process.env.JWT_SECRET);
+      const callId = payload.callId;
+  
+      // ДИНАМИЧЕСКОЕ НАЗНАЧЕНИЕ РОЛИ:
+      // первый peer в комнате — offerer, все остальные — answerer
+      const peersKey = `call:${callId}:peers`;
+      const peersCount = await redis.scard(peersKey);
+      const role = (peersCount > 0) ? 'answerer' : 'offerer';
+  
+      return res.json({
+        callId,
+        role,
+        iceServers: buildIceServers(),
+        wsUrl: WS_PUBLIC
+      });
+    } catch (e) {
+      console.error(e);
+      const msg = (e && e.message) || 'internal_error';
+      if (msg === 'bad_jwt' || msg === 'bad_jwt_sig' || msg === 'jwt_expired' || msg === 'bad_jwt_payload') {
+        return res.status(401).json({ error: msg });
+      }
+      return res.status(500).json({ error: 'internal_error' });
+    }
+  });

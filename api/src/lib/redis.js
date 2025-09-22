@@ -1,10 +1,4 @@
-﻿import Redis from 'ioredis';
+import Redis from 'ioredis';
+import { REDIS_URL } from './env.js';
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-const redis = new Redis(redisUrl);
-
-redis.on('error', (error) => {
-  console.error('Redis error:', error);
-});
-
-export default redis;
+export const redis = new Redis(REDIS_URL);

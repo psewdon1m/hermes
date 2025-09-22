@@ -1,33 +1,19 @@
-﻿import crypto from 'crypto';
+GNU nano 6.2                                           turn.js                                                     
+import crypto from 'crypto';
+import { TURN_DOMAIN, TURN_SECRET, TURN_TTL_SECONDS } from '../lib/env.js';
 
-export async function createTurnCredentials(callId) {
-  const turnSecret = process.env.TURN_SECRET || 'default-turn-secret';
-  const turnDomain = process.env.TURN_DOMAIN || process.env.DOMAIN || 'tgcall.us';
-  const turnPort = process.env.TURN_PORT || '3479';
-  const turnTlsPort = process.env.TURN_TLS_PORT || '5350';
+export function makeTurnCredentials() {
+  const expiry = Math.floor(Date.now() / 1000) + TURN_TTL_SECONDS; // unix ts
+  const username = String(expiry);
+  const credential = crypto.createHmac('sha1', TURN_SECRET).update(username).digest('base64');
+  return { username, credential };
+}
 
-  const username = call__;
-  const password = crypto.createHmac('sha256', turnSecret)
-    .update(username)
-    .digest('base64');
-
-  const iceServers = [
-    { urls: stun:: },
-    {
-      urls: 	urn::,
-      username,
-      credential: password
-    },
-    {
-      urls: 	urns::,
-      username,
-      credential: password
-    }
+export function buildIceServers() {
+  const { username, credential } = makeTurnCredentials();
+  return [
+    { urls: [`stun:${TURN_DOMAIN}:3478`] },
+    { urls: [`turn:${TURN_DOMAIN}:3478?transport=udp`], username, credential },
+    { urls: [`turn:${TURN_DOMAIN}:3478?transport=tcp`], username, credential }
   ];
-
-  return {
-    iceServers,
-    username,
-    password
-  };
 }

@@ -1,33 +1,34 @@
-﻿import http from 'http';
-import dotenv from 'dotenv';
-import { WebSocketServer } from 'ws';
-import Redis from 'ioredis';
-import jwt from 'jsonwebtoken';
-import { nanoid } from 'nanoid';
-
-dotenv.config();
+﻿import http from "http";
+import { WebSocketServer } from "ws";
+import Redis from "ioredis";
+import crypto from "node:crypto";
+import url from "node:url";
 
 const {
-  REDIS_URL = 'redis://localhost:6379',
-  JWT_SECRET = 'default-secret',
-  PORT = '3002',
-  MAX_PEERS_PER_CALL = '2',
-  INACTIVE_TTL_SECONDS = '3600'
+  REDIS_URL = "redis://redis:6379",
+  JWT_SECRET,
+  PORT = "3002",
+  SIGNAL_PATH = "/ws",
+  MAX_PEERS_PER_CALL = "2",
+  INACTIVE_TTL_SECONDS = "3600",
 } = process.env;
 
+if (!JWT_SECRET) throw new Error("JWT_SECRET is required");
+
 const redis = new Redis(REDIS_URL);
-
-redis.on('error', (error) => {
-  console.error('Redis error:', error);
-});
-
 const server = http.createServer();
-const wss = new WebSocketServer({ server, path: process.env.SIGNAL_PATH || '/ws' });
+const wss = new WebSocketServer({ server, path: SIGNAL_PATH });
 
 function verifyJWT(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+    const [h, p, s] = token.split(".");
+    if (!h || !p || !s) return null;
+    const sig = crypto.createHmac("sha256", JWT_SECRET).update(`${h}.${p}`).digest("base64url");
+    if (sig !== s) return null;
+    const body = JSON.parse(Buffer.from(p, "base64url").toString());
+    if (typeof body.exp === "number" && Math.floor(Date.now() / 1000) > body.exp) return null;
+    return body;
+  } catch {
     return null;
   }
 }
@@ -39,74 +40,68 @@ function send(ws, obj) {
 }
 
 async function callExists(callId) {
-  return (await redis.exists(call:)) === 1;
+  return (await redis.exists(`call:${callId}`)) === 1;
 }
 
 async function listPeers(callId) {
-  return redis.smembers(call::peers);
+  return redis.smembers(`call:${callId}:peers`);
 }
 
 async function addPeer(callId, peerId) {
-  await redis.sadd(call::peers, peerId);
-  await redis.hset(call:, {
-    status: 'active',
-    updatedAt: new Date().toISOString()
+  await redis.sadd(`call:${callId}:peers`, peerId);
+  await redis.hset(`call:${callId}`, {
+    status: "active",
+    updatedAt: String(Date.now()),
   });
-  await redis.persist(call:);
+  await redis.persist(`call:${callId}`);
 }
 
 async function removePeer(callId, peerId) {
-  await redis.srem(call::peers, peerId);
-  const size = await redis.scard(call::peers);
-
+  await redis.srem(`call:${callId}:peers`, peerId);
+  const size = await redis.scard(`call:${callId}:peers`);
   if (size === 0) {
-    await redis.hset(call:, {
-      status: 'pending',
-      updatedAt: new Date().toISOString()
+    await redis.hset(`call:${callId}`, {
+      status: "pending",
+      updatedAt: String(Date.now()),
     });
-    await redis.expire(call:, Number(INACTIVE_TTL_SECONDS));
+    await redis.expire(`call:${callId}`, Number(INACTIVE_TTL_SECONDS));
   } else {
-    await redis.hset(call:, {
-      updatedAt: new Date().toISOString()
-    });
+    await redis.hset(`call:${callId}`, { updatedAt: String(Date.now()) });
   }
-
   return size;
 }
 
 const sockets = new Map();
 
-wss.on('connection', async (ws, req) => {
+wss.on("connection", async (ws, req) => {
   try {
-    const url = new URL(req.url, 'http://localhost');
-    const callId = url.searchParams.get('callId');
-    const peerId = url.searchParams.get('peerId') || nanoid(8);
-    const token = url.searchParams.get('token');
+    const searchParams = new url.URL(req.url, "http://x").searchParams;
+    const callId = searchParams.get("callId");
+    const peerId = searchParams.get("peerId");
+    const sig = searchParams.get("sig");
 
-    if (!callId) {
-      send(ws, { type: 'error', error: 'missing_call_id' });
+    if (!callId || !peerId || !sig) {
+      send(ws, { type: "error", error: "bad_params" });
       ws.close();
       return;
     }
 
-    if (token) {
-      const decoded = verifyJWT(token);
-      if (!decoded || decoded.callId !== callId) {
-        send(ws, { type: 'unauthorized' });
-        ws.close();
-        return;
-      }
+    const jwt = verifyJWT(sig);
+    if (!jwt || jwt.callId !== callId) {
+      send(ws, { type: "unauthorized" });
+      ws.close();
+      return;
     }
 
     if (!(await callExists(callId))) {
-      send(ws, { type: 'room_expired' });
+      send(ws, { type: "room-expired" });
       ws.close();
       return;
     }
 
     const peersBefore = await listPeers(callId);
     if (peersBefore.length >= Number(MAX_PEERS_PER_CALL)) {
-      send(ws, { type: 'room_full' });
+      send(ws, { type: "room-full" });
       ws.close();
       return;
     }
@@ -115,68 +110,53 @@ wss.on('connection', async (ws, req) => {
     await addPeer(callId, peerId);
 
     const peersNow = await listPeers(callId);
-    send(ws, {
-      type: 'peers',
-      peers: peersNow.filter((p) => p !== peerId)
-    });
+    send(ws, { type: "peers", peers: peersNow.filter((p) => p !== peerId) });
 
     for (const [otherWs, meta] of sockets) {
       if (otherWs !== ws && meta.callId === callId) {
-        send(otherWs, { type: 'peer_joined', peerId });
+        send(otherWs, { type: "peer-joined", peerId });
       }
     }
 
-    ws.on('message', async (raw) => {
+    ws.on("message", async (data) => {
+      let msg;
       try {
-        const message = JSON.parse(raw);
-        const { target, type, payload } = message;
-
-        if (!target || !type) {
-          return;
-        }
-
-        for (const [otherWs, meta] of sockets) {
-          if (meta.callId === callId && meta.peerId === target && otherWs.readyState === ws.OPEN) {
-            send(otherWs, { type, from: peerId, payload });
-          }
-        }
-      } catch (error) {
-        console.error('Signal message parsing error:', error);
-      }
-    });
-
-    ws.on('close', async () => {
-      const meta = sockets.get(ws);
-      if (!meta) {
+        msg = JSON.parse(data);
+      } catch {
         return;
       }
+      const { target, type, payload } = msg;
+      if (!target || !type) return;
 
-      sockets.delete(ws);
-      const remaining = await removePeer(meta.callId, meta.peerId);
-
-      for (const [otherWs, otherMeta] of sockets) {
-        if (otherMeta.callId === meta.callId) {
-          send(otherWs, {
-            type: 'peer_left',
-            peerId: meta.peerId,
-            left: remaining
-          });
+      for (const [otherWs, meta] of sockets) {
+        if (meta.callId === callId && meta.peerId === target && otherWs.readyState === ws.OPEN) {
+          send(otherWs, { type, from: peerId, payload });
         }
       }
     });
 
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
+    ws.on("close", async () => {
+      const meta = sockets.get(ws);
+      if (!meta) return;
+      sockets.delete(ws);
+      const leftSize = await removePeer(meta.callId, meta.peerId);
+      for (const [otherWs, o] of sockets) {
+        if (o.callId === meta.callId) {
+          send(otherWs, { type: "peer-left", peerId: meta.peerId, left: leftSize });
+        }
+      }
     });
+
+    ws.on("error", () => {});
   } catch (error) {
-    console.error('Connection error:', error);
+    console.error("Signal connection error:", error);
     try {
-      send(ws, { type: 'error', error: 'internal_error' });
+      send(ws, { type: "error", error: "internal" });
     } catch {}
     ws.close();
   }
 });
 
 server.listen(Number(PORT), () => {
-  console.log(Signal server running on port );
+  console.log(`Signal WS on :${PORT}`);
 });

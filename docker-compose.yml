@@ -20,14 +20,13 @@
       - NODE_ENV=
       - PORT=3001
       - REDIS_URL=
-      - DOMAIN=
+      - API_ORIGIN=
+      - WS_PUBLIC=
       - JWT_SECRET=
-      - TURN_SECRET=
       - TURN_DOMAIN=
-      - TURN_PORT=
-      - TURN_TLS_PORT=
-      - CALL_TIMEOUT_MINUTES=
-      - INACTIVE_TTL_SECONDS=
+      - TURN_SECRET=
+      - TURN_TTL_SECONDS=
+      - JOIN_TOKEN_TTL_SECONDS=
     depends_on:
       - redis
     networks:
