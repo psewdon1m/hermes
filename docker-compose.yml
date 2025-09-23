@@ -1,25 +1,22 @@
 services:
-  nginx:
+  caddy:
     depends_on:
       - api
       - signal
-    image: hermes-nginx
+    image: hermes-caddy
     build:
       context: .
-      dockerfile: ./nginx/Dockerfile
+      dockerfile: ./caddy/Dockerfile
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     environment:
-      SERVER_NAME: ${SERVER_NAME}
-      API_UPSTREAM: api:8080
-      SIGNAL_UPSTREAM: signal:8081
-      SSL_CERT_PATH: /etc/nginx/certs/fullchain.pem
-      SSL_KEY_PATH: /etc/nginx/certs/privkey.pem
+      SSL_CERT_PATH: /etc/caddy/certs/fullchain.pem
+      SSL_KEY_PATH: /etc/caddy/certs/privkey.pem
     volumes:
-      - ${SSL_CERT_HOST_PATH}:/etc/nginx/certs/fullchain.pem:ro
-      - ${SSL_KEY_HOST_PATH}:/etc/nginx/certs/privkey.pem:ro
+      - ${SSL_CERT_HOST_PATH}:/etc/caddy/certs/fullchain.pem:ro
+      - ${SSL_KEY_HOST_PATH}:/etc/caddy/certs/privkey.pem:ro
 
   coturn:
     image: coturn/coturn:latest

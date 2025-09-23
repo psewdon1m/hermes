@@ -1,0 +1,35 @@
+{
+}
+
+call.tgcall.us {
+  encode gzip
+  root * /srv
+  tls {$SSL_CERT_PATH} {$SSL_KEY_PATH}
+
+  @ws path /ws /ws/*
+  handle @ws {
+    reverse_proxy signal:8081 {
+      transport http {
+        versions 1.1
+      }
+    }
+  }
+
+  handle /api/* {
+    reverse_proxy api:8080
+  }
+
+  @join path /join /join/*
+  handle @join {
+    rewrite * /index.html
+    file_server
+  }
+
+  handle /health {
+    respond "healthy" 200 {
+      close
+    }
+  }
+
+  file_server
+}
