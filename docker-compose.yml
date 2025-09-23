@@ -12,6 +12,7 @@ services:
       - "80:80"
       - "443:443"
     environment:
+      SERVER_NAME: ${SERVER_NAME}
       SSL_CERT_PATH: /etc/caddy/certs/fullchain.pem
       SSL_KEY_PATH: /etc/caddy/certs/privkey.pem
     volumes:

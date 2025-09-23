@@ -1,9 +1,10 @@
 {
 }
 
-call.tgcall.us {
+{$SERVER_NAME} {
   encode gzip
   root * /srv
+
   tls {$SSL_CERT_PATH} {$SSL_KEY_PATH}
 
   @ws path /ws /ws/*
