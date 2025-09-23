@@ -45,7 +45,7 @@ services:
     restart: unless-stopped
 
   api:
-    build: ./services/api
+    build: ./api
     restart: unless-stopped
     environment:
       - DOMAIN=${SERVER_NAME}
@@ -60,7 +60,7 @@ services:
       - redis
 
   signal:
-    build: ./services/signal
+    build: ./signal
     restart: unless-stopped
     environment:
       - REDIS_URL=redis://redis:6379
