@@ -36,12 +36,11 @@ services:
       exec turnserver -c /etc/turnserver.conf --static-auth-secret=\"${TURN_SECRET}\"
       "
     volumes:
-      - ./infra/turnserver.conf:/etc/turnserver.conf:ro
+      - ./coturn/turnserver.conf:/etc/turnserver.conf:ro
       - ${SSL_CERT_HOST_PATH}:/tls/fullchain.pem:ro
       - ${SSL_KEY_HOST_PATH}:/tls/privkey.pem:ro
 
-  redis:
-    image: redis:7-alpine
+  redis:\r\n    build: ./redis
     restart: unless-stopped
 
   api:
@@ -69,3 +68,4 @@ services:
       - redis
 
 volumes: {}
+
