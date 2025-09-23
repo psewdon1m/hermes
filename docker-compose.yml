@@ -1,16 +1,25 @@
 services:
-  caddy:
-    image: callstack-caddy
+  nginx:
+    depends_on:
+      - api
+      - signal
+    image: hermes-nginx
     build:
       context: .
-      dockerfile: ./caddy/Dockerfile
+      dockerfile: ./nginx/Dockerfile
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      SERVER_NAME: ${SERVER_NAME}
+      API_UPSTREAM: api:8080
+      SIGNAL_UPSTREAM: signal:8081
+      SSL_CERT_PATH: /etc/nginx/certs/fullchain.pem
+      SSL_KEY_PATH: /etc/nginx/certs/privkey.pem
     volumes:
-      - caddy_data:/data
-      - caddy_config:/config
+      - ${SSL_CERT_HOST_PATH}:/etc/nginx/certs/fullchain.pem:ro
+      - ${SSL_KEY_HOST_PATH}:/etc/nginx/certs/privkey.pem:ro
 
   coturn:
     image: coturn/coturn:latest
@@ -23,14 +32,15 @@ services:
       sh -lc "
       set -e;
       mkdir -p /var/lib/coturn/tls;
-      cp -f /tls/call.tgcall.us.crt /var/lib/coturn/tls/cert.crt;
-      cp -f /tls/call.tgcall.us.key /var/lib/coturn/tls/key.key;
+      cp -f /tls/fullchain.pem /var/lib/coturn/tls/cert.crt;
+      cp -f /tls/privkey.pem /var/lib/coturn/tls/key.key;
       chmod 0644 /var/lib/coturn/tls/cert.crt /var/lib/coturn/tls/key.key;
       exec turnserver -c /etc/turnserver.conf --static-auth-secret=\"${TURN_SECRET}\"
       "
     volumes:
       - ./infra/turnserver.conf:/etc/turnserver.conf:ro
-      - /var/lib/docker/volumes/callstack_caddy_data/_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/call.tgcall.us:/tls:ro
+      - ${SSL_CERT_HOST_PATH}:/tls/fullchain.pem:ro
+      - ${SSL_KEY_HOST_PATH}:/tls/privkey.pem:ro
 
   redis:
     image: redis:7-alpine
@@ -40,12 +50,12 @@ services:
     build: ./services/api
     restart: unless-stopped
     environment:
-      - DOMAIN=call.tgcall.us
-      - API_ORIGIN=https://call.tgcall.us
-      - WS_PUBLIC=wss://call.tgcall.us/ws
+      - DOMAIN=${SERVER_NAME}
+      - API_ORIGIN=https://${SERVER_NAME}
+      - WS_PUBLIC=wss://${SERVER_NAME}/ws
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=${JWT_SECRET}
-      - TURN_DOMAIN=call.tgcall.us
+      - TURN_DOMAIN=${SERVER_NAME}
       - TURN_SECRET=${TURN_SECRET}
       - TURN_TTL_SECONDS=600
     depends_on:
@@ -60,6 +70,4 @@ services:
     depends_on:
       - redis
 
-volumes:
-  caddy_data:
-  caddy_config:
+volumes: {}
