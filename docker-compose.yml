@@ -40,7 +40,8 @@ services:
       - ${SSL_CERT_HOST_PATH}:/tls/fullchain.pem:ro
       - ${SSL_KEY_HOST_PATH}:/tls/privkey.pem:ro
 
-  redis:\r\n    build: ./redis
+  redis:
+    build: ./redis
     restart: unless-stopped
 
   api:
@@ -68,4 +69,3 @@ services:
       - redis
 
 volumes: {}
-
