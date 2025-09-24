@@ -93,14 +93,14 @@ wss.on('connection', async (ws, req) => {
 
     if (!callId || !peerId || !sig) {
       send(ws, { type: 'error', error: 'bad_params' });
-      ws.close();
+      try { ws.close(4400, 'bad-params'); } catch { ws.close(); }
       return;
     }
 
     const jwt = verifyJWT(sig);
     if (!jwt || jwt.callId !== callId) {
       send(ws, { type: 'unauthorized' });
-      ws.close();
+      try { ws.close(4401, 'unauthorized'); } catch { ws.close(); }
       return;
     }
 
@@ -109,15 +109,17 @@ wss.on('connection', async (ws, req) => {
 
     if (!(await callExists(callId))) {
       send(ws, { type: 'room-expired' });
-      ws.close();
+      try { ws.close(4404, 'room-expired'); } catch { ws.close(); }
       return;
     }
 
     if (!observer) {
       const peersBefore = await listPeers(callId);
       if (peersBefore.length >= Number(MAX_PEERS_PER_CALL)) {
+        const entry = { ts: Date.now(), callId, peerId, role, message: 'room-full reject' };
+        try { await publishLog(callId, entry); } catch {}
         send(ws, { type: 'room-full' });
-        ws.close();
+        try { ws.close(4403, 'room-full'); } catch { ws.close(); }
         return;
       }
       await addPeer(callId, peerId);

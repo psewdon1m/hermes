@@ -9,6 +9,9 @@ const btnJoin = document.getElementById('joinBtn');
 // ---------- Helpers ----------
 const url   = new URL(location.href);
 const token = url.searchParams.get('token') || '';
+const debugSDP = url.searchParams.get('debug') === '1';
+const wsRetryLimit = Number(url.searchParams.get('wsRetryLimit') ?? 5);
+const wsRetryDelayMs = Number(url.searchParams.get('wsRetryDelayMs') ?? 1500);
 
 function formatLogPart(part){
   if (typeof part === 'string') return part;
@@ -53,6 +56,25 @@ async function resumePlay(el){
   try { await el.play(); } catch {}
 }
 
+function detectClient(){
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const vendor = navigator.vendor || "";
+  let device = "desktop";
+  if (/Android/i.test(ua)) device = "android";
+  else if (/iPhone|iPad|iPod/i.test(ua)) device = "ios";
+  else if (/Macintosh|MacIntel/i.test(ua)) device = "mac";
+  else if (/Windows/i.test(ua)) device = "windows";
+  const browserMatch = ua.match(/(Firefox|Chrome|Edg|Safari|OPR)\/(\d+\.?[\d]*)/i);
+  const browser = browserMatch ? `${browserMatch[1]} ${browserMatch[2]}` : "unknown";
+  return { ua, platform, vendor, device, browser };
+}
+
+function logClientInfo(){
+  const info = detectClient();
+  log('client info', JSON.stringify(info));
+}
+
 // Auto-resume playback after user interaction or when returning to the tab
 ['click','touchstart'].forEach(ev =>
   document.addEventListener(ev, () => { resumePlay(vLocal); resumePlay(vRemote); }, { passive:true })
@@ -72,6 +94,9 @@ let callId=null, role=null, iceServers=[], wsUrl=null;
 let myPeerId=null, otherPeer=null;
 const peers = new Set();
 let pendingCandidates = [];
+let wsRetryCount = 0;
+let statsTimer = null;
+const statsPrev = new Map();
 
 // perfect negotiation
 let makingOffer=false;
@@ -123,6 +148,7 @@ function attachRemoteStreamDebug(stream){
 }
 
 function newPC(){
+  stopStatsMonitor();
   pc = new RTCPeerConnection({ iceServers });
   pendingCandidates = [];
 
@@ -171,14 +197,14 @@ function newPC(){
   pc.oniceconnectionstatechange = () => {
     const st = pc.iceConnectionState;
     log('iceState', st);
-    if (st==='connected') attachRemoteStreamDebug(remoteStream);
-    if (st==='disconnected'||st==='failed') scheduleIceRestart();
+    if (st==='connected') { attachRemoteStreamDebug(remoteStream); startStatsMonitor(); }
+    if (st==='disconnected'||st==='failed') { scheduleIceRestart(); stopStatsMonitor(); }
   };
   pc.onconnectionstatechange = () => {
     const st = pc.connectionState;
     log('pcState', st);
-    if (st==='connected') attachRemoteStreamDebug(remoteStream);
-    if (st==='disconnected'||st==='failed') scheduleIceRestart();
+    if (st==='connected') { attachRemoteStreamDebug(remoteStream); startStatsMonitor(); }
+    if (st==='disconnected'||st==='failed') { scheduleIceRestart(); stopStatsMonitor(); }
   };
 }
 
@@ -201,6 +227,10 @@ async function flushPendingCandidates(){
 async function handleOffer(from, sdp){
   try {
     const offer = new RTCSessionDescription(sdp);
+    if (debugSDP) {
+      const head = (offer.sdp || '').split('\n').slice(0, 40).join('\\n');
+      log('[SDP] offer received', head);
+    }
     const offerCollision = (makingOffer || pc.signalingState !== 'stable');
 
     const ignoreOffer = !polite && offerCollision;
@@ -220,6 +250,10 @@ async function handleOffer(from, sdp){
     await flushPendingCandidates();
 
     const answer = await pc.createAnswer();
+    if (debugSDP) {
+      const head = (answer.sdp || '').split('\n').slice(0, 40).join('\\n');
+      log('[SDP] answer created', head);
+    }
     await pc.setLocalDescription(answer);
     bufferedSend({ type:'answer', target:from, payload:pc.localDescription });
     log('answer sent');
@@ -229,7 +263,12 @@ async function handleOffer(from, sdp){
 
 async function handleAnswer(_from, sdp){
   try {
-    await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+    const answerDesc = new RTCSessionDescription(sdp);
+    if (debugSDP) {
+      const head = (answerDesc.sdp || '').split('\n').slice(0, 40).join('\\n');
+      log('[SDP] answer received', head);
+    }
+    await pc.setRemoteDescription(answerDesc);
     await flushPendingCandidates();
     log('answer set');
   } catch(e){ log('handleAnswer ERR', e?.message || e); }
@@ -246,6 +285,7 @@ function setupWS(sigToken){
 
   ws.onopen = () => {
     wsReady = true;
+    wsRetryCount = 0;
     log('WS open');
     while (sendQueue.length) {
       const m = sendQueue.shift();
@@ -264,8 +304,14 @@ function setupWS(sigToken){
       return; // Disable auto retry
     }
 
-    log('WS close - retry in 1.5s');
-    setTimeout(() => setupWS(sigToken), 1500);
+    if (wsRetryCount >= wsRetryLimit) {
+      log('WS close - retries exhausted');
+      alert('Connection lost. Please reload the page.');
+      return;
+    }
+    wsRetryCount += 1;
+    log('WS close - retry', wsRetryCount, 'of', wsRetryLimit, 'in', wsRetryDelayMs, 'ms');
+    setTimeout(() => setupWS(sigToken), wsRetryDelayMs);
   };
 
   ws.onerror = (e) => log('WS error', e?.message || e);
@@ -290,6 +336,10 @@ function setupWS(sigToken){
         try {
           makingOffer = true;
           const offer = await pc.createOffer();
+          if (debugSDP) {
+            const head = (offer.sdp || '').split('\n').slice(0, 40).join('\\n');
+            log('[SDP] offer created', head);
+          }
           await pc.setLocalDescription(offer);
           log('offer sent');
         } finally { makingOffer = false; }
@@ -310,6 +360,10 @@ function setupWS(sigToken){
         try {
           makingOffer = true;
           const offer = await pc.createOffer();
+          if (debugSDP) {
+            const head = (offer.sdp || '').split('\n').slice(0, 40).join('\\n');
+            log('[SDP] offer created', head);
+          }
           await pc.setLocalDescription(offer);
           log('offer sent');
         } finally { makingOffer = false; }
@@ -321,6 +375,13 @@ function setupWS(sigToken){
     if (msg.type === 'peer-left') {
       peers.delete(msg.peerId);
       if (otherPeer === msg.peerId) otherPeer = pickOtherPeer();
+      return;
+    }
+
+    if (msg.type === 'room-full') {
+      log('room-full received');
+      alert('Room already full: maximum 2 participants.');
+      try { ws.close(4403, 'room-full'); } catch {}
       return;
     }
 
@@ -358,6 +419,7 @@ async function join(){
   sessionStorage.setItem(storageKey, myPeerId);
 
   log('join ok', callId, role, 'polite=', polite);
+  logClientInfo();
 
   // Acquire local media
   localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
@@ -377,6 +439,76 @@ btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)
 // Auto-join when token already in URL
 if (token) {
   join().catch(e => { log('ERR', e?.message || String(e)); });
+}
+
+// ---------- Media stats (periodic) ----------
+async function sampleStats(){
+  if (!pc) return null;
+  try {
+    const report = await pc.getStats();
+    const now = Date.now();
+    let inboundAudio = 0, inboundVideo = 0, outboundAudio = 0, outboundVideo = 0;
+    report.forEach(stat => {
+      if (!stat || typeof stat.type !== 'string') return;
+      if (stat.type === 'inbound-rtp' && !stat.isRemote) {
+        const key = stat.id;
+        const prev = statsPrev.get(key);
+        const bytes = stat.bytesReceived ?? 0;
+        if (prev) {
+          const deltaBytes = bytes - prev.bytes;
+          const deltaMs = now - prev.ts;
+          if (deltaBytes > 0 && deltaMs > 0) {
+            const kbps = (deltaBytes * 8) / deltaMs;
+            if ((stat.kind || stat.mediaType) === 'audio') inboundAudio += kbps;
+            if ((stat.kind || stat.mediaType) === 'video') inboundVideo += kbps;
+          }
+        }
+        statsPrev.set(key, { bytes, ts: now });
+      }
+      if (stat.type === 'outbound-rtp' && !stat.isRemote) {
+        const key = stat.id;
+        const prev = statsPrev.get(key);
+        const bytes = stat.bytesSent ?? 0;
+        if (prev) {
+          const deltaBytes = bytes - prev.bytes;
+          const deltaMs = now - prev.ts;
+          if (deltaBytes > 0 && deltaMs > 0) {
+            const kbps = (deltaBytes * 8) / deltaMs;
+            if ((stat.kind || stat.mediaType) === 'audio') outboundAudio += kbps;
+            if ((stat.kind || stat.mediaType) === 'video') outboundVideo += kbps;
+          }
+        }
+        statsPrev.set(key, { bytes, ts: now });
+      }
+    });
+    const round = value => Math.round(value * 10) / 10;
+    return {
+      inboundAudio: round(inboundAudio),
+      inboundVideo: round(inboundVideo),
+      outboundAudio: round(outboundAudio),
+      outboundVideo: round(outboundVideo)
+    };
+  } catch (err) {
+    log('stats error', err?.message || err);
+    return null;
+  }
+}
+
+function startStatsMonitor(){
+  if (statsTimer || !pc) return;
+  statsTimer = setInterval(async () => {
+    const stats = await sampleStats();
+    if (!stats) return;
+    log('[stats]', 'in_a=' + stats.inboundAudio + 'kbps', 'in_v=' + stats.inboundVideo + 'kbps', 'out_a=' + stats.outboundAudio + 'kbps', 'out_v=' + stats.outboundVideo + 'kbps');
+  }, 5000);
+}
+
+function stopStatsMonitor(){
+  if (statsTimer) {
+    clearInterval(statsTimer);
+    statsTimer = null;
+  }
+  statsPrev.clear();
 }
 
 
