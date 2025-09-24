@@ -425,7 +425,9 @@ function setupWS(sigToken){
         if (before !== polite) log('polite reassigned by tie-break:', polite);
       }
 
-      if (otherPeer) {
+      // Initiate offer only when rightful initiator
+      const rightfulInitiator = otherPeer && (!polite);
+      if (rightfulInitiator) {
         try {
           makingOffer = true;
           const offer = await pc.createOffer();
@@ -445,7 +447,7 @@ function setupWS(sigToken){
       peers.add(msg.peerId);
       otherPeer = pickOtherPeer();
 
-      if (otherPeer) {
+      if (otherPeer && !polite) {
         const before = polite;
         polite = (myPeerId > otherPeer);
         if (before !== polite) log('polite reassigned by tie-break:', polite);
@@ -468,6 +470,8 @@ function setupWS(sigToken){
     if (msg.type === 'peer-left') {
       peers.delete(msg.peerId);
       if (otherPeer === msg.peerId) otherPeer = pickOtherPeer();
+      // optional: rebuild to reset state for upcoming peer
+      try { await rebuildPCAndRenegotiate(); } catch {}
       return;
     }
 
@@ -519,17 +523,21 @@ async function join(){
 
   // Acquire local media (tolerant)
   localStream = null;
+  let gumOk = false;
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
+    gumOk = true;
   } catch (e1) {
     log('media error', e1?.name || e1?.message || String(e1));
     try {
       localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+      gumOk = true;
       log('fallback media: audio only');
     } catch (e2) {
       log('media error (audio only)', e2?.name || e2?.message || String(e2));
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio:false, video:true });
+        gumOk = true;
         log('fallback media: video only');
       } catch (e3) {
         log('media error (video only)', e3?.name || e3?.message || String(e3));
@@ -541,7 +549,36 @@ async function join(){
   if (localStream) {
     localStream.getTracks().forEach(t => {
       log('local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
-      t.onended = () => log('local track ended', t.kind);
+      t.onended = async () => {
+        log('local track ended', t.kind, '— try recover');
+        try {
+          const constraints = t.kind === 'video' ? { video:true } : { audio:true };
+          const fresh = await navigator.mediaDevices.getUserMedia(constraints);
+          const newTrack = t.kind === 'video' ? fresh.getVideoTracks()[0] : fresh.getAudioTracks()[0];
+          if (newTrack) {
+            // Update localStream: remove ended track and add fresh one
+            try { if (localStream) localStream.removeTrack(t); } catch {}
+            try { if (localStream) localStream.addTrack(newTrack); } catch {}
+            vLocal.srcObject = localStream;
+
+            // Replace on sender if exists, otherwise rebuild
+            const sender = pc && pc.getSenders ? pc.getSenders().find(s => s.track && s.track.kind === t.kind) : null;
+            if (sender && sender.replaceTrack) {
+              await sender.replaceTrack(newTrack);
+              log('track recovered via replaceTrack', t.kind);
+              try { fresh.getTracks().forEach(x => { if (x !== newTrack) x.stop(); }); } catch {}
+              // renegotiate to sync m-lines
+              await rebuildPCAndRenegotiate();
+              return;
+            }
+
+            await rebuildPCAndRenegotiate();
+            return;
+          }
+        } catch (err) {
+          log('recover track ERR', err?.name || err?.message || String(err));
+        }
+      };
       t.onmute = () => log('local track mute', t.kind);
       t.onunmute = () => log('local track unmute', t.kind);
     });
@@ -549,6 +586,10 @@ async function join(){
   resumePlay(vLocal);
 
   // PC + WS
+  if (!gumOk && (!localStream || (!localStream.getAudioTracks().length && !localStream.getVideoTracks().length))) {
+    log('entering recvonly mode: starting signaling without local tracks');
+    localStream = new MediaStream();
+  }
   newPC();
   setupWS(joinSigToken);
 }
