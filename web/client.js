@@ -5,6 +5,8 @@ const logEl   = document.getElementById('log');
 const vLocal  = document.getElementById('local');
 const vRemote = document.getElementById('remote');
 const btnJoin = document.getElementById('joinBtn');
+const btnCam  = document.getElementById('camBtn');
+const btnMic  = document.getElementById('micBtn');
 
 // ---------- Helpers ----------
 const url   = new URL(location.href);
@@ -124,8 +126,18 @@ function safeClosePC(){
   pc = null;
 }
 
-function rebuildPCAndRenegotiate(){
+function tryRollback(){
+  try {
+    if (pc && pc.signalingState && pc.signalingState !== 'stable') {
+      return pc.setLocalDescription({ type:'rollback' }).catch(() => {});
+    }
+  } catch {}
+  return Promise.resolve();
+}
+
+async function rebuildPCAndRenegotiate(){
   log('rebuild PC and renegotiate');
+  await tryRollback();
   safeClosePC();
   newPC();
   if (otherPeer) {
@@ -346,6 +358,11 @@ function setupWS(sigToken){
     wsReady = false;
     // reset PC to avoid stale transceivers/m-line ordering issues
     safeClosePC();
+    // clear signaling state
+    makingOffer = false;
+    otherPeer = null;
+    pendingCandidates = [];
+    peers.clear();
 
     // Do not retry if server replied "room full" (or bad request).
     if (ev && (ev.code === 4403 || ev.code === 4400)) {
@@ -371,9 +388,20 @@ function setupWS(sigToken){
           iceServers = resp.iceServers || [];
           wsUrl  = resp.wsUrl;
           lastJoinRefresh = now;
+          polite = (role === 'answerer');
+          makingOffer = false;
+          otherPeer = null;
+          pendingCandidates = [];
+          peers.clear();
           log('refreshed join on retry');
         }
       } catch (e) { log('join refresh failed', e?.message || e); }
+      // Ensure role/politeness reset even without refresh window
+      polite = (role === 'answerer');
+      makingOffer = false;
+      otherPeer = null;
+      pendingCandidates = [];
+      peers.clear();
       newPC();
       setupWS(joinSigToken);
     }, wsRetryDelayMs);
@@ -526,6 +554,33 @@ async function join(){
 }
 
 btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)); alert('Join failed'); }); };
+
+// Mic/Cam toggles: do not stop tracks; use enabled=false to keep RTP alive
+btnCam.onclick = () => {
+  try {
+    const videoTracks = (localStream && localStream.getVideoTracks()) || [];
+    if (videoTracks.length) {
+      const t = videoTracks[0];
+      t.enabled = !t.enabled;
+      log('video toggle', t.enabled ? 'on' : 'off');
+    } else {
+      log('video toggle: no video track');
+    }
+  } catch (e) { log('video toggle ERR', e?.message || e); }
+};
+
+btnMic.onclick = () => {
+  try {
+    const audioTracks = (localStream && localStream.getAudioTracks()) || [];
+    if (audioTracks.length) {
+      const t = audioTracks[0];
+      t.enabled = !t.enabled;
+      log('audio toggle', t.enabled ? 'on' : 'off');
+    } else {
+      log('audio toggle: no audio track');
+    }
+  } catch (e) { log('audio toggle ERR', e?.message || e); }
+};
 
 // Auto-join when token already in URL
 if (token) {
