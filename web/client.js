@@ -92,6 +92,8 @@ let sendQueue=[];
 let localStream=null;
 let callId=null, role=null, iceServers=[], wsUrl=null;
 let myPeerId=null, otherPeer=null;
+let joinSigToken=null;
+let lastJoinRefresh=0;
 const peers = new Set();
 let pendingCandidates = [];
 let wsRetryCount = 0;
@@ -112,6 +114,36 @@ function bufferedSend(obj){
     try { ws.send(JSON.stringify(obj)); } catch {}
   } else {
     sendQueue.push(obj);
+  }
+}
+
+function safeClosePC(){
+  stopStatsMonitor();
+  try { if (pc) pc.ontrack = pc.onicecandidate = pc.oniceconnectionstatechange = pc.onconnectionstatechange = null; } catch {}
+  try { if (pc) pc.close(); } catch {}
+  pc = null;
+}
+
+function rebuildPCAndRenegotiate(){
+  log('rebuild PC and renegotiate');
+  safeClosePC();
+  newPC();
+  if (otherPeer) {
+    (async () => {
+      try {
+        makingOffer = true;
+        const offer = await pc.createOffer();
+        if (debugSDP) {
+          const head = (offer.sdp || '').split('\n').slice(0, 40).join('\\n');
+          log('[SDP] offer created (rebuild)', head);
+        }
+        await pc.setLocalDescription(offer);
+        bufferedSend({ type:'offer', target:otherPeer, payload:pc.localDescription });
+        log('offer sent (rebuild)');
+      } catch (e) {
+        log('rebuild offer ERR', e?.message || e);
+      } finally { makingOffer = false; }
+    })();
   }
 }
 
@@ -198,13 +230,19 @@ function newPC(){
     const st = pc.iceConnectionState;
     log('iceState', st);
     if (st==='connected') { attachRemoteStreamDebug(remoteStream); startStatsMonitor(); }
-    if (st==='disconnected'||st==='failed') { scheduleIceRestart(); stopStatsMonitor(); }
+    if (st==='disconnected'||st==='failed') {
+      stopStatsMonitor();
+      rebuildPCAndRenegotiate();
+    }
   };
   pc.onconnectionstatechange = () => {
     const st = pc.connectionState;
     log('pcState', st);
     if (st==='connected') { attachRemoteStreamDebug(remoteStream); startStatsMonitor(); }
-    if (st==='disconnected'||st==='failed') { scheduleIceRestart(); stopStatsMonitor(); }
+    if (st==='disconnected'||st==='failed') {
+      stopStatsMonitor();
+      rebuildPCAndRenegotiate();
+    }
   };
 }
 
@@ -258,7 +296,12 @@ async function handleOffer(from, sdp){
     bufferedSend({ type:'answer', target:from, payload:pc.localDescription });
     log('answer sent');
     otherPeer = from;
-  } catch(e){ log('handleOffer ERR', e?.message || e); }
+  } catch(e){
+    log('handleOffer ERR', e?.message || e);
+    if (/m-?lines?/i.test(String(e?.message || ''))) {
+      rebuildPCAndRenegotiate();
+    }
+  }
 }
 
 async function handleAnswer(_from, sdp){
@@ -271,7 +314,12 @@ async function handleAnswer(_from, sdp){
     await pc.setRemoteDescription(answerDesc);
     await flushPendingCandidates();
     log('answer set');
-  } catch(e){ log('handleAnswer ERR', e?.message || e); }
+  } catch(e){
+    log('handleAnswer ERR', e?.message || e);
+    if (/m-?lines?/i.test(String(e?.message || ''))) {
+      rebuildPCAndRenegotiate();
+    }
+  }
 }
 
 // ---------- WebSocket (signaling) ----------
@@ -296,6 +344,8 @@ function setupWS(sigToken){
 
   ws.onclose = (ev) => {
     wsReady = false;
+    // reset PC to avoid stale transceivers/m-line ordering issues
+    safeClosePC();
 
     // Do not retry if server replied "room full" (or bad request).
     if (ev && (ev.code === 4403 || ev.code === 4400)) {
@@ -311,7 +361,22 @@ function setupWS(sigToken){
     }
     wsRetryCount += 1;
     log('WS close - retry', wsRetryCount, 'of', wsRetryLimit, 'in', wsRetryDelayMs, 'ms');
-    setTimeout(() => setupWS(sigToken), wsRetryDelayMs);
+    setTimeout(async () => {
+      try {
+        const now = Date.now();
+        if (joinSigToken && (now - lastJoinRefresh > 120000)) {
+          const resp = await api('/join', { token: joinSigToken });
+          callId = resp.callId;
+          role   = resp.role;
+          iceServers = resp.iceServers || [];
+          wsUrl  = resp.wsUrl;
+          lastJoinRefresh = now;
+          log('refreshed join on retry');
+        }
+      } catch (e) { log('join refresh failed', e?.message || e); }
+      newPC();
+      setupWS(joinSigToken);
+    }, wsRetryDelayMs);
   };
 
   ws.onerror = (e) => log('WS error', e?.message || e);
@@ -409,6 +474,9 @@ async function join(){
   role       = resp.role;
   iceServers = resp.iceServers || [];
   wsUrl      = resp.wsUrl;
+  joinSigToken = token;
+  try { sessionStorage.setItem('joinToken', token); } catch {}
+  lastJoinRefresh = Date.now();
 
   // Pre-set politeness from role: answerer starts polite
   polite = (role === 'answerer');
@@ -421,17 +489,40 @@ async function join(){
   log('join ok', callId, role, 'polite=', polite);
   logClientInfo();
 
-  // Acquire local media
-  localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
+  // Acquire local media (tolerant)
+  localStream = null;
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
+  } catch (e1) {
+    log('media error', e1?.name || e1?.message || String(e1));
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+      log('fallback media: audio only');
+    } catch (e2) {
+      log('media error (audio only)', e2?.name || e2?.message || String(e2));
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio:false, video:true });
+        log('fallback media: video only');
+      } catch (e3) {
+        log('media error (video only)', e3?.name || e3?.message || String(e3));
+        log('proceed without local media');
+      }
+    }
+  }
   vLocal.srcObject = localStream;
-  localStream.getTracks().forEach(t => {
-    log('local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
-  });
+  if (localStream) {
+    localStream.getTracks().forEach(t => {
+      log('local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
+      t.onended = () => log('local track ended', t.kind);
+      t.onmute = () => log('local track mute', t.kind);
+      t.onunmute = () => log('local track unmute', t.kind);
+    });
+  }
   resumePlay(vLocal);
 
   // PC + WS
   newPC();
-  setupWS(token);
+  setupWS(joinSigToken);
 }
 
 btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)); alert('Join failed'); }); };
@@ -439,6 +530,15 @@ btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)
 // Auto-join when token already in URL
 if (token) {
   join().catch(e => { log('ERR', e?.message || String(e)); });
+} else {
+  try {
+    const saved = sessionStorage.getItem('joinToken');
+    if (saved) {
+      const u = new URL(location.href);
+      u.searchParams.set('token', saved);
+      location.replace(u.toString());
+    }
+  } catch {}
 }
 
 // ---------- Media stats (periodic) ----------
@@ -510,6 +610,9 @@ function stopStatsMonitor(){
   }
   statsPrev.clear();
 }
+
+
+
 
 
 
