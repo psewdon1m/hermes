@@ -46,6 +46,7 @@ let localStream=null;
 let callId=null, role=null, iceServers=[], wsUrl=null;
 let myPeerId=null, otherPeer=null;
 const peers = new Set();
+let pendingCandidates = [];
 
 // perfect negotiation
 let makingOffer=false;
@@ -98,6 +99,7 @@ function attachRemoteStreamDebug(stream){
 
 function newPC(){
   pc = new RTCPeerConnection({ iceServers });
+  pendingCandidates = [];
 
   // заранее объявляем двунаправленные m-lines — помогает некоторым WebView
   try {
@@ -161,6 +163,16 @@ function pickOtherPeer(){
 }
 
 // ---------- Perfect Negotiation ----------
+async function flushPendingCandidates(){
+  if (!pc || !pendingCandidates.length) return;
+  const queued = pendingCandidates;
+  pendingCandidates = [];
+  for (const cand of queued) {
+    try { await pc.addIceCandidate(cand); }
+    catch (e) { log('addIce ERR queued', e?.message || e); }
+  }
+}
+
 async function handleOffer(from, sdp){
   try {
     const offer = new RTCSessionDescription(sdp);
@@ -180,6 +192,8 @@ async function handleOffer(from, sdp){
       await pc.setRemoteDescription(offer);
     }
 
+    await flushPendingCandidates();
+
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     bufferedSend({ type:'answer', target:from, payload:pc.localDescription });
@@ -191,6 +205,7 @@ async function handleOffer(from, sdp){
 async function handleAnswer(_from, sdp){
   try {
     await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+    await flushPendingCandidates();
     log('answer set');
   } catch(e){ log('handleAnswer ERR', e?.message || e); }
 }
@@ -288,6 +303,10 @@ function setupWS(sigToken){
     if (msg.type === 'answer')  return handleAnswer(msg.from, msg.payload);
 
     if (msg.type === 'candidate') {
+      if (!pc.remoteDescription || pc.remoteDescription.type === 'rollback') {
+        pendingCandidates.push(msg.payload);
+        return;
+      }
       try { await pc.addIceCandidate(msg.payload); }
       catch (e) { log('addIce ERR', e.message); }
       return;
