@@ -9,6 +9,9 @@ const btnJoin = document.getElementById('joinBtn');
 // ---------- Helpers ----------
 const url   = new URL(location.href);
 const token = url.searchParams.get('token') || '';
+const debugSDP = url.searchParams.get('debug') === '1';
+const wsRetryLimit = Number(url.searchParams.get('wsRetryLimit') ?? 5);
+const wsRetryDelayMs = Number(url.searchParams.get('wsRetryDelayMs') ?? 1500);
 
 function formatLogPart(part){
   if (typeof part === 'string') return part;
@@ -52,6 +55,33 @@ async function resumePlay(el){
   if (!el) return;
   try { await el.play(); } catch {}
 }
+function detectClient(){
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const vendor = navigator.vendor || "";
+  let device = "desktop";
+  if (/Android/i.test(ua)) device = "android";
+  else if (/iPhone|iPad|iPod/i.test(ua)) device = "ios";
+  else if (/Macintosh|MacIntel/i.test(ua)) device = "mac";
+  else if (/Windows/i.test(ua)) device = "windows";
+  const browserMatch = ua.match(/(Firefox|Chrome|Edg|Safari|OPR)\/([\d\.]+)/i);
+  const browser = browserMatch ? `${browserMatch[1]} ${browserMatch[2]}` : "unknown";
+  return { ua, platform, vendor, device, browser };
+}
+
+function logClientInfo(){
+  const info = detectClient();
+  log('client info', JSON.stringify(info));
+}
+
+function logSDP(label, desc){
+  if (!debugSDP || !desc) return;
+  const sdp = typeof desc === 'string' ? desc : desc.sdp;
+  if (!sdp) return;
+  const head = sdp.split("\n").slice(0, 40).join("\\n");
+  log(label, head);
+}
+
 
 // Auto-resume playback after user interaction or when returning to the tab
 ['click','touchstart'].forEach(ev =>
@@ -72,6 +102,9 @@ let callId=null, role=null, iceServers=[], wsUrl=null;
 let myPeerId=null, otherPeer=null;
 const peers = new Set();
 let pendingCandidates = [];
+let wsRetryCount = 0;
+let statsTimer = null;
+const statsPrev = new Map();
 
 // perfect negotiation
 let makingOffer=false;
@@ -96,6 +129,7 @@ async function doIceRestart(){
     log('ICE restart...');
     makingOffer = true;
     const offer = await pc.createOffer({ iceRestart:true });
+    logSDP('[SDP] offer created', offer);
     await pc.setLocalDescription(offer);
     makingOffer = false;
     if (otherPeer) bufferedSend({ type:'offer', target:otherPeer, payload:pc.localDescription });
@@ -113,16 +147,87 @@ function scheduleIceRestart(){
   }, 3000);
 }
 
+async function sampleStats(){
+  if (!pc) return null;
+  try {
+    const report = await pc.getStats();
+    const now = Date.now();
+    let inboundAudio = 0, inboundVideo = 0, outboundAudio = 0, outboundVideo = 0;
+    report.forEach(stat => {
+      if (!stat || typeof stat.type !== 'string') return;
+      if (stat.type === 'inbound-rtp' && !stat.isRemote) {
+        const key = stat.id;
+        const prev = statsPrev.get(key);
+        const bytes = stat.bytesReceived ?? 0;
+        if (prev) {
+          const deltaBytes = bytes - prev.bytes;
+          const deltaMs = now - prev.ts;
+          if (deltaBytes > 0 && deltaMs > 0) {
+            const kbps = (deltaBytes * 8) / deltaMs;
+            if ((stat.kind || stat.mediaType) === 'audio') inboundAudio += kbps;
+            if ((stat.kind || stat.mediaType) === 'video') inboundVideo += kbps;
+          }
+        }
+        statsPrev.set(key, { bytes, ts: now });
+      }
+      if (stat.type === 'outbound-rtp' && !stat.isRemote) {
+        const key = stat.id;
+        const prev = statsPrev.get(key);
+        const bytes = stat.bytesSent ?? 0;
+        if (prev) {
+          const deltaBytes = bytes - prev.bytes;
+          const deltaMs = now - prev.ts;
+          if (deltaBytes > 0 && deltaMs > 0) {
+            const kbps = (deltaBytes * 8) / deltaMs;
+            if ((stat.kind || stat.mediaType) === 'audio') outboundAudio += kbps;
+            if ((stat.kind || stat.mediaType) === 'video') outboundVideo += kbps;
+          }
+        }
+        statsPrev.set(key, { bytes, ts: now });
+      }
+    });
+    const round = value => Math.round(value * 10) / 10;
+    return {
+      inboundAudio: round(inboundAudio),
+      inboundVideo: round(inboundVideo),
+      outboundAudio: round(outboundAudio),
+      outboundVideo: round(outboundVideo)
+    };
+  } catch (err) {
+    log('stats error', err?.message || err);
+    return null;
+  }
+}
+
+function startStatsMonitor(){
+  if (statsTimer || !pc) return;
+  statsTimer = setInterval(async () => {
+    const stats = await sampleStats();
+    if (!stats) return;
+    log('[stats]', 'in_a=' + stats.inboundAudio + 'kbps', 'in_v=' + stats.inboundVideo + 'kbps', 'out_a=' + stats.outboundAudio + 'kbps', 'out_v=' + stats.outboundVideo + 'kbps');
+  }, 5000);
+}
+
+function stopStatsMonitor(){
+  if (statsTimer) {
+    clearInterval(statsTimer);
+    statsTimer = null;
+  }
+  statsPrev.clear();
+}
 // ---------- RTCPeerConnection ----------
 function attachRemoteStreamDebug(stream){
   const tracks = stream.getTracks()
     .map(t => `${t.kind}:${t.readyState}:${t.enabled}`)
     .join(',');
-  log('[remote attach] tracks=[', tracks, ']',
+  const videoTracks = stream.getVideoTracks().length;
+  const audioTracks = stream.getAudioTracks().length;
+  log('[remote attach] tracks=[', tracks, ']', 'paused=', vRemote?.paused, 'readyState=', vRemote?.readyState ?? '?', 'videoTracks=', videoTracks, 'audioTracks=', audioTracks);
       'paused=', vRemote?.paused, 'readyState=', vRemote?.readyState ?? '?');
 }
 
 function newPC(){
+  stopStatsMonitor();
   pc = new RTCPeerConnection({ iceServers });
   pendingCandidates = [];
 
@@ -149,7 +254,12 @@ function newPC(){
     const s = ev.streams?.[0];
     log('ontrack kind=', ev.track?.kind, 'state=', ev.track?.readyState, 'enabled=', ev.track?.enabled);
     if (s) {
-      s.getTracks().forEach(t => remoteStream.addTrack(t));
+      s.getTracks().forEach(t => {
+        remoteStream.addTrack(t);
+        t.onmute = () => log('remote track mute', t.kind);
+        t.onunmute = () => log('remote track unmute', t.kind);
+        t.onended = () => log('remote track ended', t.kind);
+      });
       attachRemoteStreamDebug(remoteStream);
       resumePlay(vRemote);
     }
@@ -171,14 +281,14 @@ function newPC(){
   pc.oniceconnectionstatechange = () => {
     const st = pc.iceConnectionState;
     log('iceState', st);
-    if (st==='connected') attachRemoteStreamDebug(remoteStream);
-    if (st==='disconnected'||st==='failed') scheduleIceRestart();
+    if (st==='connected') { attachRemoteStreamDebug(remoteStream); startStatsMonitor(); }
+    if (st==='disconnected'||st==='failed') { scheduleIceRestart(); stopStatsMonitor(); }
   };
   pc.onconnectionstatechange = () => {
     const st = pc.connectionState;
     log('pcState', st);
-    if (st==='connected') attachRemoteStreamDebug(remoteStream);
-    if (st==='disconnected'||st==='failed') scheduleIceRestart();
+    if (st==='connected') { attachRemoteStreamDebug(remoteStream); startStatsMonitor(); }
+    if (st==='disconnected'||st==='failed') { scheduleIceRestart(); stopStatsMonitor(); }
   };
 }
 
@@ -201,6 +311,7 @@ async function flushPendingCandidates(){
 async function handleOffer(from, sdp){
   try {
     const offer = new RTCSessionDescription(sdp);
+    logSDP('[SDP] offer received', offer);
     const offerCollision = (makingOffer || pc.signalingState !== 'stable');
 
     const ignoreOffer = !polite && offerCollision;
@@ -220,6 +331,7 @@ async function handleOffer(from, sdp){
     await flushPendingCandidates();
 
     const answer = await pc.createAnswer();
+    logSDP('[SDP] answer created', answer);
     await pc.setLocalDescription(answer);
     bufferedSend({ type:'answer', target:from, payload:pc.localDescription });
     log('answer sent');
@@ -229,7 +341,9 @@ async function handleOffer(from, sdp){
 
 async function handleAnswer(_from, sdp){
   try {
-    await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+    const answerDesc = new RTCSessionDescription(sdp);
+    logSDP('[SDP] answer received', answerDesc);
+    await pc.setRemoteDescription(answerDesc);
     await flushPendingCandidates();
     log('answer set');
   } catch(e){ log('handleAnswer ERR', e?.message || e); }
@@ -246,6 +360,7 @@ function setupWS(sigToken){
 
   ws.onopen = () => {
     wsReady = true;
+    wsRetryCount = 0;
     log('WS open');
     while (sendQueue.length) {
       const m = sendQueue.shift();
@@ -264,8 +379,13 @@ function setupWS(sigToken){
       return; // Disable auto retry
     }
 
-    log('WS close - retry in 1.5s');
-    setTimeout(() => setupWS(sigToken), 1500);
+    if (wsRetryCount >= wsRetryLimit) {
+      log('WS close - retries exhausted');
+      return;
+    }
+    wsRetryCount += 1;
+    log('WS close - retry', wsRetryCount, 'of', wsRetryLimit, 'in', wsRetryDelayMs, 'ms');
+    setTimeout(() => setupWS(sigToken), wsRetryDelayMs);
   };
 
   ws.onerror = (e) => log('WS error', e?.message || e);
@@ -290,6 +410,7 @@ function setupWS(sigToken){
         try {
           makingOffer = true;
           const offer = await pc.createOffer();
+          logSDP('[SDP] offer created', offer);
           await pc.setLocalDescription(offer);
           log('offer sent');
         } finally { makingOffer = false; }
@@ -310,6 +431,7 @@ function setupWS(sigToken){
         try {
           makingOffer = true;
           const offer = await pc.createOffer();
+          logSDP('[SDP] offer created', offer);
           await pc.setLocalDescription(offer);
           log('offer sent');
         } finally { makingOffer = false; }
@@ -359,11 +481,16 @@ async function join(){
 
   log('join ok', callId, role, 'polite=', polite);
 
+  logClientInfo();
+
   // Acquire local media
   localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
   vLocal.srcObject = localStream;
   localStream.getTracks().forEach(t => {
     log('local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
+    t.onmute = () => log('local track mute', t.kind);
+    t.onunmute = () => log('local track unmute', t.kind);
+    t.onended = () => log('local track ended', t.kind);
   });
   resumePlay(vLocal);
 
@@ -378,7 +505,6 @@ btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)
 if (token) {
   join().catch(e => { log('ERR', e?.message || String(e)); });
 }
-
 
 
 

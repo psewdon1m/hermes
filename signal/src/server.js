@@ -116,6 +116,7 @@ wss.on('connection', async (ws, req) => {
     if (!observer) {
       const peersBefore = await listPeers(callId);
       if (peersBefore.length >= Number(MAX_PEERS_PER_CALL)) {
+        await publishLog(callId, { ts: Date.now(), callId, peerId, role, message: 'room-full reject' });
         send(ws, { type: 'room-full' });
         ws.close();
         return;
@@ -206,3 +207,4 @@ wss.on('connection', async (ws, req) => {
 server.listen(Number(PORT), () => {
   console.log(`Signal WS on :${PORT}`);
 });
+
