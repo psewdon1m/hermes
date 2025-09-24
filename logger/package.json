@@ -1,0 +1,13 @@
+﻿{
+  "name": "call-logger",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "colorette": "^2.0.20",
+    "ioredis": "^5.4.1"
+  }
+}

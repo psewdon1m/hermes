@@ -1,4 +1,4 @@
-services:
+﻿services:
   caddy:
     depends_on:
       - api
@@ -68,4 +68,23 @@ services:
     depends_on:
       - redis
 
+  logger:
+    build: ./logger
+    depends_on:
+      - redis
+    environment:
+      REDIS_URL: redis://redis:6379
+      LOGGER_CALL_FILTER: ${LOGGER_CALL_FILTER}
+      LOGGER_INCLUDE_DETAIL: ${LOGGER_INCLUDE_DETAIL}
+      LOGGER_FILE_PATH: /var/log/calls/observer.log
+    volumes:
+      - ./log-output:/var/log/calls
+    restart: unless-stopped
+
 volumes: {}
+
+
+
+
+
+

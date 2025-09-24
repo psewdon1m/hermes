@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 // ---------- DOM ----------
 const logEl   = document.getElementById('log');
@@ -10,7 +10,32 @@ const btnJoin = document.getElementById('joinBtn');
 const url   = new URL(location.href);
 const token = url.searchParams.get('token') || '';
 
-function log(...a){ if (logEl) logEl.textContent += a.join(' ') + '\n'; }
+function formatLogPart(part){
+  if (typeof part === 'string') return part;
+  if (part === null || part === undefined) return String(part);
+  if (typeof part === 'number' || typeof part === 'boolean') return String(part);
+  try { return JSON.stringify(part); }
+  catch { return String(part); }
+}
+
+function log(...a){
+  const text = a.map(formatLogPart).join(' ');
+  if (logEl) logEl.textContent += text + '\n';
+  sendLogEvent(text, a);
+}
+
+function sendLogEvent(text, args = []){
+  if (!wsUrl) return;
+  const payload = {
+    ts: Date.now(),
+    callId: callId ?? null,
+    peerId: myPeerId ?? null,
+    role: role ?? null,
+    message: text
+  };
+  if (args.length) payload.detail = args.map(formatLogPart);
+  bufferedSend({ type: 'log', payload });
+}
 function rid(){ return Math.random().toString(36).slice(2, 10); }
 
 async function api(path, body){
@@ -327,12 +352,12 @@ async function join(){
   // Pre-set politeness from role: answerer starts polite
   polite = (role === 'answerer');
 
-  log('join ok', callId, role, 'polite=', polite);
-
   // Stable peerId per tab/browser (for tie-break and auto re-invite)
   const storageKey = `peerId:${callId}`;
   myPeerId = sessionStorage.getItem(storageKey) || rid();
   sessionStorage.setItem(storageKey, myPeerId);
+
+  log('join ok', callId, role, 'polite=', polite);
 
   // Acquire local media
   localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
@@ -353,3 +378,8 @@ btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)
 if (token) {
   join().catch(e => { log('ERR', e?.message || String(e)); });
 }
+
+
+
+
+
