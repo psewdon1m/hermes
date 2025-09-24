@@ -28,7 +28,7 @@ async function resumePlay(el){
   try { await el.play(); } catch {}
 }
 
-// авто-резюм при пользовательском взаимодействии/возврате во вкладку
+// Auto-resume playback after user interaction or when returning to the tab
 ['click','touchstart'].forEach(ev =>
   document.addEventListener(ev, () => { resumePlay(vLocal); resumePlay(vRemote); }, { passive:true })
 );
@@ -50,7 +50,7 @@ let pendingCandidates = [];
 
 // perfect negotiation
 let makingOffer=false;
-let polite=false; // стартовое значение по роли, затем может переопределяться tie-break’ом
+let polite=false; // Initial value comes from the role; tie-break can override it
 
 // ICE restart
 let wantIceRestart=false;
@@ -101,20 +101,20 @@ function newPC(){
   pc = new RTCPeerConnection({ iceServers });
   pendingCandidates = [];
 
-  // заранее объявляем двунаправленные m-lines — помогает некоторым WebView
+  // Pre-create bidirectional m-lines (some WebViews need this)
   try {
     pc.addTransceiver('video', { direction:'sendrecv' });
     pc.addTransceiver('audio', { direction:'sendrecv' });
   } catch {}
 
-  // локальные треки
+  // Attach local tracks
   if (localStream) {
     localStream.getTracks().forEach(t => {
       pc.addTrack(t, localStream);
     });
   }
 
-  // удалённый стрим
+  // Prepare remote stream
   const remoteStream = new MediaStream();
   vRemote.srcObject = remoteStream;
   attachRemoteStreamDebug(remoteStream);
@@ -232,14 +232,14 @@ function setupWS(sigToken){
   ws.onclose = (ev) => {
     wsReady = false;
 
-    // НЕ ретраим, если сервер сообщил "комната заполнена" (или плохой запрос).
+    // Do not retry if server replied "room full" (or bad request).
     if (ev && (ev.code === 4403 || ev.code === 4400)) {
       log('WS closed:', ev.code, ev.reason || 'room_full');
-      alert('Комната уже занята: максимум 2 участника.');
-      return; // отключаем авто-ретраи
+      alert('Room already full: maximum 2 participants.');
+      return; // Disable auto retry
     }
 
-    log('WS close — retry in 1.5s');
+    log('WS close - retry in 1.5s');
     setTimeout(() => setupWS(sigToken), 1500);
   };
 
@@ -249,12 +249,12 @@ function setupWS(sigToken){
     let msg; try { msg = JSON.parse(ev.data); } catch { return; }
 
     if (msg.type === 'peers') {
-      // полный слепок
+      // Full snapshot
       peers.clear();
       (msg.peers || []).forEach(id => peers.add(id));
       otherPeer = pickOtherPeer();
 
-      // tie-break: «больший» peerId становится polite=true
+      // tie-break: lexicographically larger peerId becomes polite=true
       if (otherPeer) {
         const before = polite;
         polite = (myPeerId > otherPeer);
@@ -316,7 +316,7 @@ function setupWS(sigToken){
 
 // ---------- Join flow ----------
 async function join(){
-  if (!token) { alert('Нет token в URL'); return; }
+  if (!token) { alert('Token is missing in URL'); return; }
 
   const resp = await api('/join', { token });
   callId     = resp.callId;
@@ -324,17 +324,17 @@ async function join(){
   iceServers = resp.iceServers || [];
   wsUrl      = resp.wsUrl;
 
-  // предварительная «вежливость» по роли: answerer = более вежливый
+  // Pre-set politeness from role: answerer starts polite
   polite = (role === 'answerer');
 
   log('join ok', callId, role, 'polite=', polite);
 
-  // стабильный peerId на вкладку/браузер (для tie-break и авто-реинвайта)
+  // Stable peerId per tab/browser (for tie-break and auto re-invite)
   const storageKey = `peerId:${callId}`;
   myPeerId = sessionStorage.getItem(storageKey) || rid();
   sessionStorage.setItem(storageKey, myPeerId);
 
-  // локальные медиа
+  // Acquire local media
   localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
   vLocal.srcObject = localStream;
   localStream.getTracks().forEach(t => {
@@ -347,9 +347,9 @@ async function join(){
   setupWS(token);
 }
 
-btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)); alert('Ошибка присоединения'); }); };
+btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)); alert('Join failed'); }); };
 
-// авто-join если token уже в URL
+// Auto-join when token already in URL
 if (token) {
   join().catch(e => { log('ERR', e?.message || String(e)); });
 }
