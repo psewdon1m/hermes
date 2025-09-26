@@ -1,11 +1,14 @@
 // ---------- MediaSession Class ----------
 export class MediaSession {
-  constructor(signalingSession, logger, logPermissionsInfo, resumePlay, debugSDP) {
+  constructor(signalingSession, logger, logPermissionsInfo, resumePlay, debugSDP, vLocal, vRemote, diagEl) {
     this.signaling = signalingSession;
     this.log = logger;
     this.logPermissionsInfo = logPermissionsInfo;
     this.resumePlay = resumePlay;
     this.debugSDP = debugSDP;
+    this.vLocal = vLocal;
+    this.vRemote = vRemote;
+    this.diagEl = diagEl;
     this.pc = null;
     this.localStream = null;
     this.pendingCandidates = [];
@@ -54,9 +57,9 @@ export class MediaSession {
       this.localStream = new MediaStream();
     }
 
-    vLocal.srcObject = this.localStream;
+    this.vLocal.srcObject = this.localStream;
     this.setupTrackHandlers();
-    this.resumePlay(vLocal);
+    this.resumePlay(this.vLocal);
     
     return gumOk;
   }
@@ -83,7 +86,7 @@ export class MediaSession {
       this.log('[media] pre-recvonly cleanup', { tracksBefore: before, tracksAfter: after });
       if (after === 0) {
         this.localStream = new MediaStream();
-        vLocal.srcObject = this.localStream;
+        this.vLocal.srcObject = this.localStream;
         this.log('[media] entered recvonly immediately after track end');
         await this.rebuildPCAndRenegotiate();
       }
@@ -107,7 +110,7 @@ export class MediaSession {
           const count = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
           if (count === 0) {
             this.localStream = new MediaStream();
-            vLocal.srcObject = this.localStream;
+            this.vLocal.srcObject = this.localStream;
             this.rebuildPCAndRenegotiate().catch(() => {});
           }
         } catch {}
@@ -137,7 +140,7 @@ export class MediaSession {
           
           try { if (this.localStream) this.localStream.removeTrack(t); } catch {}
           try { if (this.localStream) this.localStream.addTrack(newTrack); } catch {}
-          vLocal.srcObject = this.localStream;
+          this.vLocal.srcObject = this.localStream;
           
           try {
             const senderStates = (this.pc.getSenders && this.pc.getSenders()) ? this.pc.getSenders().map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })) : [];
@@ -157,20 +160,20 @@ export class MediaSession {
     } catch (err) {
       this.gumFailCount += 1;
       this.log('[media] recover track ERR', err?.name || err?.message || String(err), constraints);
-      try { if (this.gumFailCount >= 1 && diagEl) diagEl.textContent = 'Разрешите доступ к камере/микрофону и нажмите «Разрешить».'; } catch {}
+      try { if (this.gumFailCount >= 1 && this.diagEl) this.diagEl.textContent = 'Разрешите доступ к камере/микрофону и нажмите «Разрешить».'; } catch {}
     } finally {
       try { clearTimeout(gumTimeoutId); } catch {}
       
       const before = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
       try { if (this.localStream) this.localStream.removeTrack(t); } catch {}
-      vLocal.srcObject = this.localStream;
+      this.vLocal.srcObject = this.localStream;
       
       try {
         const count = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
         this.log('[media] recover finally', { tracksBefore: before, tracksAfter: count });
         if (count === 0) {
           this.localStream = new MediaStream();
-          vLocal.srcObject = this.localStream;
+          this.vLocal.srcObject = this.localStream;
           this.log('[media] entered recvonly after track end (no local tracks)');
           await this.rebuildPCAndRenegotiate();
         }
@@ -220,9 +223,9 @@ export class MediaSession {
 
     // Prepare remote stream
     const remoteStream = new MediaStream();
-    vRemote.srcObject = remoteStream;
+    this.vRemote.srcObject = remoteStream;
     this.attachRemoteStreamDebug(remoteStream);
-    this.resumePlay(vRemote);
+    this.resumePlay(this.vRemote);
 
     this.pc.ontrack = (ev) => {
       const s = ev.streams?.[0];
@@ -230,7 +233,7 @@ export class MediaSession {
       if (s) {
         s.getTracks().forEach(t => remoteStream.addTrack(t));
         this.attachRemoteStreamDebug(remoteStream);
-        this.resumePlay(vRemote);
+        this.resumePlay(this.vRemote);
       }
     };
 
@@ -284,7 +287,7 @@ export class MediaSession {
       .map(t => `${t.kind}:${t.readyState}:${t.enabled}`)
       .join(',');
     this.log('[media] remote attach tracks=[', tracks, ']',
-        'paused=', vRemote?.paused, 'readyState=', vRemote?.readyState ?? '?');
+        'paused=', this.vRemote?.paused, 'readyState=', this.vRemote?.readyState ?? '?');
   }
 
   async rebuildPCAndRenegotiate() {

@@ -180,7 +180,7 @@ async function join(){
   signalingSession.attachWS();
 
   // Phase 2: Establish media session
-  mediaSession = new MediaSession(signalingSession, log, logPermissionsInfo, resumePlay, debugSDP);
+  mediaSession = new MediaSession(signalingSession, log, logPermissionsInfo, resumePlay, debugSDP, vLocal, vRemote, diagEl);
   
   // Set up media state change callback
   mediaSession.onStateChange = (newState, oldState) => {

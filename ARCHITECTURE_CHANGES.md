@@ -96,6 +96,8 @@
 ### Проблема
 Изначально классы подключались как обычные скрипты, а `client.js` как ES-модуль. Это приводило к ошибке `TypeError: log is not a function`, так как функция `log` была недоступна в глобальной области видимости.
 
+Дополнительно, DOM элементы `vLocal` и `vRemote` были определены только в `client.js` и недоступны в `MediaSession`, что вызывало `ReferenceError: vLocal is not defined`.
+
 ### Решение
 1. **Превратили все файлы в ES-модули**:
    - `signaling-session.js` → `export class SignalingSession`
@@ -110,8 +112,11 @@
 3. **Передача зависимостей через конструкторы**:
    ```javascript
    signalingSession = new SignalingSession(log, api, rid, wsRetryLimit, wsRetryDelayMs);
-   mediaSession = new MediaSession(signalingSession, log, logPermissionsInfo, resumePlay, debugSDP);
+   mediaSession = new MediaSession(signalingSession, log, logPermissionsInfo, resumePlay, debugSDP, vLocal, vRemote, diagEl);
    ```
+   - Все функции (`log`, `api`, `resumePlay`) передаются как параметры
+   - DOM ???????? (`vLocal`, `vRemote`, `diagEl`) ?????????? ? ???????????
+   - Никаких глобальных зависимостей в модулях
 
 4. **Упростили HTML**:
    ```html
