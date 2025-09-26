@@ -195,6 +195,12 @@ function newPC(){
   stopStatsMonitor();
   pc = new RTCPeerConnection({ iceServers });
   pendingCandidates = [];
+  try {
+    const total = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
+    const ac = (localStream && localStream.getAudioTracks) ? localStream.getAudioTracks().length : 0;
+    const vc = (localStream && localStream.getVideoTracks) ? localStream.getVideoTracks().length : 0;
+    log('newPC start', 'localTracks=', total, 'audio=', ac, 'video=', vc);
+  } catch {}
 
   // Pre-create bidirectional m-lines (some WebViews need this)
   try {
@@ -561,6 +567,7 @@ async function join(){
             const sender = pc && pc.getSenders ? pc.getSenders().find(s => s.track && s.track.kind === t.kind) : null;
             if (sender && sender.replaceTrack) {
               await sender.replaceTrack(newTrack);
+              log('replaceTrack success', t.kind);
               // Update localStream only after successful replace
               try { if (localStream) localStream.removeTrack(t); } catch {}
               try { if (localStream) localStream.addTrack(newTrack); } catch {}
@@ -569,6 +576,7 @@ async function join(){
               // Clean up extra fresh tracks
               try { fresh.getTracks().forEach(x => { if (x !== newTrack) x.stop(); }); } catch {}
               await rebuildPCAndRenegotiate();
+              log('renegotiate after replaceTrack done');
               didRenegotiate = true;
               return;
             } else {
@@ -581,15 +589,18 @@ async function join(){
           log('recover track ERR', err?.name || err?.message || String(err));
         } finally {
           // Always remove the ended track from localStream so it doesn't block recvonly detection
+          const before = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
           try { if (localStream) localStream.removeTrack(t); } catch {}
           vLocal.srcObject = localStream;
           try {
             const count = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
+            log('recover finally', 'tracksBefore=', before, 'tracksAfter=', count);
             if (count === 0) {
               localStream = new MediaStream();
               vLocal.srcObject = localStream;
               log('entered recvonly after track end (no local tracks)');
               if (!didRenegotiate) await rebuildPCAndRenegotiate();
+              log('renegotiate after recvonly done');
             }
           } catch {}
         }
