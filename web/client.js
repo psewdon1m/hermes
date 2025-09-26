@@ -145,7 +145,7 @@ async function join(){
           // Media session not ready yet, ensure PC is created first
           mediaSession.newPC();
         }
-        mediaSession.startNegotiation();
+        mediaSession.requestNegotiation('peer update');
       }
     } else if (eventType === 'peer-joined' && otherPeer && !signalingSession.polite) {
       // Start media negotiation when peer joins
@@ -154,7 +154,7 @@ async function join(){
           // Media session not ready yet, ensure PC is created first
           mediaSession.newPC();
         }
-        mediaSession.startNegotiation();
+        mediaSession.requestNegotiation('peer update');
       }
     } else if (eventType === 'peer-left') {
       // Rebuild media session when peer leaves
@@ -207,8 +207,8 @@ async function join(){
   
   // Start negotiation if we have a peer
   if (signalingSession.otherPeer && !signalingSession.polite) {
-    // PC is ready, start negotiation immediately
-    await mediaSession.startNegotiation();
+    // Request negotiation (will be executed when tracks are ready)
+    mediaSession.requestNegotiation('initial peer detected');
   }
 }
 

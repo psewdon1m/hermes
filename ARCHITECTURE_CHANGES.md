@@ -67,6 +67,20 @@
 - Автоматическая обработка отложенных offer после создания PC
 - Функция `attachLocalTracksToPC()` для добавления треков к существующему PC
 
+### 7. Управление локальными треками
+- **Флаг localTracksReady**: Контроль готовности локальных треков для переговоров
+- **Отложенные переговоры**: Не отправляем offer до готовности локальных треков
+- **replaceTrack**: Использование `transceiver.sender.replaceTrack()` вместо `addTrack`
+- **Автоматические переговоры**: `requestNegotiation()` после добавления/восстановления треков
+- **Мониторинг исходящего трафика**: Автоматическое восстановление при остановке отправки
+
+### 8. Система явных статусов
+- **Четкая последовательность**: `idle → signal-request → signal-ready → media-request → media-ready → pc-ready → negotiating → connected`
+- **Дополнительные статусы**: `media-stalled`, `recovering`, `disconnected`, `failed`
+- **Логирование переходов**: `[status] old → new (reason)` для всех изменений
+- **Контроль этапов**: Проверка текущего статуса перед переходом к следующему
+- **Диагностика**: Легко определить, на каком этапе остановился процесс
+
 ## Логирование
 
 ### Сигналинг (`[signal]`)
@@ -87,6 +101,24 @@
 - `executing pending remote offer` - выполнение отложенного offer
 - `newPC: no local tracks to attach yet` - PC создан без треков
 - `attachLocalTracksToPC senders` - добавление треков к существующему PC
+- `startNegotiation skipped: local tracks not ready` - отложенные переговоры до готовности треков
+- `requestNegotiation` - запрос переговоров с указанием причины
+- `replaceTrack` - замена трека в существующем sender
+- `attachLocalTracksToPC: no tracks to attach (recvonly mode)` - переход в recvonly режим
+- `WARNING: outbound stalled with local tracks ready` - предупреждение об остановке исходящего трафика
+
+### Статусы (`[status]`)
+- `idle → signal-request` - начало запроса параметров подключения
+- `signal-request → signal-ready` - получены параметры подключения
+- `signal-ready → media-request` - запрос доступа к медиа-устройствам
+- `media-request → media-ready` - медиа готовы (треки получены или recvonly)
+- `media-ready → pc-ready` - RTCPeerConnection создан и настроен
+- `pc-ready → negotiating` - начат обмен SDP
+- `negotiating → connected` - установлено соединение
+- `connected → media-stalled` - остановлен исходящий трафик
+- `connected → recovering` - восстановление треков
+- `connected → disconnected` - потеряно соединение
+- `recovering → failed` - исчерпаны попытки восстановления
 
 ### Восстановление (`[recover]`)
 - `recover start/exit` - начало/конец восстановления

@@ -22,10 +22,20 @@ export class SignalingSession {
     this.polite = false;
     this.onPeerUpdate = null;
     this.onMessage = null;
+    this.status = 'idle';
+  }
+
+  setStatus(newStatus, reason = '') {
+    if (this.status !== newStatus) {
+      const oldStatus = this.status;
+      this.status = newStatus;
+      this.log('[status]', oldStatus, '->', newStatus, reason ? `(${reason})` : '');
+    }
   }
 
   async join(token) {
     try {
+      this.setStatus('signal-request', 'requesting join parameters');
       const resp = await this.api('/join', { token });
       this.callId = resp.callId;
       this.role = resp.role;
@@ -45,9 +55,11 @@ export class SignalingSession {
       try { sessionStorage.setItem('joinToken', token); } catch {}
       
       this.log('[signal] join ok', this.callId, this.role, 'polite=', this.polite);
+      this.setStatus('signal-ready', 'join parameters obtained');
       return true;
     } catch (e) {
       this.log('[signal] join ERR', e?.message || e);
+      this.setStatus('failed', 'join failed');
       return false;
     }
   }
@@ -69,6 +81,7 @@ export class SignalingSession {
       this.wsReady = true;
       this.wsRetryCount = 0;
       this.log('[signal] ws open');
+      this.setStatus('signal-ready', 'WebSocket connected');
       while (this.sendQueue.length) {
         const m = this.sendQueue.shift();
         try { this.ws.send(JSON.stringify(m)); } catch {}
@@ -78,22 +91,26 @@ export class SignalingSession {
     this.ws.onclose = (ev) => {
       this.wsReady = false;
       this.log('[signal] ws close', ev?.code, ev?.reason);
+      this.setStatus('disconnected', `WebSocket closed: ${ev?.code}`);
 
       // Do not retry if server replied "room full"
       if (ev && (ev.code === 4403 || ev.code === 4400)) {
         this.log('[signal] room full, stopping retries');
+        this.setStatus('failed', 'room full');
         alert('Room already full: maximum 2 participants.');
         return;
       }
 
       if (this.wsRetryCount >= this.wsRetryLimit) {
         this.log('[signal] retries exhausted');
+        this.setStatus('failed', 'retries exhausted');
         alert('Connection lost. Please reload the page.');
         return;
       }
 
       this.wsRetryCount += 1;
       this.log('[signal] retry', this.wsRetryCount, 'of', this.wsRetryLimit, 'in', this.wsRetryDelayMs, 'ms');
+      this.setStatus('recovering', `WebSocket retry ${this.wsRetryCount}/${this.wsRetryLimit}`);
       
       setTimeout(async () => {
         await this.refreshIfNeeded();

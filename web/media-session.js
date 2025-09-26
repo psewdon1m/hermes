@@ -20,10 +20,15 @@ export class MediaSession {
     this.onStateChange = null;
     this.pendingNegotiation = false; // Flag for delayed negotiation
     this.pendingRemoteOffer = null; // Store remote offer when PC is not ready
+    this.localTracksReady = false; // Flag indicating local tracks are ready for negotiation
+    this.status = 'idle'; // Detailed status tracking
+    this.transceivers = new Map(); // Store transceivers by kind for easy access
+    this.stallRetryCount = 0; // Counter for outbound stall retries
   }
 
   async prepareLocalMedia() {
     this.setState('preparing');
+    this.setStatus('media-request', 'requesting local devices');
     this.log('[media] preparing local media');
     
     this.localStream = null;
@@ -65,6 +70,12 @@ export class MediaSession {
     // Attach tracks to existing PC if it exists
     this.attachLocalTracksToPC();
     
+    // Set media-ready status
+    this.setStatus('media-ready', gumOk ? 'local tracks obtained' : 'recvonly mode');
+    
+    // Request negotiation after tracks are ready
+    this.requestNegotiation('local tracks attached');
+    
     return gumOk;
   }
 
@@ -83,9 +94,29 @@ export class MediaSession {
   attachLocalTracksToPC() {
     if (!this.pc || !this.localStream) return;
     
-    this.localStream.getTracks().forEach(t => {
-      this.pc.addTrack(t, this.localStream);
+    const tracks = this.localStream.getTracks();
+    if (tracks.length === 0) {
+      this.log('[media] attachLocalTracksToPC: no tracks to attach (recvonly mode)');
+      this.localTracksReady = true; // Ready for recvonly negotiation
+      return;
+    }
+    
+    tracks.forEach(track => {
+      // Use stored transceiver reference
+      const transceiver = this.transceivers.get(track.kind);
+      
+      if (transceiver && transceiver.sender) {
+        // Replace track in existing sender
+        transceiver.sender.replaceTrack(track);
+        this.log('[media] replaceTrack', track.kind, 'currentDirection=', transceiver.currentDirection);
+      } else {
+        // Fallback to addTrack if no stored transceiver
+        this.pc.addTrack(track, this.localStream);
+        this.log('[media] addTrack fallback', track.kind);
+      }
     });
+    
+    this.localTracksReady = true;
     
     try {
       const senders = (this.pc.getSenders && this.pc.getSenders()) || [];
@@ -95,6 +126,7 @@ export class MediaSession {
 
   async handleTrackEnded(t) {
     this.log('[media] track ended', t.kind, 'state=', t.readyState);
+    this.setStatus('recovering', `track ended: ${t.kind}`);
     
     // Immediate recvonly switch for stability
     try {
@@ -168,6 +200,7 @@ export class MediaSession {
           this.log('[media] track recovered via replaceTrack', t.kind);
           try { fresh.getTracks().forEach(x => { if (x !== newTrack) x.stop(); }); } catch {}
           await this.rebuildPCAndRenegotiate();
+          this.requestNegotiation('track recovered');
           return;
         } else {
           this.log('[media] recover track ERR', 'no sender for kind=' + t.kind, constraints);
@@ -205,8 +238,16 @@ export class MediaSession {
     if (this.state !== newState) {
       const oldState = this.state;
       this.state = newState;
-      this.log('[media] state change', oldState, '→', newState);
+      this.log('[media] state change', oldState, '->', newState);
       if (this.onStateChange) this.onStateChange(newState, oldState);
+    }
+  }
+
+  setStatus(newStatus, reason = '') {
+    if (this.status !== newStatus) {
+      const oldStatus = this.status;
+      this.status = newStatus;
+      this.log('[status]', oldStatus, '->', newStatus, reason ? `(${reason})` : '');
     }
   }
 
@@ -214,6 +255,8 @@ export class MediaSession {
     this.stopStatsMonitor();
     this.pc = new RTCPeerConnection({ iceServers: this.signaling.iceServers });
     this.pendingCandidates = [];
+    this.localTracksReady = false; // Reset flag for new PC
+    this.stallRetryCount = 0; // Reset stall retry counter
     
     try {
       const total = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
@@ -222,10 +265,12 @@ export class MediaSession {
       this.log('[media] newPC start', 'localTracks=', total, 'audio=', ac, 'video=', vc);
     } catch {}
 
-    // Pre-create bidirectional m-lines
+    // Pre-create bidirectional m-lines and store references
     try {
-      this.pc.addTransceiver('video', { direction: 'sendrecv' });
-      this.pc.addTransceiver('audio', { direction: 'sendrecv' });
+      const videoTransceiver = this.pc.addTransceiver('video', { direction: 'sendrecv' });
+      const audioTransceiver = this.pc.addTransceiver('audio', { direction: 'sendrecv' });
+      this.transceivers.set('video', videoTransceiver);
+      this.transceivers.set('audio', audioTransceiver);
     } catch {}
 
     // Attach local tracks (if available)
@@ -233,12 +278,15 @@ export class MediaSession {
       this.localStream.getTracks().forEach(t => {
         this.pc.addTrack(t, this.localStream);
       });
+      this.localTracksReady = true; // Set flag after successful track attachment
       try {
         const senders = (this.pc.getSenders && this.pc.getSenders()) || [];
         this.log('[media] newPC after addTrack senders', senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })));
       } catch {}
     } else {
       this.log('[media] newPC: no local tracks to attach yet');
+      // For recvonly mode, we're still ready for negotiation
+      this.localTracksReady = true;
     }
 
     // Prepare remote stream
@@ -277,9 +325,11 @@ export class MediaSession {
         this.attachRemoteStreamDebug(remoteStream); 
         this.startStatsMonitor(); 
         this.setState('active');
+        this.setStatus('connected', 'ICE connection established');
       }
       if (st === 'disconnected' || st === 'failed') {
         this.stopStatsMonitor();
+        this.setStatus('disconnected', `ICE ${st}`);
         this.rebuildPCAndRenegotiate();
       }
     };
@@ -291,13 +341,18 @@ export class MediaSession {
         this.attachRemoteStreamDebug(remoteStream); 
         this.startStatsMonitor(); 
         this.setState('active');
+        this.setStatus('connected', 'PeerConnection established');
       }
       if (st === 'disconnected' || st === 'failed') {
         this.stopStatsMonitor();
+        this.setStatus('disconnected', `PeerConnection ${st}`);
         this.rebuildPCAndRenegotiate();
       }
     };
 
+    // Set pc-ready status
+    this.setStatus('pc-ready', 'RTCPeerConnection created and configured');
+    
     // Check for pending operations after PC is ready
     this.checkPendingNegotiation();
     this.checkPendingRemoteOffer();
@@ -313,6 +368,7 @@ export class MediaSession {
 
   async rebuildPCAndRenegotiate() {
     this.log('[media] rebuild PC and renegotiate');
+    this.setStatus('recovering', 'rebuilding PC');
     await this.tryRollback();
     this.safeClosePC();
     this.newPC();
@@ -335,12 +391,23 @@ export class MediaSession {
     try { if (this.pc) this.pc.ontrack = this.pc.onicecandidate = this.pc.oniceconnectionstatechange = this.pc.onconnectionstatechange = null; } catch {}
     try { if (this.pc) this.pc.close(); } catch {}
     this.pc = null;
+    this.transceivers.clear(); // Clear transceiver references
   }
 
   async startNegotiation() {
+    // Reset pending flag at the start
+    this.pendingNegotiation = false;
+    
     // Protect against missing PC
     if (!this.pc) {
       this.log('[media] startNegotiation skipped: pc not ready');
+      this.pendingNegotiation = true;
+      return;
+    }
+    
+    // Don't send offer until local tracks are ready
+    if (!this.localTracksReady) {
+      this.log('[media] startNegotiation skipped: local tracks not ready');
       this.pendingNegotiation = true;
       return;
     }
@@ -349,6 +416,7 @@ export class MediaSession {
     
     try {
       this.makingOffer = true;
+      this.setStatus('negotiating', 'sending offer');
       try {
         const senders = (this.pc.getSenders && this.pc.getSenders()) || [];
         this.log('[media] before createOffer senders', { count: senders.length, tracks: senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })) });
@@ -370,13 +438,14 @@ export class MediaSession {
 
   // Check and execute pending negotiation
   checkPendingNegotiation() {
-    if (this.pendingNegotiation && this.pc && this.signaling.otherPeer && !this.makingOffer) {
+    if (this.pendingNegotiation && this.pc && this.localTracksReady && this.signaling.otherPeer && !this.makingOffer) {
       this.log('[media] executing pending negotiation');
       this.pendingNegotiation = false;
       this.startNegotiation();
     } else if (this.pendingNegotiation) {
       this.log('[media] startNegotiation pending', { 
         hasPC: !!this.pc, 
+        localTracksReady: this.localTracksReady,
         hasOtherPeer: !!this.signaling.otherPeer, 
         makingOffer: this.makingOffer 
       });
@@ -390,6 +459,15 @@ export class MediaSession {
       const { from, sdp } = this.pendingRemoteOffer;
       this.pendingRemoteOffer = null;
       this.handleOffer(from, sdp);
+    }
+  }
+
+  // Request negotiation with reason
+  requestNegotiation(reason) {
+    this.log('[media] requestNegotiation', reason);
+    this.pendingNegotiation = true;
+    if (this.pc && this.pc.signalingState === 'stable') {
+      this.startNegotiation();
     }
   }
 
@@ -413,6 +491,8 @@ export class MediaSession {
       this.log('[media] offer from', from, 'collision=', offerCollision, 'ignore=', ignoreOffer, 'polite=', this.signaling.polite);
 
       if (ignoreOffer) return;
+
+      this.setStatus('negotiating', 'received offer');
 
       if (offerCollision) {
         await Promise.all([
@@ -536,6 +616,29 @@ export class MediaSession {
       const stats = await this.sampleStats();
       if (!stats) return;
       this.log('[media] stats', 'in_a=' + stats.inboundAudio + 'kbps', 'in_v=' + stats.inboundVideo + 'kbps', 'out_a=' + stats.outboundAudio + 'kbps', 'out_v=' + stats.outboundVideo + 'kbps');
+      
+      // Check for outbound traffic issues
+      if (this.localTracksReady && stats.outboundAudio === 0 && stats.outboundVideo === 0) {
+        // Check if tracks are intentionally disabled
+        const senders = this.pc.getSenders();
+        const hasEnabledTracks = senders.some(sender => 
+          sender.track && sender.track.readyState === 'live' && sender.track.enabled
+        );
+        
+        if (hasEnabledTracks && this.stallRetryCount < 3) {
+          this.log('[media] WARNING: outbound stalled with enabled tracks');
+          this.setStatus('media-stalled', 'outbound traffic stopped');
+          this.stallRetryCount += 1;
+          this.requestNegotiation('outbound stalled');
+        } else if (!hasEnabledTracks) {
+          this.log('[media] outbound zero: all tracks disabled by user');
+        } else {
+          this.log('[media] outbound stalled: max retries reached');
+        }
+      } else if (stats.outboundAudio > 0 || stats.outboundVideo > 0) {
+        // Reset counter when traffic is flowing
+        this.stallRetryCount = 0;
+      }
     }, 5000);
   }
 
@@ -550,5 +653,6 @@ export class MediaSession {
   close() {
     this.safeClosePC();
     this.setState('idle');
+    this.setStatus('idle', 'media session closed');
   }
 }
