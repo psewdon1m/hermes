@@ -7,6 +7,7 @@ const vRemote = document.getElementById('remote');
 const btnJoin = document.getElementById('joinBtn');
 const btnCam  = document.getElementById('camBtn');
 const btnMic  = document.getElementById('micBtn');
+const diagEl  = document.getElementById('diag');
 
 // ---------- Helpers ----------
 const url   = new URL(location.href);
@@ -77,6 +78,15 @@ function logClientInfo(){
   log('client info', JSON.stringify(info));
 }
 
+async function logPermissionsInfo(){
+  try {
+    if (!navigator.permissions || !navigator.permissions.query) return;
+    const mic = await navigator.permissions.query({ name:'microphone' });
+    const cam = await navigator.permissions.query({ name:'camera' });
+    log('permissions', { mic: mic?.state || 'unknown', cam: cam?.state || 'unknown' });
+  } catch {}
+}
+
 // Auto-resume playback after user interaction or when returning to the tab
 ['click','touchstart'].forEach(ev =>
   document.addEventListener(ev, () => { resumePlay(vLocal); resumePlay(vRemote); }, { passive:true })
@@ -101,6 +111,7 @@ let pendingCandidates = [];
 let wsRetryCount = 0;
 let statsTimer = null;
 const statsPrev = new Map();
+let gumFailCount = 0;
 
 // perfect negotiation
 let makingOffer=false;
@@ -144,6 +155,10 @@ async function rebuildPCAndRenegotiate(){
     (async () => {
       try {
         makingOffer = true;
+        try {
+          const senders = (pc.getSenders && pc.getSenders()) || [];
+          log('before createOffer senders', { count: senders.length, tracks: senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })) });
+        } catch {}
         const offer = await pc.createOffer();
         if (debugSDP) {
           const head = (offer.sdp || '').split('\n').slice(0, 40).join('\\n');
@@ -213,6 +228,10 @@ function newPC(){
     localStream.getTracks().forEach(t => {
       pc.addTrack(t, localStream);
     });
+    try {
+      const senders = (pc.getSenders && pc.getSenders()) || [];
+      log('newPC after addTrack senders', senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })));
+    } catch {}
   }
 
   // Prepare remote stream
@@ -557,10 +576,46 @@ async function join(){
       log('local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
       t.onended = async () => {
         log('recover start', { kind: t.kind, trackState: t.readyState });
+        // Immediate recvonly switch for stability
+        try {
+          const before = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
+          try { if (localStream) localStream.removeTrack(t); } catch {}
+          const after = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
+          log('recover pre-recvonly cleanup', { tracksBefore: before, tracksAfter: after });
+          if (after === 0) {
+            localStream = new MediaStream();
+            vLocal.srcObject = localStream;
+            log('entered recvonly immediately after track end');
+            await rebuildPCAndRenegotiate();
+          }
+        } catch {}
+
         let didRenegotiate = false;
         let constraints = t.kind === 'video' ? { video:true } : { audio:true };
+        // Timeout guard
+        let gumTimeoutId;
+        const gumTimeoutMs = 4000;
+        const timeoutPromise = new Promise((resolve) => {
+          gumTimeoutId = setTimeout(() => {
+            log('recover track TIMEOUT', { kind: t.kind, constraints });
+            try {
+              const count = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
+              if (count === 0) {
+                localStream = new MediaStream();
+                vLocal.srcObject = localStream;
+                rebuildPCAndRenegotiate().catch(() => {});
+              }
+            } catch {}
+            resolve(null);
+          }, gumTimeoutMs);
+        });
         try {
-          const fresh = await navigator.mediaDevices.getUserMedia(constraints);
+          await logPermissionsInfo();
+          const fresh = await Promise.race([
+            navigator.mediaDevices.getUserMedia(constraints),
+            timeoutPromise
+          ]);
+          if (!fresh) { log('recover exit', { kind: t.kind, didRenegotiate }); return; }
           const newTrack = t.kind === 'video' ? fresh.getVideoTracks()[0] : fresh.getAudioTracks()[0];
           if (newTrack) {
             // Try replace on sender first
@@ -576,6 +631,10 @@ async function join(){
               log('track recovered via replaceTrack', t.kind);
               // Clean up extra fresh tracks
               try { fresh.getTracks().forEach(x => { if (x !== newTrack) x.stop(); }); } catch {}
+              try {
+                const senderStates = (pc.getSenders && pc.getSenders()) ? pc.getSenders().map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })) : [];
+                log('sender states after replace', senderStates);
+              } catch {}
               await rebuildPCAndRenegotiate();
               log('renegotiate done', { callbacks:'replaceTrack' });
               didRenegotiate = true;
@@ -588,8 +647,11 @@ async function join(){
             log('recover track ERR', 'gum returned no tracks', constraints);
           }
         } catch (err) {
+          gumFailCount += 1;
           log('recover track ERR', err?.name || err?.message || String(err), constraints);
+          try { if (gumFailCount >= 1 && diagEl) diagEl.textContent = 'Разрешите доступ к камере/микрофону и нажмите «Разрешить».'; } catch {}
         } finally {
+          try { clearTimeout(gumTimeoutId); } catch {}
           // Always remove the ended track from localStream so it doesn't block recvonly detection
           const before = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
           try { if (localStream) localStream.removeTrack(t); } catch {}
