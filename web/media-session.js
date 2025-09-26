@@ -285,8 +285,7 @@ export class MediaSession {
       } catch {}
     } else {
       this.log('[media] newPC: no local tracks to attach yet');
-      // For recvonly mode, we're still ready for negotiation
-      this.localTracksReady = true;
+      // Keep localTracksReady = false until tracks are actually ready
     }
 
     // Prepare remote stream
@@ -296,13 +295,30 @@ export class MediaSession {
     this.resumePlay(this.vRemote);
 
     this.pc.ontrack = (ev) => {
-      const s = ev.streams?.[0];
       this.log('[media] ontrack kind=', ev.track?.kind, 'state=', ev.track?.readyState, 'enabled=', ev.track?.enabled);
-      if (s) {
-        s.getTracks().forEach(t => remoteStream.addTrack(t));
-        this.attachRemoteStreamDebug(remoteStream);
-        this.resumePlay(this.vRemote);
+      
+      const stream = ev.streams?.[0];
+      if (stream) {
+        // Primary path: use provided stream
+        stream.getTracks().forEach(t => {
+          if (!remoteStream.getTracks().includes(t)) {
+            remoteStream.addTrack(t);
+          }
+        });
+        this.log('[media] ontrack stream', stream.getTracks().length, 'tracks');
+      } else if (ev.track) {
+        // Fallback path: add track directly
+        if (!remoteStream.getTracks().includes(ev.track)) {
+          remoteStream.addTrack(ev.track);
+          this.log('[media] ontrack fallback', ev.track.kind, 'state=', ev.track.readyState);
+        } else {
+          this.log('[media] ontrack duplicate', ev.track.kind, 'already exists');
+        }
       }
+      
+      // Always update debug and resume playback
+      this.attachRemoteStreamDebug(remoteStream);
+      this.resumePlay(this.vRemote);
     };
 
     this.pc.onicecandidate = (e) => {

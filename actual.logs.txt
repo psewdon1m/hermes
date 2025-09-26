@@ -1,318 +1,1205 @@
-2025-09-26T20:18:34.102Z c_66cec7 t4otbjbs   [offerer] [signal] ws open
+# observer started 2025-09-26T21:10:56.922Z
+log observer listening on redis://redis:6379 (filter=*; detail=on)
+# redis=redis://redis:6379 filter=* detail=on
+2025-09-26T21:07:09.487Z c_19a63e agovuvhr   [offerer] [signal] ws open
   detail: [signal] ws open
-2025-09-26T20:18:34.102Z c_66cec7 t4otbjbs   [offerer] [signal] peers [] otherPeer= null polite= false
+2025-09-26T21:07:09.493Z c_19a63e agovuvhr   [offerer] [signal] peers [] otherPeer= null polite= false
   detail: [signal] peers | [] | otherPeer= | null | polite= | false
-2025-09-26T20:18:40.884Z c_66cec7 t4otbjbs   [offerer] [media] local media ready (audio+video)
+2025-09-26T21:07:13.760Z c_19a63e agovuvhr   [offerer] [media] local media ready (audio+video)
   detail: [media] local media ready (audio+video)
-2025-09-26T20:18:40.885Z c_66cec7 t4otbjbs   [offerer] [media] local track audio live live enabled= true
+2025-09-26T21:07:13.760Z c_19a63e agovuvhr   [offerer] [media] local track audio live live enabled= true
   detail: [media] local track | audio | live | live | enabled= | true
-2025-09-26T20:18:40.885Z c_66cec7 t4otbjbs   [offerer] [media] local track video live live enabled= true
+2025-09-26T21:07:13.760Z c_19a63e agovuvhr   [offerer] [media] local track video live live enabled= true
   detail: [media] local track | video | live | live | enabled= | true
-2025-09-26T20:18:40.885Z c_66cec7 t4otbjbs   [offerer] [media] attachLocalTracksToPC senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
-  detail: [media] attachLocalTracksToPC senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
-2025-09-26T20:18:53.851Z c_66cec7 t4otbjbs   [offerer] [signal] polite reassigned by tie-break: true
-  detail: [signal] polite reassigned by tie-break: | true
-2025-09-26T20:18:53.851Z c_66cec7 t4otbjbs   [offerer] [signal] peer joined dfufzn82 otherPeer= dfufzn82 polite= true
-  detail: [signal] peer joined | dfufzn82 | otherPeer= | dfufzn82 | polite= | true
-2025-09-26T20:18:53.026Z c_66cec7 dfufzn82   [offerer] [signal] ws open
+2025-09-26T21:07:13.760Z c_19a63e agovuvhr   [offerer] [media] replaceTrack audio currentDirection= null
+  detail: [media] replaceTrack | audio | currentDirection= | null
+2025-09-26T21:07:13.760Z c_19a63e agovuvhr   [offerer] [media] replaceTrack video currentDirection= null
+  detail: [media] replaceTrack | video | currentDirection= | null
+2025-09-26T21:07:13.760Z c_19a63e agovuvhr   [offerer] [media] attachLocalTracksToPC senders [{"kind":null,"state":null},{"kind":null,"state":null}]
+  detail: [media] attachLocalTracksToPC senders | [{"kind":null,"state":null},{"kind":null,"state":null}]
+2025-09-26T21:07:13.760Z c_19a63e agovuvhr   [offerer] [status] media-request -> media-ready (local tracks obtained)
+  detail: [status] | media-request | -> | media-ready | (local tracks obtained)
+2025-09-26T21:07:13.761Z c_19a63e agovuvhr   [offerer] [media] requestNegotiation local tracks attached
+  detail: [media] requestNegotiation | local tracks attached
+2025-09-26T21:12:07.680Z c_19a63e 1pfxs59h   [offerer] [signal] ws open
   detail: [signal] ws open
-2025-09-26T20:18:53.028Z c_66cec7 dfufzn82   [offerer] [signal] polite reassigned by tie-break: false
+2025-09-26T21:12:07.681Z c_19a63e 1pfxs59h   [offerer] [signal] polite reassigned by tie-break: false
   detail: [signal] polite reassigned by tie-break: | false
-2025-09-26T20:18:53.028Z c_66cec7 dfufzn82   [offerer] [signal] peers ["t4otbjbs"] otherPeer= t4otbjbs polite= false
-  detail: [signal] peers | ["t4otbjbs"] | otherPeer= | t4otbjbs | polite= | false
-2025-09-26T20:18:53.030Z c_66cec7 dfufzn82   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:12:07.681Z c_19a63e 1pfxs59h   [offerer] [signal] peers ["agovuvhr"] otherPeer= agovuvhr polite= false
+  detail: [signal] peers | ["agovuvhr"] | otherPeer= | agovuvhr | polite= | false
+2025-09-26T21:12:07.681Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation peer update
+  detail: [media] requestNegotiation | peer update
+2025-09-26T21:12:07.681Z c_19a63e 1pfxs59h   [offerer] [status] media-request -> negotiating (sending offer)
+  detail: [status] | media-request | -> | negotiating | (sending offer)
+2025-09-26T21:12:07.681Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
   detail: [media] before createOffer senders | {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
-2025-09-26T20:18:53.067Z c_66cec7 dfufzn82   [offerer] [media] offer sent
-  detail: [media] offer sent
-2025-09-26T20:18:53.075Z c_66cec7 dfufzn82   [offerer] [media] candidate host
-  detail: [media] candidate | host
-2025-09-26T20:18:53.077Z c_66cec7 dfufzn82   [offerer] [media] candidate host
-  detail: [media] candidate | host
-2025-09-26T20:18:53.988Z c_66cec7 t4otbjbs   [offerer] [media] offer from dfufzn82 collision= false ignore= false polite= true
-  detail: [media] offer from | dfufzn82 | collision= | false | ignore= | false | polite= | true
-2025-09-26T20:18:53.992Z c_66cec7 t4otbjbs   [offerer] [media] ontrack kind= video state= live enabled= true
-  detail: [media] ontrack kind= | video | state= | live | enabled= | true
-2025-09-26T20:18:53.992Z c_66cec7 t4otbjbs   [offerer] [media] ontrack kind= audio state= live enabled= true
-  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
-2025-09-26T20:18:53.998Z c_66cec7 t4otbjbs   [offerer] [media] answer sent
-  detail: [media] answer sent
-2025-09-26T20:18:54.001Z c_66cec7 t4otbjbs   [offerer] [media] candidate host
-  detail: [media] candidate | host
-2025-09-26T20:18:54.001Z c_66cec7 t4otbjbs   [offerer] [media] candidate host
-  detail: [media] candidate | host
-2025-09-26T20:18:54.038Z c_66cec7 t4otbjbs   [offerer] [media] iceState checking
-  detail: [media] iceState | checking
-2025-09-26T20:18:54.038Z c_66cec7 t4otbjbs   [offerer] [media] pcState connecting
-  detail: [media] pcState | connecting
-2025-09-26T20:18:53.234Z c_66cec7 dfufzn82   [offerer] [media] candidate srflx
-  detail: [media] candidate | srflx
-2025-09-26T20:18:53.247Z c_66cec7 dfufzn82   [offerer] [media] candidate srflx
-  detail: [media] candidate | srflx
-2025-09-26T20:18:53.248Z c_66cec7 dfufzn82   [offerer] [media] iceState checking
-  detail: [media] iceState | checking
-2025-09-26T20:18:54.112Z c_66cec7 t4otbjbs   [offerer] [media] candidate srflx
-  detail: [media] candidate | srflx
-2025-09-26T20:18:53.255Z c_66cec7 dfufzn82   [offerer] [media] pcState connecting
-  detail: [media] pcState | connecting
-2025-09-26T20:18:54.177Z c_66cec7 t4otbjbs   [offerer] [media] candidate relay
-  detail: [media] candidate | relay
-2025-09-26T20:18:53.273Z c_66cec7 dfufzn82   [offerer] [media] iceState new
-  detail: [media] iceState | new
-2025-09-26T20:18:53.276Z c_66cec7 dfufzn82   [offerer] [media] pcState new
-  detail: [media] pcState | new
-2025-09-26T20:18:53.277Z c_66cec7 dfufzn82   [offerer] [media] answer set
-  detail: [media] answer set
-2025-09-26T20:18:53.278Z c_66cec7 dfufzn82   [offerer] [media] iceState checking
-  detail: [media] iceState | checking
-2025-09-26T20:18:53.279Z c_66cec7 dfufzn82   [offerer] [media] pcState connecting
-  detail: [media] pcState | connecting
-2025-09-26T20:18:54.186Z c_66cec7 t4otbjbs   [offerer] [media] candidate relay
-  detail: [media] candidate | relay
-2025-09-26T20:18:53.331Z c_66cec7 dfufzn82   [offerer] [media] candidate relay
-  detail: [media] candidate | relay
-2025-09-26T20:18:54.198Z c_66cec7 t4otbjbs   [offerer] [media] iceState connected
-  detail: [media] iceState | connected
-2025-09-26T20:18:54.198Z c_66cec7 t4otbjbs   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
-2025-09-26T20:18:54.198Z c_66cec7 t4otbjbs   [offerer] [media] state change preparing → active
-  detail: [media] state change | preparing | → | active
-2025-09-26T20:18:53.344Z c_66cec7 dfufzn82   [offerer] [media] iceState connected
-  detail: [media] iceState | connected
-2025-09-26T20:18:53.345Z c_66cec7 dfufzn82   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
-2025-09-26T20:18:53.346Z c_66cec7 dfufzn82   [offerer] [media] state change preparing → active
-  detail: [media] state change | preparing | → | active
-2025-09-26T20:18:53.347Z c_66cec7 dfufzn82   [offerer] [media] ICE gathering complete
-  detail: [media] ICE gathering complete
-2025-09-26T20:18:53.356Z c_66cec7 dfufzn82   [offerer] [media] pcState connected
-  detail: [media] pcState | connected
-2025-09-26T20:18:53.357Z c_66cec7 dfufzn82   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
-2025-09-26T20:18:54.221Z c_66cec7 t4otbjbs   [offerer] [media] pcState connected
-  detail: [media] pcState | connected
-2025-09-26T20:18:54.221Z c_66cec7 t4otbjbs   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
-2025-09-26T20:18:54.245Z c_66cec7 t4otbjbs   [offerer] [media] candidate relay
-  detail: [media] candidate | relay
-2025-09-26T20:18:54.245Z c_66cec7 t4otbjbs   [offerer] [media] candidate ?
-  detail: [media] candidate | ?
-2025-09-26T20:18:54.245Z c_66cec7 t4otbjbs   [offerer] [media] ICE gathering complete
-  detail: [media] ICE gathering complete
-2025-09-26T20:18:54.160Z c_66cec7 dfufzn82   [offerer] [media] local media ready (audio+video)
-  detail: [media] local media ready (audio+video)
-2025-09-26T20:18:54.161Z c_66cec7 dfufzn82   [offerer] [media] local track audio live live enabled= true
-  detail: [media] local track | audio | live | live | enabled= | true
-2025-09-26T20:18:54.161Z c_66cec7 dfufzn82   [offerer] [media] local track video live live enabled= true
-  detail: [media] local track | video | live | live | enabled= | true
-2025-09-26T20:18:54.168Z c_66cec7 dfufzn82   [offerer] [media] attachLocalTracksToPC senders [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":"audio","state":"live"},{"kind":"video","state":"live"}]
-  detail: [media] attachLocalTracksToPC senders | [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":"audio","state":"live"},{"kind":"video","state":"live"}]
-2025-09-26T20:18:54.168Z c_66cec7 dfufzn82   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":"audio","state":"live"},{"kind":"video","state":"live"}]}
-  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":"audio","state":"live"},{"kind":"video","state":"live"}]}
-2025-09-26T20:18:54.201Z c_66cec7 dfufzn82   [offerer] [media] offer sent
-  detail: [media] offer sent
-2025-09-26T20:18:55.140Z c_66cec7 t4otbjbs   [offerer] [media] offer from dfufzn82 collision= false ignore= false polite= true
-  detail: [media] offer from | dfufzn82 | collision= | false | ignore= | false | polite= | true
-2025-09-26T20:18:55.146Z c_66cec7 t4otbjbs   [offerer] [media] ontrack kind= audio state= live enabled= true
-  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
-2025-09-26T20:18:55.146Z c_66cec7 t4otbjbs   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | true | readyState= | 0
-2025-09-26T20:18:55.146Z c_66cec7 t4otbjbs   [offerer] [media] ontrack kind= video state= live enabled= true
-  detail: [media] ontrack kind= | video | state= | live | enabled= | true
-2025-09-26T20:18:55.146Z c_66cec7 t4otbjbs   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
-  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
-2025-09-26T20:18:55.150Z c_66cec7 t4otbjbs   [offerer] [media] answer sent
-  detail: [media] answer sent
-2025-09-26T20:18:54.371Z c_66cec7 dfufzn82   [offerer] [media] answer set
-  detail: [media] answer set
-2025-09-26T20:18:59.201Z c_66cec7 t4otbjbs   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:18:58.364Z c_66cec7 dfufzn82   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:19:04.206Z c_66cec7 t4otbjbs   [offerer] [media] stats in_a=40.3kbps in_v=580.6kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=40.3kbps | in_v=580.6kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:19:03.355Z c_66cec7 dfufzn82   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=40.6kbps out_v=578.9kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=40.6kbps | out_v=578.9kbps
-2025-09-26T20:19:08.193Z c_66cec7 dfufzn82   [offerer] [media] track ended audio state= ended
-  detail: [media] track ended | audio | state= | ended
-2025-09-26T20:19:08.194Z c_66cec7 dfufzn82   [offerer] [media] pre-recvonly cleanup {"tracksBefore":2,"tracksAfter":1}
-  detail: [media] pre-recvonly cleanup | {"tracksBefore":2,"tracksAfter":1}
-2025-09-26T20:19:08.195Z c_66cec7 dfufzn82   [offerer] [media] recover start {"kind":"audio","trackState":"ended"}
-  detail: [media] recover start | {"kind":"audio","trackState":"ended"}
-2025-09-26T20:19:09.219Z c_66cec7 t4otbjbs   [offerer] [signal] peer left dfufzn82 otherPeer= null
-  detail: [signal] peer left | dfufzn82 | otherPeer= | null
-2025-09-26T20:19:09.219Z c_66cec7 t4otbjbs   [offerer] [media] rebuild PC and renegotiate
-  detail: [media] rebuild PC and renegotiate
-2025-09-26T20:19:09.222Z c_66cec7 t4otbjbs   [offerer] [media] newPC start localTracks= 2 audio= 1 video= 1
-  detail: [media] newPC start | localTracks= | 2 | audio= | 1 | video= | 1
-2025-09-26T20:19:09.226Z c_66cec7 t4otbjbs   [offerer] [media] newPC after addTrack senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
-  detail: [media] newPC after addTrack senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
-2025-09-26T20:19:09.227Z c_66cec7 t4otbjbs   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
-2025-09-26T20:21:15.294Z c_9670bc k7buv6q6   [offerer] [signal] ws open
-  detail: [signal] ws open
-2025-09-26T20:21:15.298Z c_9670bc k7buv6q6   [offerer] [signal] peers [] otherPeer= null polite= false
-  detail: [signal] peers | [] | otherPeer= | null | polite= | false
-2025-09-26T20:21:19.007Z c_9670bc k7buv6q6   [offerer] [media] local media ready (audio+video)
-  detail: [media] local media ready (audio+video)
-2025-09-26T20:21:19.007Z c_9670bc k7buv6q6   [offerer] [media] local track audio live live enabled= true
-  detail: [media] local track | audio | live | live | enabled= | true
-2025-09-26T20:21:19.007Z c_9670bc k7buv6q6   [offerer] [media] local track video live live enabled= true
-  detail: [media] local track | video | live | live | enabled= | true
-2025-09-26T20:21:19.008Z c_9670bc k7buv6q6   [offerer] [media] attachLocalTracksToPC senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
-  detail: [media] attachLocalTracksToPC senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
-2025-09-26T20:21:22.743Z c_9670bc k7buv6q6   [offerer] [signal] polite reassigned by tie-break: true
+2025-09-26T21:07:29.164Z c_19a63e agovuvhr   [offerer] [signal] polite reassigned by tie-break: true
   detail: [signal] polite reassigned by tie-break: | true
-2025-09-26T20:21:22.743Z c_9670bc k7buv6q6   [offerer] [signal] peer joined 7nhe652h otherPeer= 7nhe652h polite= true
-  detail: [signal] peer joined | 7nhe652h | otherPeer= | 7nhe652h | polite= | true
-2025-09-26T20:21:21.891Z c_9670bc 7nhe652h   [offerer] [signal] ws open
-  detail: [signal] ws open
-2025-09-26T20:21:21.893Z c_9670bc 7nhe652h   [offerer] [signal] polite reassigned by tie-break: false
-  detail: [signal] polite reassigned by tie-break: | false
-2025-09-26T20:21:21.894Z c_9670bc 7nhe652h   [offerer] [signal] peers ["k7buv6q6"] otherPeer= k7buv6q6 polite= false
-  detail: [signal] peers | ["k7buv6q6"] | otherPeer= | k7buv6q6 | polite= | false
-2025-09-26T20:21:21.895Z c_9670bc 7nhe652h   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
-  detail: [media] before createOffer senders | {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
-2025-09-26T20:21:21.925Z c_9670bc 7nhe652h   [offerer] [media] offer sent
+2025-09-26T21:07:29.164Z c_19a63e agovuvhr   [offerer] [signal] peer joined 1pfxs59h otherPeer= 1pfxs59h polite= true
+  detail: [signal] peer joined | 1pfxs59h | otherPeer= | 1pfxs59h | polite= | true
+2025-09-26T21:12:07.685Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
   detail: [media] offer sent
-2025-09-26T20:21:21.931Z c_9670bc 7nhe652h   [offerer] [media] candidate host
+2025-09-26T21:12:07.687Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
   detail: [media] candidate | host
-2025-09-26T20:21:21.932Z c_9670bc 7nhe652h   [offerer] [media] candidate host
+2025-09-26T21:12:07.688Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
   detail: [media] candidate | host
-2025-09-26T20:21:22.017Z c_9670bc 7nhe652h   [offerer] [media] candidate srflx
-  detail: [media] candidate | srflx
-2025-09-26T20:21:22.020Z c_9670bc 7nhe652h   [offerer] [media] candidate srflx
-  detail: [media] candidate | srflx
-2025-09-26T20:21:22.872Z c_9670bc k7buv6q6   [offerer] [media] offer from 7nhe652h collision= false ignore= false polite= true
-  detail: [media] offer from | 7nhe652h | collision= | false | ignore= | false | polite= | true
-2025-09-26T20:21:22.875Z c_9670bc k7buv6q6   [offerer] [media] ontrack kind= video state= live enabled= true
+2025-09-26T21:12:07.688Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:07.688Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:07.689Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:07.689Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:07.689Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:07.690Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:07:29.246Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= false ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | false | ignore= | false | polite= | true
+2025-09-26T21:07:29.246Z c_19a63e agovuvhr   [offerer] [status] media-ready -> negotiating (received offer)
+  detail: [status] | media-ready | -> | negotiating | (received offer)
+2025-09-26T21:07:29.249Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= video state= live enabled= true
   detail: [media] ontrack kind= | video | state= | live | enabled= | true
-2025-09-26T20:21:22.875Z c_9670bc k7buv6q6   [offerer] [media] ontrack kind= audio state= live enabled= true
+2025-09-26T21:07:29.249Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= audio state= live enabled= true
   detail: [media] ontrack kind= | audio | state= | live | enabled= | true
-2025-09-26T20:21:22.879Z c_9670bc k7buv6q6   [offerer] [media] answer sent
+2025-09-26T21:07:29.257Z c_19a63e agovuvhr   [offerer] [media] answer sent
   detail: [media] answer sent
-2025-09-26T20:21:22.882Z c_9670bc k7buv6q6   [offerer] [media] candidate host
+2025-09-26T21:07:29.263Z c_19a63e agovuvhr   [offerer] [media] candidate host
   detail: [media] candidate | host
-2025-09-26T20:21:22.882Z c_9670bc k7buv6q6   [offerer] [media] candidate host
-  detail: [media] candidate | host
-2025-09-26T20:21:22.883Z c_9670bc k7buv6q6   [offerer] [media] iceState checking
-  detail: [media] iceState | checking
-2025-09-26T20:21:22.883Z c_9670bc k7buv6q6   [offerer] [media] pcState connecting
-  detail: [media] pcState | connecting
-2025-09-26T20:21:22.030Z c_9670bc 7nhe652h   [offerer] [media] iceState checking
-  detail: [media] iceState | checking
-2025-09-26T20:21:22.034Z c_9670bc 7nhe652h   [offerer] [media] pcState connecting
-  detail: [media] pcState | connecting
-2025-09-26T20:21:22.111Z c_9670bc 7nhe652h   [offerer] [media] candidate relay
-  detail: [media] candidate | relay
-2025-09-26T20:21:22.979Z c_9670bc k7buv6q6   [offerer] [media] iceState connected
-  detail: [media] iceState | connected
-2025-09-26T20:21:22.979Z c_9670bc k7buv6q6   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
-2025-09-26T20:21:22.979Z c_9670bc k7buv6q6   [offerer] [media] state change preparing → active
-  detail: [media] state change | preparing | → | active
-2025-09-26T20:21:22.127Z c_9670bc 7nhe652h   [offerer] [media] candidate relay
-  detail: [media] candidate | relay
-2025-09-26T20:21:22.130Z c_9670bc 7nhe652h   [offerer] [media] iceState connected
-  detail: [media] iceState | connected
-2025-09-26T20:21:22.987Z c_9670bc k7buv6q6   [offerer] [media] candidate srflx
-  detail: [media] candidate | srflx
-2025-09-26T20:21:22.130Z c_9670bc 7nhe652h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
-2025-09-26T20:21:22.131Z c_9670bc 7nhe652h   [offerer] [media] state change preparing → active
-  detail: [media] state change | preparing | → | active
-2025-09-26T20:21:22.991Z c_9670bc k7buv6q6   [offerer] [media] pcState connected
-  detail: [media] pcState | connected
-2025-09-26T20:21:22.991Z c_9670bc k7buv6q6   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
-2025-09-26T20:21:22.136Z c_9670bc 7nhe652h   [offerer] [media] answer set
+2025-09-26T21:12:07.849Z c_19a63e 1pfxs59h   [offerer] [media] answer set
   detail: [media] answer set
-2025-09-26T20:21:22.136Z c_9670bc 7nhe652h   [offerer] [media] ICE gathering complete
-  detail: [media] ICE gathering complete
-2025-09-26T20:21:22.139Z c_9670bc 7nhe652h   [offerer] [media] pcState connected
-  detail: [media] pcState | connected
-2025-09-26T20:21:22.140Z c_9670bc 7nhe652h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
-2025-09-26T20:21:23.054Z c_9670bc k7buv6q6   [offerer] [media] candidate relay
+2025-09-26T21:07:29.343Z c_19a63e agovuvhr   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:12:07.885Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
   detail: [media] candidate | relay
-2025-09-26T20:21:23.061Z c_9670bc k7buv6q6   [offerer] [media] candidate relay
+2025-09-26T21:12:07.903Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
   detail: [media] candidate | relay
-2025-09-26T20:21:23.112Z c_9670bc k7buv6q6   [offerer] [media] candidate relay
+2025-09-26T21:12:07.909Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:12:07.919Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:12:07.920Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:07:29.425Z c_19a63e agovuvhr   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:07:29.425Z c_19a63e agovuvhr   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:07:29.432Z c_19a63e agovuvhr   [offerer] [media] candidate relay
   detail: [media] candidate | relay
-2025-09-26T20:21:23.113Z c_9670bc k7buv6q6   [offerer] [media] candidate ?
+2025-09-26T21:12:07.954Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:12:07.961Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:12:07.961Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:12:08.029Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:12:08.034Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:12:08.035Z c_19a63e 1pfxs59h   [offerer] [media] candidate ?
   detail: [media] candidate | ?
-2025-09-26T20:21:23.113Z c_9670bc k7buv6q6   [offerer] [media] ICE gathering complete
+2025-09-26T21:12:08.035Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
   detail: [media] ICE gathering complete
-2025-09-26T20:21:23.380Z c_9670bc 7nhe652h   [offerer] [media] local media ready (audio+video)
-  detail: [media] local media ready (audio+video)
-2025-09-26T20:21:23.380Z c_9670bc 7nhe652h   [offerer] [media] local track audio live live enabled= true
-  detail: [media] local track | audio | live | live | enabled= | true
-2025-09-26T20:21:23.381Z c_9670bc 7nhe652h   [offerer] [media] local track video live live enabled= true
-  detail: [media] local track | video | live | live | enabled= | true
-2025-09-26T20:21:23.386Z c_9670bc 7nhe652h   [offerer] [media] attachLocalTracksToPC senders [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":"audio","state":"live"},{"kind":"video","state":"live"}]
-  detail: [media] attachLocalTracksToPC senders | [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":"audio","state":"live"},{"kind":"video","state":"live"}]
-2025-09-26T20:21:23.386Z c_9670bc 7nhe652h   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":"audio","state":"live"},{"kind":"video","state":"live"}]}
-  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":"audio","state":"live"},{"kind":"video","state":"live"}]}
-2025-09-26T20:21:23.422Z c_9670bc 7nhe652h   [offerer] [media] offer sent
-  detail: [media] offer sent
-2025-09-26T20:21:24.353Z c_9670bc k7buv6q6   [offerer] [media] offer from 7nhe652h collision= false ignore= false polite= true
-  detail: [media] offer from | 7nhe652h | collision= | false | ignore= | false | polite= | true
-2025-09-26T20:21:24.356Z c_9670bc k7buv6q6   [offerer] [media] ontrack kind= audio state= live enabled= true
-  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
-2025-09-26T20:21:24.356Z c_9670bc k7buv6q6   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= true readyState= 0
-  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | true | readyState= | 0
-2025-09-26T20:21:24.356Z c_9670bc k7buv6q6   [offerer] [media] ontrack kind= video state= live enabled= true
-  detail: [media] ontrack kind= | video | state= | live | enabled= | true
-2025-09-26T20:21:24.356Z c_9670bc k7buv6q6   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
-  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
-2025-09-26T20:21:24.361Z c_9670bc k7buv6q6   [offerer] [media] answer sent
-  detail: [media] answer sent
-2025-09-26T20:21:23.579Z c_9670bc 7nhe652h   [offerer] [media] answer set
-  detail: [media] answer set
-2025-09-26T20:21:27.986Z c_9670bc k7buv6q6   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:21:27.148Z c_9670bc 7nhe652h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:21:32.986Z c_9670bc k7buv6q6   [offerer] [media] stats in_a=61.9kbps in_v=910.3kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=61.9kbps | in_v=910.3kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:21:32.138Z c_9670bc 7nhe652h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=61.7kbps out_v=912kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=61.7kbps | out_v=912kbps
-2025-09-26T20:21:37.143Z c_9670bc 7nhe652h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=64.2kbps out_v=1383.7kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=64.2kbps | out_v=1383.7kbps
-2025-09-26T20:21:38.000Z c_9670bc k7buv6q6   [offerer] [media] stats in_a=64.3kbps in_v=1381kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=64.3kbps | in_v=1381kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:21:42.140Z c_9670bc 7nhe652h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=46.2kbps out_v=1663.2kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=46.2kbps | out_v=1663.2kbps
-2025-09-26T20:21:43.002Z c_9670bc k7buv6q6   [offerer] [media] stats in_a=45.9kbps in_v=1660.6kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=45.9kbps | in_v=1660.6kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:21:47.141Z c_9670bc 7nhe652h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=34.5kbps out_v=1737.7kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=34.5kbps | out_v=1737.7kbps
-2025-09-26T20:21:48.008Z c_9670bc k7buv6q6   [offerer] [media] stats in_a=34.8kbps in_v=1737.3kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=34.8kbps | in_v=1737.3kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:21:52.141Z c_9670bc 7nhe652h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=63.6kbps out_v=1669.2kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=63.6kbps | out_v=1669.2kbps
-2025-09-26T20:21:53.015Z c_9670bc k7buv6q6   [offerer] [media] stats in_a=63.5kbps in_v=1666.8kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=63.5kbps | in_v=1666.8kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:21:57.140Z c_9670bc 7nhe652h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=40.8kbps out_v=1705kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=40.8kbps | out_v=1705kbps
-2025-09-26T20:21:58.015Z c_9670bc k7buv6q6   [offerer] [media] stats in_a=40.8kbps in_v=1704.7kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=40.8kbps | in_v=1704.7kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:22:02.148Z c_9670bc 7nhe652h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=64.1kbps out_v=1673.6kbps
-  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=64.1kbps | out_v=1673.6kbps
-2025-09-26T20:22:03.025Z c_9670bc k7buv6q6   [offerer] [media] stats in_a=64.3kbps in_v=1688kbps out_a=0kbps out_v=0kbps
-  detail: [media] stats | in_a=64.3kbps | in_v=1688kbps | out_a=0kbps | out_v=0kbps
-2025-09-26T20:22:02.818Z c_9670bc 7nhe652h   [offerer] [media] track ended audio state= ended
-  detail: [media] track ended | audio | state= | ended
-2025-09-26T20:22:02.820Z c_9670bc 7nhe652h   [offerer] [media] pre-recvonly cleanup {"tracksBefore":2,"tracksAfter":1}
-  detail: [media] pre-recvonly cleanup | {"tracksBefore":2,"tracksAfter":1}
-2025-09-26T20:22:02.820Z c_9670bc 7nhe652h   [offerer] [media] recover start {"kind":"audio","trackState":"ended"}
-  detail: [media] recover start | {"kind":"audio","trackState":"ended"}
-2025-09-26T20:22:03.740Z c_9670bc k7buv6q6   [offerer] [signal] peer left 7nhe652h otherPeer= null
-  detail: [signal] peer left | 7nhe652h | otherPeer= | null
-2025-09-26T20:22:03.740Z c_9670bc k7buv6q6   [offerer] [media] rebuild PC and renegotiate
-  detail: [media] rebuild PC and renegotiate
-2025-09-26T20:22:03.742Z c_9670bc k7buv6q6   [offerer] [media] newPC start localTracks= 2 audio= 1 video= 1
-  detail: [media] newPC start | localTracks= | 2 | audio= | 1 | video= | 1
-2025-09-26T20:22:03.743Z c_9670bc k7buv6q6   [offerer] [media] newPC after addTrack senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
-  detail: [media] newPC after addTrack senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
-2025-09-26T20:22:03.743Z c_9670bc k7buv6q6   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+2025-09-26T21:07:29.518Z c_19a63e agovuvhr   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:07:29.533Z c_19a63e agovuvhr   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:07:29.575Z c_19a63e agovuvhr   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:07:29.592Z c_19a63e agovuvhr   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:07:29.594Z c_19a63e agovuvhr   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:07:29.725Z c_19a63e agovuvhr   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:07:29.725Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:07:29.725Z c_19a63e agovuvhr   [offerer] [media] state change preparing -> active
+  detail: [media] state change | preparing | -> | active
+2025-09-26T21:07:29.725Z c_19a63e agovuvhr   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:12:08.140Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:12:08.140Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
   detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:12:08.140Z c_19a63e 1pfxs59h   [offerer] [media] state change preparing -> active
+  detail: [media] state change | preparing | -> | active
+2025-09-26T21:12:08.140Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:07:29.842Z c_19a63e agovuvhr   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:07:29.842Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:12:08.418Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:12:08.418Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:12:13.160Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
+  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T21:12:13.160Z c_19a63e 1pfxs59h   [offerer] [media] outbound zero: all tracks disabled by user
+  detail: [media] outbound zero: all tracks disabled by user
+2025-09-26T21:07:34.728Z c_19a63e agovuvhr   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
+  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T21:07:34.729Z c_19a63e agovuvhr   [offerer] [media] WARNING: outbound stalled with enabled tracks
+  detail: [media] WARNING: outbound stalled with enabled tracks
+2025-09-26T21:07:34.729Z c_19a63e agovuvhr   [offerer] [status] connected -> media-stalled (outbound traffic stopped)
+  detail: [status] | connected | -> | media-stalled | (outbound traffic stopped)
+2025-09-26T21:07:34.729Z c_19a63e agovuvhr   [offerer] [media] requestNegotiation outbound stalled
+  detail: [media] requestNegotiation | outbound stalled
+2025-09-26T21:07:34.729Z c_19a63e agovuvhr   [offerer] [status] media-stalled -> negotiating (sending offer)
+  detail: [status] | media-stalled | -> | negotiating | (sending offer)
+2025-09-26T21:07:34.729Z c_19a63e agovuvhr   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:07:34.741Z c_19a63e agovuvhr   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:12:13.411Z c_19a63e 1pfxs59h   [offerer] [media] offer from agovuvhr collision= false ignore= false polite= false
+  detail: [media] offer from | agovuvhr | collision= | false | ignore= | false | polite= | false
+2025-09-26T21:12:13.411Z c_19a63e 1pfxs59h   [offerer] [status] connected -> negotiating (received offer)
+  detail: [status] | connected | -> | negotiating | (received offer)
+2025-09-26T21:12:13.418Z c_19a63e 1pfxs59h   [offerer] [media] ontrack kind= video state= live enabled= true
+  detail: [media] ontrack kind= | video | state= | live | enabled= | true
+2025-09-26T21:12:13.418Z c_19a63e 1pfxs59h   [offerer] [media] ontrack kind= audio state= live enabled= true
+  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
+2025-09-26T21:12:13.424Z c_19a63e 1pfxs59h   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:07:34.970Z c_19a63e agovuvhr   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:12:16.054Z c_19a63e 1pfxs59h   [offerer] [media] local media ready (audio+video)
+  detail: [media] local media ready (audio+video)
+2025-09-26T21:12:16.054Z c_19a63e 1pfxs59h   [offerer] [media] local track audio live live enabled= true
+  detail: [media] local track | audio | live | live | enabled= | true
+2025-09-26T21:12:16.054Z c_19a63e 1pfxs59h   [offerer] [media] local track video live live enabled= true
+  detail: [media] local track | video | live | live | enabled= | true
+2025-09-26T21:12:16.054Z c_19a63e 1pfxs59h   [offerer] [media] replaceTrack audio currentDirection= sendonly
+  detail: [media] replaceTrack | audio | currentDirection= | sendonly
+2025-09-26T21:12:16.055Z c_19a63e 1pfxs59h   [offerer] [media] replaceTrack video currentDirection= sendonly
+  detail: [media] replaceTrack | video | currentDirection= | sendonly
+2025-09-26T21:12:16.055Z c_19a63e 1pfxs59h   [offerer] [media] attachLocalTracksToPC senders [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]
+  detail: [media] attachLocalTracksToPC senders | [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]
+2025-09-26T21:12:16.055Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> media-ready (local tracks obtained)
+  detail: [status] | negotiating | -> | media-ready | (local tracks obtained)
+2025-09-26T21:12:16.055Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation local tracks attached
+  detail: [media] requestNegotiation | local tracks attached
+2025-09-26T21:12:16.055Z c_19a63e 1pfxs59h   [offerer] [status] media-ready -> negotiating (sending offer)
+  detail: [status] | media-ready | -> | negotiating | (sending offer)
+2025-09-26T21:12:16.055Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:12:16.055Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation initial peer detected
+  detail: [media] requestNegotiation | initial peer detected
+2025-09-26T21:12:16.059Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:12:16.059Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:12:16.059Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:12:16.061Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:16.061Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:16.062Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:16.062Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:07:37.617Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= false ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | false | ignore= | false | polite= | true
+2025-09-26T21:07:37.633Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:12:16.216Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:12:16.216Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:12:16.216Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:12:16.216Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:12:16.216Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:12:16.217Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:12:16.218Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:12:18.171Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
+  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T21:12:18.171Z c_19a63e 1pfxs59h   [offerer] [media] WARNING: outbound stalled with enabled tracks
+  detail: [media] WARNING: outbound stalled with enabled tracks
+2025-09-26T21:12:18.171Z c_19a63e 1pfxs59h   [offerer] [status] connected -> media-stalled (outbound traffic stopped)
+  detail: [status] | connected | -> | media-stalled | (outbound traffic stopped)
+2025-09-26T21:12:18.171Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation outbound stalled
+  detail: [media] requestNegotiation | outbound stalled
+2025-09-26T21:12:18.171Z c_19a63e 1pfxs59h   [offerer] [status] media-stalled -> negotiating (sending offer)
+  detail: [status] | media-stalled | -> | negotiating | (sending offer)
+2025-09-26T21:12:18.171Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:12:18.175Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:12:18.175Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:12:18.176Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:12:18.177Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:18.177Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:18.177Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:12:18.178Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:07:39.718Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= false ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | false | ignore= | false | polite= | true
+2025-09-26T21:07:39.729Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:07:39.730Z c_19a63e agovuvhr   [offerer] [media] stats in_a=8.5kbps in_v=87.5kbps out_a=0kbps out_v=0kbps
+  detail: [media] stats | in_a=8.5kbps | in_v=87.5kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T21:07:39.730Z c_19a63e agovuvhr   [offerer] [media] WARNING: outbound stalled with enabled tracks
+  detail: [media] WARNING: outbound stalled with enabled tracks
+2025-09-26T21:07:39.730Z c_19a63e agovuvhr   [offerer] [status] negotiating -> media-stalled (outbound traffic stopped)
+  detail: [status] | negotiating | -> | media-stalled | (outbound traffic stopped)
+2025-09-26T21:07:39.730Z c_19a63e agovuvhr   [offerer] [media] requestNegotiation outbound stalled
+  detail: [media] requestNegotiation | outbound stalled
+2025-09-26T21:07:39.730Z c_19a63e agovuvhr   [offerer] [status] media-stalled -> negotiating (sending offer)
+  detail: [status] | media-stalled | -> | negotiating | (sending offer)
+2025-09-26T21:07:39.730Z c_19a63e agovuvhr   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:07:39.740Z c_19a63e agovuvhr   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:12:18.309Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:12:18.309Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:12:18.309Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:12:18.309Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:12:18.309Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:12:18.309Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:12:18.311Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:12:18.362Z c_19a63e 1pfxs59h   [offerer] [media] offer from agovuvhr collision= false ignore= false polite= false
+  detail: [media] offer from | agovuvhr | collision= | false | ignore= | false | polite= | false
+2025-09-26T21:12:18.362Z c_19a63e 1pfxs59h   [offerer] [status] connected -> negotiating (received offer)
+  detail: [status] | connected | -> | negotiating | (received offer)
+2025-09-26T21:12:18.375Z c_19a63e 1pfxs59h   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:07:39.939Z c_19a63e agovuvhr   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:12:23.179Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.3kbps in_v=1833.1kbps out_a=19.3kbps out_v=518.1kbps
+  detail: [media] stats | in_a=64.3kbps | in_v=1833.1kbps | out_a=19.3kbps | out_v=518.1kbps
+2025-09-26T21:07:44.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=19.2kbps in_v=542.2kbps out_a=64.4kbps out_v=1836.8kbps
+  detail: [media] stats | in_a=19.2kbps | in_v=542.2kbps | out_a=64.4kbps | out_v=1836.8kbps
+2025-09-26T21:12:28.183Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.6kbps in_v=1820.4kbps out_a=20.1kbps out_v=1085.1kbps
+  detail: [media] stats | in_a=64.6kbps | in_v=1820.4kbps | out_a=20.1kbps | out_v=1085.1kbps
+2025-09-26T21:07:49.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=20.1kbps in_v=1090.1kbps out_a=64.3kbps out_v=1816.8kbps
+  detail: [media] stats | in_a=20.1kbps | in_v=1090.1kbps | out_a=64.3kbps | out_v=1816.8kbps
+2025-09-26T21:12:33.196Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64kbps in_v=1692.9kbps out_a=19.3kbps out_v=1449kbps
+  detail: [media] stats | in_a=64kbps | in_v=1692.9kbps | out_a=19.3kbps | out_v=1449kbps
+2025-09-26T21:07:54.726Z c_19a63e agovuvhr   [offerer] [media] stats in_a=19.4kbps in_v=1458kbps out_a=64.2kbps out_v=1704.1kbps
+  detail: [media] stats | in_a=19.4kbps | in_v=1458kbps | out_a=64.2kbps | out_v=1704.1kbps
+2025-09-26T21:12:38.196Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1732kbps out_a=24.9kbps out_v=1859.2kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1732kbps | out_a=24.9kbps | out_v=1859.2kbps
+2025-09-26T21:07:59.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=25kbps in_v=1866.9kbps out_a=64.4kbps out_v=1722kbps
+  detail: [media] stats | in_a=25kbps | in_v=1866.9kbps | out_a=64.4kbps | out_v=1722kbps
+2025-09-26T21:12:43.202Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.6kbps in_v=1868.6kbps out_a=26kbps out_v=2047.5kbps
+  detail: [media] stats | in_a=64.6kbps | in_v=1868.6kbps | out_a=26kbps | out_v=2047.5kbps
+2025-09-26T21:08:04.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=25.9kbps in_v=2053.6kbps out_a=64.4kbps out_v=1881.6kbps
+  detail: [media] stats | in_a=25.9kbps | in_v=2053.6kbps | out_a=64.4kbps | out_v=1881.6kbps
+2025-09-26T21:12:48.203Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1657.3kbps out_a=27.5kbps out_v=1785.8kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1657.3kbps | out_a=27.5kbps | out_v=1785.8kbps
+2025-09-26T21:08:09.726Z c_19a63e agovuvhr   [offerer] [media] stats in_a=27.6kbps in_v=1787kbps out_a=64.4kbps out_v=1643.4kbps
+  detail: [media] stats | in_a=27.6kbps | in_v=1787kbps | out_a=64.4kbps | out_v=1643.4kbps
+2025-09-26T21:12:53.205Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1701.2kbps out_a=30kbps out_v=1929.1kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1701.2kbps | out_a=30kbps | out_v=1929.1kbps
+2025-09-26T21:08:14.737Z c_19a63e agovuvhr   [offerer] [media] stats in_a=30kbps in_v=1928.5kbps out_a=64.3kbps out_v=1713.4kbps
+  detail: [media] stats | in_a=30kbps | in_v=1928.5kbps | out_a=64.3kbps | out_v=1713.4kbps
+2025-09-26T21:12:58.215Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1746kbps out_a=19.8kbps out_v=1989.1kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1746kbps | out_a=19.8kbps | out_v=1989.1kbps
+2025-09-26T21:08:19.728Z c_19a63e agovuvhr   [offerer] [media] stats in_a=19.7kbps in_v=1964.8kbps out_a=64.7kbps out_v=1723.1kbps
+  detail: [media] stats | in_a=19.7kbps | in_v=1964.8kbps | out_a=64.7kbps | out_v=1723.1kbps
+2025-09-26T21:13:03.217Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.5kbps in_v=1834.9kbps out_a=19.4kbps out_v=1918.7kbps
+  detail: [media] stats | in_a=64.5kbps | in_v=1834.9kbps | out_a=19.4kbps | out_v=1918.7kbps
+2025-09-26T21:08:24.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=19.4kbps in_v=1918.1kbps out_a=64.5kbps out_v=1864.4kbps
+  detail: [media] stats | in_a=19.4kbps | in_v=1918.1kbps | out_a=64.5kbps | out_v=1864.4kbps
+2025-09-26T21:13:08.231Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.5kbps in_v=1789.4kbps out_a=30.7kbps out_v=1835.9kbps
+  detail: [media] stats | in_a=64.5kbps | in_v=1789.4kbps | out_a=30.7kbps | out_v=1835.9kbps
+2025-09-26T21:08:29.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=30.8kbps in_v=1841kbps out_a=64.4kbps out_v=1781.9kbps
+  detail: [media] stats | in_a=30.8kbps | in_v=1841kbps | out_a=64.4kbps | out_v=1781.9kbps
+2025-09-26T21:13:13.241Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1651.9kbps out_a=32.5kbps out_v=1491.8kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1651.9kbps | out_a=32.5kbps | out_v=1491.8kbps
+2025-09-26T21:08:34.740Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.7kbps in_v=1490.9kbps out_a=64.5kbps out_v=1663.2kbps
+  detail: [media] stats | in_a=32.7kbps | in_v=1490.9kbps | out_a=64.5kbps | out_v=1663.2kbps
+2025-09-26T21:08:39.728Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.2kbps in_v=1535.4kbps out_a=64.1kbps out_v=1628.2kbps
+  detail: [media] stats | in_a=32.2kbps | in_v=1535.4kbps | out_a=64.1kbps | out_v=1628.2kbps
+2025-09-26T21:13:18.256Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.3kbps in_v=1647.3kbps out_a=32.6kbps out_v=1528.5kbps
+  detail: [media] stats | in_a=64.3kbps | in_v=1647.3kbps | out_a=32.6kbps | out_v=1528.5kbps
+2025-09-26T21:08:44.726Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.4kbps in_v=1440.9kbps out_a=64.7kbps out_v=1635.1kbps
+  detail: [media] stats | in_a=32.4kbps | in_v=1440.9kbps | out_a=64.7kbps | out_v=1635.1kbps
+2025-09-26T21:13:23.265Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.5kbps in_v=1659.9kbps out_a=32.3kbps out_v=1436.3kbps
+  detail: [media] stats | in_a=64.5kbps | in_v=1659.9kbps | out_a=32.3kbps | out_v=1436.3kbps
+2025-09-26T21:08:49.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.4kbps in_v=1828.8kbps out_a=64.1kbps out_v=1612.4kbps
+  detail: [media] stats | in_a=32.4kbps | in_v=1828.8kbps | out_a=64.1kbps | out_v=1612.4kbps
+2025-09-26T21:13:28.278Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64kbps in_v=1590.5kbps out_a=32.3kbps out_v=1824kbps
+  detail: [media] stats | in_a=64kbps | in_v=1590.5kbps | out_a=32.3kbps | out_v=1824kbps
+2025-09-26T21:08:54.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.4kbps in_v=1284.6kbps out_a=64.4kbps out_v=1500.3kbps
+  detail: [media] stats | in_a=32.4kbps | in_v=1284.6kbps | out_a=64.4kbps | out_v=1500.3kbps
+2025-09-26T21:13:33.280Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1518kbps out_a=32.4kbps out_v=1284.3kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1518kbps | out_a=32.4kbps | out_v=1284.3kbps
+2025-09-26T21:08:59.739Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.5kbps in_v=1613.9kbps out_a=64.5kbps out_v=1522.5kbps
+  detail: [media] stats | in_a=32.5kbps | in_v=1613.9kbps | out_a=64.5kbps | out_v=1522.5kbps
+2025-09-26T21:13:38.283Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.6kbps in_v=1496.9kbps out_a=32.4kbps out_v=1616.8kbps
+  detail: [media] stats | in_a=64.6kbps | in_v=1496.9kbps | out_a=32.4kbps | out_v=1616.8kbps
+2025-09-26T21:09:04.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.3kbps in_v=1367.8kbps out_a=64.3kbps out_v=1503kbps
+  detail: [media] stats | in_a=32.3kbps | in_v=1367.8kbps | out_a=64.3kbps | out_v=1503kbps
+2025-09-26T21:13:43.295Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.2kbps in_v=1524.5kbps out_a=32.5kbps out_v=1361.2kbps
+  detail: [media] stats | in_a=64.2kbps | in_v=1524.5kbps | out_a=32.5kbps | out_v=1361.2kbps
+2025-09-26T21:09:09.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.4kbps in_v=1451.1kbps out_a=64.4kbps out_v=1534.5kbps
+  detail: [media] stats | in_a=32.4kbps | in_v=1451.1kbps | out_a=64.4kbps | out_v=1534.5kbps
+2025-09-26T21:13:48.304Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.5kbps in_v=1513.3kbps out_a=32.5kbps out_v=1448.2kbps
+  detail: [media] stats | in_a=64.5kbps | in_v=1513.3kbps | out_a=32.5kbps | out_v=1448.2kbps
+2025-09-26T21:09:14.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.4kbps in_v=1359.1kbps out_a=64.4kbps out_v=1480.4kbps
+  detail: [media] stats | in_a=32.4kbps | in_v=1359.1kbps | out_a=64.4kbps | out_v=1480.4kbps
+2025-09-26T21:13:53.308Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.3kbps in_v=1498.4kbps out_a=32.4kbps out_v=1358.3kbps
+  detail: [media] stats | in_a=64.3kbps | in_v=1498.4kbps | out_a=32.4kbps | out_v=1358.3kbps
+2025-09-26T21:09:19.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.3kbps in_v=1442.4kbps out_a=64.4kbps out_v=1484.4kbps
+  detail: [media] stats | in_a=32.3kbps | in_v=1442.4kbps | out_a=64.4kbps | out_v=1484.4kbps
+2025-09-26T21:13:58.316Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.3kbps in_v=1463.2kbps out_a=32.3kbps out_v=1472.8kbps
+  detail: [media] stats | in_a=64.3kbps | in_v=1463.2kbps | out_a=32.3kbps | out_v=1472.8kbps
+2025-09-26T21:09:24.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.5kbps in_v=1431.5kbps out_a=64.4kbps out_v=1498.4kbps
+  detail: [media] stats | in_a=32.5kbps | in_v=1431.5kbps | out_a=64.4kbps | out_v=1498.4kbps
+2025-09-26T21:14:03.328Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.5kbps in_v=1511.8kbps out_a=32.5kbps out_v=1428.7kbps
+  detail: [media] stats | in_a=64.5kbps | in_v=1511.8kbps | out_a=32.5kbps | out_v=1428.7kbps
+2025-09-26T21:09:29.726Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.4kbps in_v=1450.5kbps out_a=64.4kbps out_v=1520.9kbps
+  detail: [media] stats | in_a=32.4kbps | in_v=1450.5kbps | out_a=64.4kbps | out_v=1520.9kbps
+2025-09-26T21:14:08.332Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1500.3kbps out_a=32.4kbps out_v=1450.1kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1500.3kbps | out_a=32.4kbps | out_v=1450.1kbps
+2025-09-26T21:09:34.726Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.4kbps in_v=1492.4kbps out_a=64.4kbps out_v=1428.5kbps
+  detail: [media] stats | in_a=32.4kbps | in_v=1492.4kbps | out_a=64.4kbps | out_v=1428.5kbps
+2025-09-26T21:14:13.333Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1448.1kbps out_a=32.4kbps out_v=1491.4kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1448.1kbps | out_a=32.4kbps | out_v=1491.4kbps
+2025-09-26T21:09:39.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.3kbps in_v=1535.9kbps out_a=64.4kbps out_v=1477.1kbps
+  detail: [media] stats | in_a=32.3kbps | in_v=1535.9kbps | out_a=64.4kbps | out_v=1477.1kbps
+2025-09-26T21:14:18.337Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1458.1kbps out_a=32.4kbps out_v=1501.3kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1458.1kbps | out_a=32.4kbps | out_v=1501.3kbps
+2025-09-26T21:09:44.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.5kbps in_v=1354.9kbps out_a=64.4kbps out_v=1428.7kbps
+  detail: [media] stats | in_a=32.5kbps | in_v=1354.9kbps | out_a=64.4kbps | out_v=1428.7kbps
+2025-09-26T21:14:23.352Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.5kbps in_v=1441.6kbps out_a=32.4kbps out_v=1386.3kbps
+  detail: [media] stats | in_a=64.5kbps | in_v=1441.6kbps | out_a=32.4kbps | out_v=1386.3kbps
+2025-09-26T21:09:49.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.3kbps in_v=1731.7kbps out_a=64.3kbps out_v=1543.7kbps
+  detail: [media] stats | in_a=32.3kbps | in_v=1731.7kbps | out_a=64.3kbps | out_v=1543.7kbps
+2025-09-26T21:14:28.357Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.3kbps in_v=1564kbps out_a=32.3kbps out_v=1747.4kbps
+  detail: [media] stats | in_a=64.3kbps | in_v=1564kbps | out_a=32.3kbps | out_v=1747.4kbps
+2025-09-26T21:09:54.726Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.4kbps in_v=1865.7kbps out_a=64.4kbps out_v=1702.9kbps
+  detail: [media] stats | in_a=32.4kbps | in_v=1865.7kbps | out_a=64.4kbps | out_v=1702.9kbps
+2025-09-26T21:14:33.363Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.6kbps in_v=1691.7kbps out_a=32.3kbps out_v=1843kbps
+  detail: [media] stats | in_a=64.6kbps | in_v=1691.7kbps | out_a=32.3kbps | out_v=1843kbps
+2025-09-26T21:09:59.726Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.4kbps in_v=1849.3kbps out_a=64.4kbps out_v=1600.7kbps
+  detail: [media] stats | in_a=32.4kbps | in_v=1849.3kbps | out_a=64.4kbps | out_v=1600.7kbps
+2025-09-26T21:14:38.373Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.3kbps in_v=1596.3kbps out_a=32.5kbps out_v=1858.5kbps
+  detail: [media] stats | in_a=64.3kbps | in_v=1596.3kbps | out_a=32.5kbps | out_v=1858.5kbps
+2025-09-26T21:10:04.727Z c_19a63e agovuvhr   [offerer] [media] stats in_a=32.5kbps in_v=1675.6kbps out_a=64.7kbps out_v=1517.9kbps
+  detail: [media] stats | in_a=32.5kbps | in_v=1675.6kbps | out_a=64.7kbps | out_v=1517.9kbps
+2025-09-26T21:14:43.384Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=63.7kbps in_v=1475.3kbps out_a=32.6kbps out_v=1671kbps
+  detail: [media] stats | in_a=63.7kbps | in_v=1475.3kbps | out_a=32.6kbps | out_v=1671kbps
+2025-09-26T21:14:46.494Z c_19a63e 1pfxs59h   [offerer] [signal] peer left agovuvhr otherPeer= null
+  detail: [signal] peer left | agovuvhr | otherPeer= | null
+2025-09-26T21:14:46.495Z c_19a63e 1pfxs59h   [offerer] [media] rebuild PC and renegotiate
+  detail: [media] rebuild PC and renegotiate
+2025-09-26T21:14:46.495Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> recovering (rebuilding PC)
+  detail: [status] | negotiating | -> | recovering | (rebuilding PC)
+2025-09-26T21:14:46.496Z c_19a63e 1pfxs59h   [offerer] [media] newPC start localTracks= 2 audio= 1 video= 1
+  detail: [media] newPC start | localTracks= | 2 | audio= | 1 | video= | 1
+2025-09-26T21:14:46.498Z c_19a63e 1pfxs59h   [offerer] [media] newPC after addTrack senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+  detail: [media] newPC after addTrack senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+2025-09-26T21:14:46.498Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:14:46.498Z c_19a63e 1pfxs59h   [offerer] [status] recovering -> pc-ready (RTCPeerConnection created and configured)
+  detail: [status] | recovering | -> | pc-ready | (RTCPeerConnection created and configured)
+2025-09-26T21:10:08.284Z c_19a63e agovuvhr   [offerer] [signal] ws open
+  detail: [signal] ws open
+2025-09-26T21:10:08.284Z c_19a63e agovuvhr   [offerer] [signal] peers ["1pfxs59h"] otherPeer= 1pfxs59h polite= true
+  detail: [signal] peers | ["1pfxs59h"] | otherPeer= | 1pfxs59h | polite= | true
+2025-09-26T21:14:46.803Z c_19a63e 1pfxs59h   [offerer] [signal] peer joined agovuvhr otherPeer= agovuvhr polite= false
+  detail: [signal] peer joined | agovuvhr | otherPeer= | agovuvhr | polite= | false
+2025-09-26T21:14:46.803Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation peer update
+  detail: [media] requestNegotiation | peer update
+2025-09-26T21:14:46.803Z c_19a63e 1pfxs59h   [offerer] [status] pc-ready -> negotiating (sending offer)
+  detail: [status] | pc-ready | -> | negotiating | (sending offer)
+2025-09-26T21:14:46.803Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]}
+  detail: [media] before createOffer senders | {"count":2,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]}
+2025-09-26T21:14:46.808Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:14:46.809Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:46.810Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:46.810Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:46.811Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:46.811Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:46.811Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:46.811Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:46.812Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:08.348Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= false ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | false | ignore= | false | polite= | true
+2025-09-26T21:10:08.348Z c_19a63e agovuvhr   [offerer] [status] media-request -> negotiating (received offer)
+  detail: [status] | media-request | -> | negotiating | (received offer)
+2025-09-26T21:10:08.351Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= video state= live enabled= true
+  detail: [media] ontrack kind= | video | state= | live | enabled= | true
+2025-09-26T21:10:08.355Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T21:10:08.355Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= audio state= live enabled= true
+  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
+2025-09-26T21:10:08.355Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T21:10:08.363Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:10:08.364Z c_19a63e agovuvhr   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:10:08.364Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:08.364Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:08.364Z c_19a63e agovuvhr   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:10:08.364Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:46.945Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:14:46.948Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:14:46.948Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:10:08.433Z c_19a63e agovuvhr   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:14:46.984Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:47.001Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:14:47.001Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:14:47.001Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:10:08.487Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:08.488Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:08.488Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:08.490Z c_19a63e agovuvhr   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:10:08.491Z c_19a63e agovuvhr   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:10:08.491Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T21:10:08.491Z c_19a63e agovuvhr   [offerer] [media] state change preparing -> active
+  detail: [media] state change | preparing | -> | active
+2025-09-26T21:10:08.491Z c_19a63e agovuvhr   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:10:08.494Z c_19a63e agovuvhr   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:10:08.494Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T21:14:47.014Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:47.015Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:14:47.015Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:14:47.043Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:14:47.055Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:47.080Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:47.104Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:14:47.112Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:47.161Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:47.163Z c_19a63e 1pfxs59h   [offerer] [media] candidate ?
+  detail: [media] candidate | ?
+2025-09-26T21:14:47.163Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:10:08.943Z c_19a63e agovuvhr   [offerer] [media] local media ready (audio+video)
+  detail: [media] local media ready (audio+video)
+2025-09-26T21:10:08.944Z c_19a63e agovuvhr   [offerer] [media] local track audio live live enabled= true
+  detail: [media] local track | audio | live | live | enabled= | true
+2025-09-26T21:10:08.944Z c_19a63e agovuvhr   [offerer] [media] local track video live live enabled= true
+  detail: [media] local track | video | live | live | enabled= | true
+2025-09-26T21:10:08.944Z c_19a63e agovuvhr   [offerer] [media] replaceTrack audio currentDirection= null
+  detail: [media] replaceTrack | audio | currentDirection= | null
+2025-09-26T21:10:08.944Z c_19a63e agovuvhr   [offerer] [media] replaceTrack video currentDirection= null
+  detail: [media] replaceTrack | video | currentDirection= | null
+2025-09-26T21:10:08.944Z c_19a63e agovuvhr   [offerer] [media] attachLocalTracksToPC senders [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]
+  detail: [media] attachLocalTracksToPC senders | [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]
+2025-09-26T21:10:08.944Z c_19a63e agovuvhr   [offerer] [status] connected -> media-ready (local tracks obtained)
+  detail: [status] | connected | -> | media-ready | (local tracks obtained)
+2025-09-26T21:10:08.944Z c_19a63e agovuvhr   [offerer] [media] requestNegotiation local tracks attached
+  detail: [media] requestNegotiation | local tracks attached
+2025-09-26T21:10:08.944Z c_19a63e agovuvhr   [offerer] [status] media-ready -> negotiating (sending offer)
+  detail: [status] | media-ready | -> | negotiating | (sending offer)
+2025-09-26T21:10:08.944Z c_19a63e agovuvhr   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:10:08.953Z c_19a63e agovuvhr   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:14:47.533Z c_19a63e 1pfxs59h   [offerer] [media] offer from agovuvhr collision= false ignore= false polite= false
+  detail: [media] offer from | agovuvhr | collision= | false | ignore= | false | polite= | false
+2025-09-26T21:14:47.533Z c_19a63e 1pfxs59h   [offerer] [status] connected -> negotiating (received offer)
+  detail: [status] | connected | -> | negotiating | (received offer)
+2025-09-26T21:14:47.538Z c_19a63e 1pfxs59h   [offerer] [media] ontrack kind= video state= live enabled= true
+  detail: [media] ontrack kind= | video | state= | live | enabled= | true
+2025-09-26T21:14:47.538Z c_19a63e 1pfxs59h   [offerer] [media] ontrack kind= audio state= live enabled= true
+  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
+2025-09-26T21:14:47.545Z c_19a63e 1pfxs59h   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:10:09.089Z c_19a63e agovuvhr   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:10:12.542Z c_19a63e agovuvhr   [offerer] [signal] peer left 1pfxs59h otherPeer= null
+  detail: [signal] peer left | 1pfxs59h | otherPeer= | null
+2025-09-26T21:10:12.542Z c_19a63e agovuvhr   [offerer] [media] rebuild PC and renegotiate
+  detail: [media] rebuild PC and renegotiate
+2025-09-26T21:10:12.542Z c_19a63e agovuvhr   [offerer] [status] negotiating -> recovering (rebuilding PC)
+  detail: [status] | negotiating | -> | recovering | (rebuilding PC)
+2025-09-26T21:10:12.547Z c_19a63e agovuvhr   [offerer] [media] newPC start localTracks= 2 audio= 1 video= 1
+  detail: [media] newPC start | localTracks= | 2 | audio= | 1 | video= | 1
+2025-09-26T21:10:12.549Z c_19a63e agovuvhr   [offerer] [media] newPC after addTrack senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+  detail: [media] newPC after addTrack senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+2025-09-26T21:10:12.549Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:10:12.549Z c_19a63e agovuvhr   [offerer] [status] recovering -> pc-ready (RTCPeerConnection created and configured)
+  detail: [status] | recovering | -> | pc-ready | (RTCPeerConnection created and configured)
+2025-09-26T21:10:12.975Z c_19a63e agovuvhr   [offerer] [signal] peer joined 1pfxs59h otherPeer= 1pfxs59h polite= true
+  detail: [signal] peer joined | 1pfxs59h | otherPeer= | 1pfxs59h | polite= | true
+2025-09-26T21:14:51.495Z c_19a63e 1pfxs59h   [offerer] [signal] ws open
+  detail: [signal] ws open
+2025-09-26T21:14:51.496Z c_19a63e 1pfxs59h   [offerer] [signal] polite reassigned by tie-break: false
+  detail: [signal] polite reassigned by tie-break: | false
+2025-09-26T21:14:51.496Z c_19a63e 1pfxs59h   [offerer] [signal] peers ["agovuvhr"] otherPeer= agovuvhr polite= false
+  detail: [signal] peers | ["agovuvhr"] | otherPeer= | agovuvhr | polite= | false
+2025-09-26T21:14:51.496Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation peer update
+  detail: [media] requestNegotiation | peer update
+2025-09-26T21:14:51.496Z c_19a63e 1pfxs59h   [offerer] [status] media-request -> negotiating (sending offer)
+  detail: [status] | media-request | -> | negotiating | (sending offer)
+2025-09-26T21:14:51.497Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:14:51.499Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:14:51.502Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.502Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.502Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.503Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.503Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.504Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.504Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.505Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:13.046Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= false ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | false | ignore= | false | polite= | true
+2025-09-26T21:10:13.046Z c_19a63e agovuvhr   [offerer] [status] pc-ready -> negotiating (received offer)
+  detail: [status] | pc-ready | -> | negotiating | (received offer)
+2025-09-26T21:10:13.049Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= video state= live enabled= true
+  detail: [media] ontrack kind= | video | state= | live | enabled= | true
+2025-09-26T21:10:13.049Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= audio state= live enabled= true
+  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
+2025-09-26T21:10:13.057Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:10:13.059Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:13.059Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:13.059Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:13.118Z c_19a63e agovuvhr   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:14:51.637Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:14:51.638Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:14:51.638Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:14:51.682Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:51.683Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:10:13.188Z c_19a63e agovuvhr   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:10:13.188Z c_19a63e agovuvhr   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:10:13.190Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:13.190Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:13.190Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:13.191Z c_19a63e agovuvhr   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:10:13.192Z c_19a63e agovuvhr   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:10:13.192Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:10:13.192Z c_19a63e agovuvhr   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:14:51.710Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:14:51.710Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:14:51.710Z c_19a63e 1pfxs59h   [offerer] [media] state change preparing -> active
+  detail: [media] state change | preparing | -> | active
+2025-09-26T21:14:51.710Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:14:51.716Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:14:51.716Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:10:13.194Z c_19a63e agovuvhr   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:10:13.194Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:14:51.730Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:14:51.743Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:51.745Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:51.765Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:14:51.821Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:51.868Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:51.868Z c_19a63e 1pfxs59h   [offerer] [media] candidate ?
+  detail: [media] candidate | ?
+2025-09-26T21:14:51.868Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [media] local media ready (audio+video)
+  detail: [media] local media ready (audio+video)
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [media] local track audio live live enabled= true
+  detail: [media] local track | audio | live | live | enabled= | true
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [media] local track video live live enabled= true
+  detail: [media] local track | video | live | live | enabled= | true
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [media] replaceTrack audio currentDirection= sendonly
+  detail: [media] replaceTrack | audio | currentDirection= | sendonly
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [media] replaceTrack video currentDirection= sendonly
+  detail: [media] replaceTrack | video | currentDirection= | sendonly
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [media] attachLocalTracksToPC senders [{"kind":null,"state":null},{"kind":null,"state":null}]
+  detail: [media] attachLocalTracksToPC senders | [{"kind":null,"state":null},{"kind":null,"state":null}]
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [status] connected -> media-ready (local tracks obtained)
+  detail: [status] | connected | -> | media-ready | (local tracks obtained)
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation local tracks attached
+  detail: [media] requestNegotiation | local tracks attached
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [status] media-ready -> negotiating (sending offer)
+  detail: [status] | media-ready | -> | negotiating | (sending offer)
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:14:51.972Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation initial peer detected
+  detail: [media] requestNegotiation | initial peer detected
+2025-09-26T21:14:51.977Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:14:51.977Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:14:51.977Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:14:51.978Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.978Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.979Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:51.979Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:13.530Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= false ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | false | ignore= | false | polite= | true
+2025-09-26T21:10:13.530Z c_19a63e agovuvhr   [offerer] [status] connected -> negotiating (received offer)
+  detail: [status] | connected | -> | negotiating | (received offer)
+2025-09-26T21:10:13.538Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:14:52.118Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:14:52.118Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:14:52.118Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:14:52.118Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:14:52.118Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:14:52.118Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:14:52.118Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:10:18.194Z c_19a63e agovuvhr   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
+  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T21:10:18.194Z c_19a63e agovuvhr   [offerer] [media] WARNING: outbound stalled with enabled tracks
+  detail: [media] WARNING: outbound stalled with enabled tracks
+2025-09-26T21:10:18.194Z c_19a63e agovuvhr   [offerer] [status] negotiating -> media-stalled (outbound traffic stopped)
+  detail: [status] | negotiating | -> | media-stalled | (outbound traffic stopped)
+2025-09-26T21:10:18.194Z c_19a63e agovuvhr   [offerer] [media] requestNegotiation outbound stalled
+  detail: [media] requestNegotiation | outbound stalled
+2025-09-26T21:10:18.194Z c_19a63e agovuvhr   [offerer] [status] media-stalled -> negotiating (sending offer)
+  detail: [status] | media-stalled | -> | negotiating | (sending offer)
+2025-09-26T21:10:18.194Z c_19a63e agovuvhr   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:10:18.205Z c_19a63e agovuvhr   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:14:56.726Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
+  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T21:14:56.726Z c_19a63e 1pfxs59h   [offerer] [media] WARNING: outbound stalled with enabled tracks
+  detail: [media] WARNING: outbound stalled with enabled tracks
+2025-09-26T21:14:56.726Z c_19a63e 1pfxs59h   [offerer] [status] connected -> media-stalled (outbound traffic stopped)
+  detail: [status] | connected | -> | media-stalled | (outbound traffic stopped)
+2025-09-26T21:14:56.726Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation outbound stalled
+  detail: [media] requestNegotiation | outbound stalled
+2025-09-26T21:14:56.726Z c_19a63e 1pfxs59h   [offerer] [status] media-stalled -> negotiating (sending offer)
+  detail: [status] | media-stalled | -> | negotiating | (sending offer)
+2025-09-26T21:14:56.726Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]}
+  detail: [media] before createOffer senders | {"count":2,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]}
+2025-09-26T21:14:56.729Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:14:56.730Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:14:56.730Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:14:56.731Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:56.731Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:56.732Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:56.732Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:18.269Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= true ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | true | ignore= | false | polite= | true
+2025-09-26T21:10:18.280Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:14:56.842Z c_19a63e 1pfxs59h   [offerer] [media] offer from agovuvhr collision= true ignore= true polite= false
+  detail: [media] offer from | agovuvhr | collision= | true | ignore= | true | polite= | false
+2025-09-26T21:14:56.860Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:14:56.860Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:14:56.860Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:14:56.860Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:14:56.860Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:14:56.860Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:14:56.860Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:10:18.486Z c_19a63e agovuvhr   [offerer] [signal] peer left 1pfxs59h otherPeer= null
+  detail: [signal] peer left | 1pfxs59h | otherPeer= | null
+2025-09-26T21:10:18.486Z c_19a63e agovuvhr   [offerer] [media] rebuild PC and renegotiate
+  detail: [media] rebuild PC and renegotiate
+2025-09-26T21:10:18.486Z c_19a63e agovuvhr   [offerer] [status] negotiating -> recovering (rebuilding PC)
+  detail: [status] | negotiating | -> | recovering | (rebuilding PC)
+2025-09-26T21:10:18.489Z c_19a63e agovuvhr   [offerer] [media] newPC start localTracks= 2 audio= 1 video= 1
+  detail: [media] newPC start | localTracks= | 2 | audio= | 1 | video= | 1
+2025-09-26T21:10:18.491Z c_19a63e agovuvhr   [offerer] [media] newPC after addTrack senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+  detail: [media] newPC after addTrack senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+2025-09-26T21:10:18.491Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:10:18.491Z c_19a63e agovuvhr   [offerer] [status] recovering -> pc-ready (RTCPeerConnection created and configured)
+  detail: [status] | recovering | -> | pc-ready | (RTCPeerConnection created and configured)
+2025-09-26T21:10:18.775Z c_19a63e agovuvhr   [offerer] [signal] peer joined 1pfxs59h otherPeer= 1pfxs59h polite= true
+  detail: [signal] peer joined | 1pfxs59h | otherPeer= | 1pfxs59h | polite= | true
+2025-09-26T21:14:57.297Z c_19a63e 1pfxs59h   [offerer] [signal] ws open
+  detail: [signal] ws open
+2025-09-26T21:14:57.298Z c_19a63e 1pfxs59h   [offerer] [signal] polite reassigned by tie-break: false
+  detail: [signal] polite reassigned by tie-break: | false
+2025-09-26T21:14:57.298Z c_19a63e 1pfxs59h   [offerer] [signal] peers ["agovuvhr"] otherPeer= agovuvhr polite= false
+  detail: [signal] peers | ["agovuvhr"] | otherPeer= | agovuvhr | polite= | false
+2025-09-26T21:14:57.298Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation peer update
+  detail: [media] requestNegotiation | peer update
+2025-09-26T21:14:57.298Z c_19a63e 1pfxs59h   [offerer] [status] media-request -> negotiating (sending offer)
+  detail: [status] | media-request | -> | negotiating | (sending offer)
+2025-09-26T21:14:57.298Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:14:57.302Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:14:57.304Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.305Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.307Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.308Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.308Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.308Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.309Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.309Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:18.842Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= false ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | false | ignore= | false | polite= | true
+2025-09-26T21:10:18.842Z c_19a63e agovuvhr   [offerer] [status] pc-ready -> negotiating (received offer)
+  detail: [status] | pc-ready | -> | negotiating | (received offer)
+2025-09-26T21:10:18.845Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= video state= live enabled= true
+  detail: [media] ontrack kind= | video | state= | live | enabled= | true
+2025-09-26T21:10:18.845Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= audio state= live enabled= true
+  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
+2025-09-26T21:10:18.852Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:10:18.853Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:18.853Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:18.854Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:18.912Z c_19a63e agovuvhr   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:14:57.435Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:14:57.435Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:14:57.435Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:14:57.485Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:10:18.981Z c_19a63e agovuvhr   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:10:18.981Z c_19a63e agovuvhr   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:10:18.984Z c_19a63e agovuvhr   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:10:18.984Z c_19a63e agovuvhr   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:10:18.985Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:10:18.985Z c_19a63e agovuvhr   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:14:57.499Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:57.502Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:14:57.502Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:14:57.502Z c_19a63e 1pfxs59h   [offerer] [media] state change preparing -> active
+  detail: [media] state change | preparing | -> | active
+2025-09-26T21:14:57.502Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:14:57.508Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:14:57.508Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:10:18.989Z c_19a63e agovuvhr   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:10:18.989Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:14:57.525Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:14:57.548Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:57.575Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:57.586Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:14:57.632Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:57.644Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:14:57.644Z c_19a63e 1pfxs59h   [offerer] [media] candidate ?
+  detail: [media] candidate | ?
+2025-09-26T21:14:57.644Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:14:57.903Z c_19a63e 1pfxs59h   [offerer] [media] local media ready (audio+video)
+  detail: [media] local media ready (audio+video)
+2025-09-26T21:14:57.903Z c_19a63e 1pfxs59h   [offerer] [media] local track audio live live enabled= true
+  detail: [media] local track | audio | live | live | enabled= | true
+2025-09-26T21:14:57.903Z c_19a63e 1pfxs59h   [offerer] [media] local track video live live enabled= true
+  detail: [media] local track | video | live | live | enabled= | true
+2025-09-26T21:14:57.903Z c_19a63e 1pfxs59h   [offerer] [media] replaceTrack audio currentDirection= sendonly
+  detail: [media] replaceTrack | audio | currentDirection= | sendonly
+2025-09-26T21:14:57.903Z c_19a63e 1pfxs59h   [offerer] [media] replaceTrack video currentDirection= sendonly
+  detail: [media] replaceTrack | video | currentDirection= | sendonly
+2025-09-26T21:14:57.904Z c_19a63e 1pfxs59h   [offerer] [media] attachLocalTracksToPC senders [{"kind":null,"state":null},{"kind":null,"state":null}]
+  detail: [media] attachLocalTracksToPC senders | [{"kind":null,"state":null},{"kind":null,"state":null}]
+2025-09-26T21:14:57.904Z c_19a63e 1pfxs59h   [offerer] [status] connected -> media-ready (local tracks obtained)
+  detail: [status] | connected | -> | media-ready | (local tracks obtained)
+2025-09-26T21:14:57.904Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation local tracks attached
+  detail: [media] requestNegotiation | local tracks attached
+2025-09-26T21:14:57.904Z c_19a63e 1pfxs59h   [offerer] [status] media-ready -> negotiating (sending offer)
+  detail: [status] | media-ready | -> | negotiating | (sending offer)
+2025-09-26T21:14:57.904Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":2,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:14:57.904Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation initial peer detected
+  detail: [media] requestNegotiation | initial peer detected
+2025-09-26T21:14:57.908Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:14:57.908Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:14:57.908Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:14:57.909Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.909Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.910Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:14:57.910Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:19.467Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= false ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | false | ignore= | false | polite= | true
+2025-09-26T21:10:19.467Z c_19a63e agovuvhr   [offerer] [status] connected -> negotiating (received offer)
+  detail: [status] | connected | -> | negotiating | (received offer)
+2025-09-26T21:10:19.476Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:14:58.055Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:14:58.055Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:14:58.055Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:14:58.055Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:14:58.055Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:14:58.055Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:14:58.056Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:15:01.416Z c_19a63e 1pfxs59h   [offerer] [signal] peer left agovuvhr otherPeer= null
+  detail: [signal] peer left | agovuvhr | otherPeer= | null
+2025-09-26T21:15:01.416Z c_19a63e 1pfxs59h   [offerer] [media] rebuild PC and renegotiate
+  detail: [media] rebuild PC and renegotiate
+2025-09-26T21:15:01.416Z c_19a63e 1pfxs59h   [offerer] [status] connected -> recovering (rebuilding PC)
+  detail: [status] | connected | -> | recovering | (rebuilding PC)
+2025-09-26T21:15:01.418Z c_19a63e 1pfxs59h   [offerer] [media] newPC start localTracks= 2 audio= 1 video= 1
+  detail: [media] newPC start | localTracks= | 2 | audio= | 1 | video= | 1
+2025-09-26T21:15:01.418Z c_19a63e 1pfxs59h   [offerer] [media] newPC after addTrack senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+  detail: [media] newPC after addTrack senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+2025-09-26T21:15:01.418Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= true readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T21:15:01.419Z c_19a63e 1pfxs59h   [offerer] [status] recovering -> pc-ready (RTCPeerConnection created and configured)
+  detail: [status] | recovering | -> | pc-ready | (RTCPeerConnection created and configured)
+2025-09-26T21:10:23.083Z c_19a63e agovuvhr   [offerer] [signal] ws open
+  detail: [signal] ws open
+2025-09-26T21:10:23.084Z c_19a63e agovuvhr   [offerer] [signal] peers ["1pfxs59h"] otherPeer= 1pfxs59h polite= true
+  detail: [signal] peers | ["1pfxs59h"] | otherPeer= | 1pfxs59h | polite= | true
+2025-09-26T21:15:01.605Z c_19a63e 1pfxs59h   [offerer] [signal] peer joined agovuvhr otherPeer= agovuvhr polite= false
+  detail: [signal] peer joined | agovuvhr | otherPeer= | agovuvhr | polite= | false
+2025-09-26T21:15:01.605Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation peer update
+  detail: [media] requestNegotiation | peer update
+2025-09-26T21:15:01.605Z c_19a63e 1pfxs59h   [offerer] [status] pc-ready -> negotiating (sending offer)
+  detail: [status] | pc-ready | -> | negotiating | (sending offer)
+2025-09-26T21:15:01.605Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":2,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]}
+  detail: [media] before createOffer senders | {"count":2,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]}
+2025-09-26T21:15:01.609Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:15:01.611Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:01.611Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:01.612Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:01.612Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:01.612Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:01.612Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:01.613Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:01.613Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:23.199Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= false ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | false | ignore= | false | polite= | true
+2025-09-26T21:10:23.199Z c_19a63e agovuvhr   [offerer] [status] media-request -> negotiating (received offer)
+  detail: [status] | media-request | -> | negotiating | (received offer)
+2025-09-26T21:10:23.202Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= video state= live enabled= true
+  detail: [media] ontrack kind= | video | state= | live | enabled= | true
+2025-09-26T21:10:23.206Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T21:10:23.207Z c_19a63e agovuvhr   [offerer] [media] ontrack kind= audio state= live enabled= true
+  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
+2025-09-26T21:10:23.207Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T21:10:23.215Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:10:23.215Z c_19a63e agovuvhr   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:10:23.215Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:23.215Z c_19a63e agovuvhr   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:10:23.216Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:23.216Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:23.280Z c_19a63e agovuvhr   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:15:01.797Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:15:01.802Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:15:01.802Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:15:01.829Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:15:01.836Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:10:23.331Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:23.331Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:23.331Z c_19a63e agovuvhr   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:10:23.333Z c_19a63e agovuvhr   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:10:23.333Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T21:10:23.333Z c_19a63e agovuvhr   [offerer] [media] state change preparing -> active
+  detail: [media] state change | preparing | -> | active
+2025-09-26T21:10:23.333Z c_19a63e agovuvhr   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:10:23.333Z c_19a63e agovuvhr   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:15:01.865Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:15:01.870Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:15:01.870Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:15:01.870Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:15:01.877Z c_19a63e 1pfxs59h   [offerer] [media] candidate srflx
+  detail: [media] candidate | srflx
+2025-09-26T21:15:01.913Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:10:23.401Z c_19a63e agovuvhr   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:10:23.401Z c_19a63e agovuvhr   [offerer] [media] remote attach tracks=[ audio:live:true,video:live:true ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ | audio:live:true,video:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T21:15:01.924Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:15:01.924Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:15:01.929Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:15:01.933Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:15:01.949Z c_19a63e 1pfxs59h   [offerer] [media] candidate relay
+  detail: [media] candidate | relay
+2025-09-26T21:15:01.949Z c_19a63e 1pfxs59h   [offerer] [media] candidate ?
+  detail: [media] candidate | ?
+2025-09-26T21:15:01.949Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [media] local media ready (audio+video)
+  detail: [media] local media ready (audio+video)
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [media] local track audio live live enabled= true
+  detail: [media] local track | audio | live | live | enabled= | true
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [media] local track video live live enabled= true
+  detail: [media] local track | video | live | live | enabled= | true
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [media] replaceTrack audio currentDirection= null
+  detail: [media] replaceTrack | audio | currentDirection= | null
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [media] replaceTrack video currentDirection= null
+  detail: [media] replaceTrack | video | currentDirection= | null
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [media] attachLocalTracksToPC senders [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]
+  detail: [media] attachLocalTracksToPC senders | [{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [status] connected -> media-ready (local tracks obtained)
+  detail: [status] | connected | -> | media-ready | (local tracks obtained)
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [media] requestNegotiation local tracks attached
+  detail: [media] requestNegotiation | local tracks attached
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [status] media-ready -> negotiating (sending offer)
+  detail: [status] | media-ready | -> | negotiating | (sending offer)
+2025-09-26T21:10:23.876Z c_19a63e agovuvhr   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:10:23.886Z c_19a63e agovuvhr   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:15:02.470Z c_19a63e 1pfxs59h   [offerer] [media] offer from agovuvhr collision= false ignore= false polite= false
+  detail: [media] offer from | agovuvhr | collision= | false | ignore= | false | polite= | false
+2025-09-26T21:15:02.470Z c_19a63e 1pfxs59h   [offerer] [status] connected -> negotiating (received offer)
+  detail: [status] | connected | -> | negotiating | (received offer)
+2025-09-26T21:15:02.476Z c_19a63e 1pfxs59h   [offerer] [media] ontrack kind= video state= live enabled= true
+  detail: [media] ontrack kind= | video | state= | live | enabled= | true
+2025-09-26T21:15:02.476Z c_19a63e 1pfxs59h   [offerer] [media] ontrack kind= audio state= live enabled= true
+  detail: [media] ontrack kind= | audio | state= | live | enabled= | true
+2025-09-26T21:15:02.481Z c_19a63e 1pfxs59h   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:10:24.027Z c_19a63e agovuvhr   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:10:28.336Z c_19a63e agovuvhr   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
+  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T21:10:28.336Z c_19a63e agovuvhr   [offerer] [media] WARNING: outbound stalled with enabled tracks
+  detail: [media] WARNING: outbound stalled with enabled tracks
+2025-09-26T21:10:28.336Z c_19a63e agovuvhr   [offerer] [status] negotiating -> media-stalled (outbound traffic stopped)
+  detail: [status] | negotiating | -> | media-stalled | (outbound traffic stopped)
+2025-09-26T21:10:28.336Z c_19a63e agovuvhr   [offerer] [media] requestNegotiation outbound stalled
+  detail: [media] requestNegotiation | outbound stalled
+2025-09-26T21:10:28.336Z c_19a63e agovuvhr   [offerer] [status] media-stalled -> negotiating (sending offer)
+  detail: [status] | media-stalled | -> | negotiating | (sending offer)
+2025-09-26T21:10:28.336Z c_19a63e agovuvhr   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:10:28.345Z c_19a63e agovuvhr   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:15:06.878Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
+  detail: [media] stats | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T21:15:06.878Z c_19a63e 1pfxs59h   [offerer] [media] WARNING: outbound stalled with enabled tracks
+  detail: [media] WARNING: outbound stalled with enabled tracks
+2025-09-26T21:15:06.878Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> media-stalled (outbound traffic stopped)
+  detail: [status] | negotiating | -> | media-stalled | (outbound traffic stopped)
+2025-09-26T21:15:06.878Z c_19a63e 1pfxs59h   [offerer] [media] requestNegotiation outbound stalled
+  detail: [media] requestNegotiation | outbound stalled
+2025-09-26T21:15:06.878Z c_19a63e 1pfxs59h   [offerer] [status] media-stalled -> negotiating (sending offer)
+  detail: [status] | media-stalled | -> | negotiating | (sending offer)
+2025-09-26T21:15:06.878Z c_19a63e 1pfxs59h   [offerer] [media] before createOffer senders {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+  detail: [media] before createOffer senders | {"count":4,"tracks":[{"kind":"video","state":"live"},{"kind":"audio","state":"live"},{"kind":null,"state":null},{"kind":null,"state":null}]}
+2025-09-26T21:15:06.885Z c_19a63e 1pfxs59h   [offerer] [media] iceState checking
+  detail: [media] iceState | checking
+2025-09-26T21:15:06.885Z c_19a63e 1pfxs59h   [offerer] [media] pcState connecting
+  detail: [media] pcState | connecting
+2025-09-26T21:15:06.885Z c_19a63e 1pfxs59h   [offerer] [media] offer sent
+  detail: [media] offer sent
+2025-09-26T21:15:06.886Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:06.887Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:06.888Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:06.891Z c_19a63e 1pfxs59h   [offerer] [media] candidate host
+  detail: [media] candidate | host
+2025-09-26T21:15:06.924Z c_19a63e 1pfxs59h   [offerer] [media] offer from agovuvhr collision= true ignore= true polite= false
+  detail: [media] offer from | agovuvhr | collision= | true | ignore= | true | polite= | false
+2025-09-26T21:10:28.429Z c_19a63e agovuvhr   [offerer] [media] offer from 1pfxs59h collision= true ignore= false polite= true
+  detail: [media] offer from | 1pfxs59h | collision= | true | ignore= | false | polite= | true
+2025-09-26T21:10:28.440Z c_19a63e agovuvhr   [offerer] [media] answer sent
+  detail: [media] answer sent
+2025-09-26T21:15:07.027Z c_19a63e 1pfxs59h   [offerer] [media] ICE gathering complete
+  detail: [media] ICE gathering complete
+2025-09-26T21:15:07.027Z c_19a63e 1pfxs59h   [offerer] [media] iceState connected
+  detail: [media] iceState | connected
+2025-09-26T21:15:07.027Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:15:07.027Z c_19a63e 1pfxs59h   [offerer] [status] negotiating -> connected (ICE connection established)
+  detail: [status] | negotiating | -> | connected | (ICE connection established)
+2025-09-26T21:15:07.027Z c_19a63e 1pfxs59h   [offerer] [media] pcState connected
+  detail: [media] pcState | connected
+2025-09-26T21:15:07.027Z c_19a63e 1pfxs59h   [offerer] [media] remote attach tracks=[  ] paused= false readyState= 0
+  detail: [media] remote attach tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T21:15:07.028Z c_19a63e 1pfxs59h   [offerer] [media] answer set
+  detail: [media] answer set
+2025-09-26T21:10:33.335Z c_19a63e agovuvhr   [offerer] [media] stats in_a=21.2kbps in_v=297.8kbps out_a=64.8kbps out_v=1620.3kbps
+  detail: [media] stats | in_a=21.2kbps | in_v=297.8kbps | out_a=64.8kbps | out_v=1620.3kbps
+2025-09-26T21:15:11.881Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1636.1kbps out_a=21.3kbps out_v=279.4kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1636.1kbps | out_a=21.3kbps | out_v=279.4kbps
+2025-09-26T21:10:38.335Z c_19a63e agovuvhr   [offerer] [media] stats in_a=23.5kbps in_v=1296.4kbps out_a=64.4kbps out_v=1582kbps
+  detail: [media] stats | in_a=23.5kbps | in_v=1296.4kbps | out_a=64.4kbps | out_v=1582kbps
+2025-09-26T21:15:16.881Z c_19a63e 1pfxs59h   [offerer] [media] stats in_a=64.4kbps in_v=1564.3kbps out_a=23.3kbps out_v=1296.4kbps
+  detail: [media] stats | in_a=64.4kbps | in_v=1564.3kbps | out_a=23.3kbps | out_v=1296.4kbps
