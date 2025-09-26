@@ -199,11 +199,13 @@ async function join(){
     }
   };
 
+  // First line of defense: Create PC immediately before media preparation
+  mediaSession.newPC();
+  
   // Prepare local media
   const gumOk = await mediaSession.prepareLocalMedia();
   
-  // Create PC and start negotiation if we have a peer
-  mediaSession.newPC();
+  // Start negotiation if we have a peer
   if (signalingSession.otherPeer && !signalingSession.polite) {
     // PC is ready, start negotiation immediately
     await mediaSession.startNegotiation();

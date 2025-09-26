@@ -61,6 +61,12 @@
 - Автоматическое выполнение отложенных переговоров после создания PC
 - Детальное логирование состояний и причин пропуска переговоров
 
+### 6. Двухуровневая защита RTCPeerConnection
+- **Первый эшелон**: Создание PC до `prepareLocalMedia()` для готовности к первому offer
+- **Второй эшелон**: Проверка `if (!this.pc)` в `handleOffer()` с сохранением в `pendingRemoteOffer`
+- Автоматическая обработка отложенных offer после создания PC
+- Функция `attachLocalTracksToPC()` для добавления треков к существующему PC
+
 ## Логирование
 
 ### Сигналинг (`[signal]`)
@@ -77,6 +83,10 @@
 - `startNegotiation skipped: pc not ready` - защита от преждевременных переговоров
 - `startNegotiation pending` - отложенные переговоры
 - `executing pending negotiation` - выполнение отложенных переговоров
+- `handleOffer: PC not ready, storing offer for later` - сохранение offer при отсутствии PC
+- `executing pending remote offer` - выполнение отложенного offer
+- `newPC: no local tracks to attach yet` - PC создан без треков
+- `attachLocalTracksToPC senders` - добавление треков к существующему PC
 
 ### Восстановление (`[recover]`)
 - `recover start/exit` - начало/конец восстановления

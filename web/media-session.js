@@ -19,6 +19,7 @@ export class MediaSession {
     this.state = 'idle'; // idle, preparing, active
     this.onStateChange = null;
     this.pendingNegotiation = false; // Flag for delayed negotiation
+    this.pendingRemoteOffer = null; // Store remote offer when PC is not ready
   }
 
   async prepareLocalMedia() {
@@ -61,6 +62,9 @@ export class MediaSession {
     this.setupTrackHandlers();
     this.resumePlay(this.vLocal);
     
+    // Attach tracks to existing PC if it exists
+    this.attachLocalTracksToPC();
+    
     return gumOk;
   }
 
@@ -73,6 +77,20 @@ export class MediaSession {
       t.onmute = () => this.log('[media] local track mute', t.kind);
       t.onunmute = () => this.log('[media] local track unmute', t.kind);
     });
+  }
+
+  // Add local tracks to existing PC
+  attachLocalTracksToPC() {
+    if (!this.pc || !this.localStream) return;
+    
+    this.localStream.getTracks().forEach(t => {
+      this.pc.addTrack(t, this.localStream);
+    });
+    
+    try {
+      const senders = (this.pc.getSenders && this.pc.getSenders()) || [];
+      this.log('[media] attachLocalTracksToPC senders', senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })));
+    } catch {}
   }
 
   async handleTrackEnded(t) {
@@ -210,8 +228,8 @@ export class MediaSession {
       this.pc.addTransceiver('audio', { direction: 'sendrecv' });
     } catch {}
 
-    // Attach local tracks
-    if (this.localStream) {
+    // Attach local tracks (if available)
+    if (this.localStream && this.localStream.getTracks().length > 0) {
       this.localStream.getTracks().forEach(t => {
         this.pc.addTrack(t, this.localStream);
       });
@@ -219,6 +237,8 @@ export class MediaSession {
         const senders = (this.pc.getSenders && this.pc.getSenders()) || [];
         this.log('[media] newPC after addTrack senders', senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })));
       } catch {}
+    } else {
+      this.log('[media] newPC: no local tracks to attach yet');
     }
 
     // Prepare remote stream
@@ -278,8 +298,9 @@ export class MediaSession {
       }
     };
 
-    // Check for pending negotiation after PC is ready
+    // Check for pending operations after PC is ready
     this.checkPendingNegotiation();
+    this.checkPendingRemoteOffer();
   }
 
   attachRemoteStreamDebug(stream) {
@@ -362,6 +383,16 @@ export class MediaSession {
     }
   }
 
+  // Check and execute pending remote offer
+  checkPendingRemoteOffer() {
+    if (this.pendingRemoteOffer && this.pc) {
+      this.log('[media] executing pending remote offer');
+      const { from, sdp } = this.pendingRemoteOffer;
+      this.pendingRemoteOffer = null;
+      this.handleOffer(from, sdp);
+    }
+  }
+
   async handleOffer(from, sdp) {
     try {
       const offer = new RTCSessionDescription(sdp);
@@ -369,6 +400,14 @@ export class MediaSession {
         const head = (offer.sdp || '').split('\n').slice(0, 40).join('\\n');
         this.log('[media] SDP offer received', head);
       }
+
+      // Second line of defense: check if PC is ready
+      if (!this.pc) {
+        this.log('[media] handleOffer: PC not ready, storing offer for later');
+        this.pendingRemoteOffer = { from, sdp };
+        return;
+      }
+
       const offerCollision = (this.makingOffer || this.pc.signalingState !== 'stable');
       const ignoreOffer = !this.signaling.polite && offerCollision;
       this.log('[media] offer from', from, 'collision=', offerCollision, 'ignore=', ignoreOffer, 'polite=', this.signaling.polite);
