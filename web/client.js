@@ -551,32 +551,47 @@ async function join(){
       log('local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
       t.onended = async () => {
         log('local track ended', t.kind, '— try recover');
+        let didRenegotiate = false;
         try {
           const constraints = t.kind === 'video' ? { video:true } : { audio:true };
           const fresh = await navigator.mediaDevices.getUserMedia(constraints);
           const newTrack = t.kind === 'video' ? fresh.getVideoTracks()[0] : fresh.getAudioTracks()[0];
           if (newTrack) {
-            // Update localStream: remove ended track and add fresh one
-            try { if (localStream) localStream.removeTrack(t); } catch {}
-            try { if (localStream) localStream.addTrack(newTrack); } catch {}
-            vLocal.srcObject = localStream;
-
-            // Replace on sender if exists, otherwise rebuild
+            // Try replace on sender first
             const sender = pc && pc.getSenders ? pc.getSenders().find(s => s.track && s.track.kind === t.kind) : null;
             if (sender && sender.replaceTrack) {
               await sender.replaceTrack(newTrack);
+              // Update localStream only after successful replace
+              try { if (localStream) localStream.removeTrack(t); } catch {}
+              try { if (localStream) localStream.addTrack(newTrack); } catch {}
+              vLocal.srcObject = localStream;
               log('track recovered via replaceTrack', t.kind);
+              // Clean up extra fresh tracks
               try { fresh.getTracks().forEach(x => { if (x !== newTrack) x.stop(); }); } catch {}
-              // renegotiate to sync m-lines
               await rebuildPCAndRenegotiate();
+              didRenegotiate = true;
               return;
+            } else {
+              log('recover track ERR', 'no sender for kind=' + t.kind);
             }
-
-            await rebuildPCAndRenegotiate();
-            return;
+          } else {
+            log('recover track ERR', 'no newTrack for kind=' + t.kind);
           }
         } catch (err) {
           log('recover track ERR', err?.name || err?.message || String(err));
+        } finally {
+          // Always remove the ended track from localStream so it doesn't block recvonly detection
+          try { if (localStream) localStream.removeTrack(t); } catch {}
+          vLocal.srcObject = localStream;
+          try {
+            const count = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
+            if (count === 0) {
+              localStream = new MediaStream();
+              vLocal.srcObject = localStream;
+              log('entered recvonly after track end (no local tracks)');
+              if (!didRenegotiate) await rebuildPCAndRenegotiate();
+            }
+          } catch {}
         }
       };
       t.onmute = () => log('local track mute', t.kind);
