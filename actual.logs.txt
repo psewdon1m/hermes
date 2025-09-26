@@ -1,0 +1,167 @@
+# observer started 2025-09-26T15:23:23.578Z
+log observer listening on redis://redis:6379 (filter=*; detail=on)
+# redis=redis://redis:6379 filter=* detail=on
+2025-09-26T15:19:51.225Z c_463127 eon0rdq2   [offerer] WS open
+  detail: WS open
+2025-09-26T15:19:49.113Z c_463127 eon0rdq2   [offerer] join ok c_4631279cc1eabc7e offerer polite= false
+  detail: join ok | c_4631279cc1eabc7e | offerer | polite= | false
+2025-09-26T15:19:49.114Z c_463127 eon0rdq2   [offerer] client info {"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36","platform":"Win32","vendor":"Google Inc.","device":"windows","browser":"Chrome 140.0"}
+  detail: client info | {"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36","platform":"Win32","vendor":"Google Inc.","device":"windows","browser":"Chrome 140.0"}
+2025-09-26T15:19:51.023Z c_463127 eon0rdq2   [offerer] local track audio live live enabled= true
+  detail: local track | audio | live | live | enabled= | true
+2025-09-26T15:19:51.023Z c_463127 eon0rdq2   [offerer] local track video live live enabled= true
+  detail: local track | video | live | live | enabled= | true
+2025-09-26T15:19:51.026Z c_463127 eon0rdq2   [offerer] newPC start localTracks= 2 audio= 1 video= 1
+  detail: newPC start | localTracks= | 2 | audio= | 1 | video= | 1
+2025-09-26T15:19:51.028Z c_463127 eon0rdq2   [offerer] newPC after addTrack senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+  detail: newPC after addTrack senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+2025-09-26T15:19:51.029Z c_463127 eon0rdq2   [offerer] [remote attach] tracks=[  ] paused= true readyState= 0
+  detail: [remote attach] tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T15:24:39.417Z c_463127 jrhm6hex   [offerer] WS open
+  detail: WS open
+2025-09-26T15:24:35.441Z c_463127 jrhm6hex   [offerer] join ok c_4631279cc1eabc7e answerer polite= true
+  detail: join ok | c_4631279cc1eabc7e | answerer | polite= | true
+2025-09-26T15:24:35.442Z c_463127 jrhm6hex   [offerer] client info {"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0","platform":"Win32","vendor":"","device":"windows","browser":"Firefox 142.0"}
+  detail: client info | {"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0","platform":"Win32","vendor":"","device":"windows","browser":"Firefox 142.0"}
+2025-09-26T15:24:39.134Z c_463127 jrhm6hex   [offerer] local track audio live live enabled= true
+  detail: local track | audio | live | live | enabled= | true
+2025-09-26T15:24:39.134Z c_463127 jrhm6hex   [offerer] local track video live live enabled= true
+  detail: local track | video | live | live | enabled= | true
+2025-09-26T15:24:39.138Z c_463127 jrhm6hex   [offerer] newPC start localTracks= 2 audio= 1 video= 1
+  detail: newPC start | localTracks= | 2 | audio= | 1 | video= | 1
+2025-09-26T15:24:39.139Z c_463127 jrhm6hex   [offerer] newPC after addTrack senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+  detail: newPC after addTrack senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+2025-09-26T15:24:39.139Z c_463127 jrhm6hex   [offerer] [remote attach] tracks=[  ] paused= true readyState= 0
+  detail: [remote attach] tracks=[ |  | ] | paused= | true | readyState= | 0
+2025-09-26T15:20:02.024Z c_463127 eon0rdq2   [offerer] offer sent
+  detail: offer sent
+2025-09-26T15:20:02.025Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.026Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.026Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.026Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.026Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.026Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.093Z c_463127 eon0rdq2   [offerer] candidate srflx
+  detail: candidate | srflx
+2025-09-26T15:20:02.096Z c_463127 eon0rdq2   [offerer] candidate srflx
+  detail: candidate | srflx
+2025-09-26T15:24:39.505Z c_463127 jrhm6hex   [offerer] offer from eon0rdq2 collision= false ignore= false polite= true
+  detail: offer from | eon0rdq2 | collision= | false | ignore= | false | polite= | true
+2025-09-26T15:24:39.508Z c_463127 jrhm6hex   [offerer] ontrack kind= video state= live enabled= true
+  detail: ontrack kind= | video | state= | live | enabled= | true
+2025-09-26T15:24:39.508Z c_463127 jrhm6hex   [offerer] [remote attach] tracks=[ video:live:true,audio:live:true ] paused= false readyState= 0
+  detail: [remote attach] tracks=[ | video:live:true,audio:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T15:24:39.508Z c_463127 jrhm6hex   [offerer] ontrack kind= audio state= live enabled= true
+  detail: ontrack kind= | audio | state= | live | enabled= | true
+2025-09-26T15:24:39.509Z c_463127 jrhm6hex   [offerer] [remote attach] tracks=[ video:live:true,audio:live:true ] paused= false readyState= 0
+  detail: [remote attach] tracks=[ | video:live:true,audio:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T15:24:39.513Z c_463127 jrhm6hex   [offerer] answer sent
+  detail: answer sent
+2025-09-26T15:24:39.516Z c_463127 jrhm6hex   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:24:39.516Z c_463127 jrhm6hex   [offerer] iceState checking
+  detail: iceState | checking
+2025-09-26T15:24:39.516Z c_463127 jrhm6hex   [offerer] pcState connecting
+  detail: pcState | connecting
+2025-09-26T15:24:39.517Z c_463127 jrhm6hex   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.144Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.144Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.145Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.145Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.145Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.145Z c_463127 eon0rdq2   [offerer] candidate host
+  detail: candidate | host
+2025-09-26T15:20:02.183Z c_463127 eon0rdq2   [offerer] answer set
+  detail: answer set
+2025-09-26T15:20:02.183Z c_463127 eon0rdq2   [offerer] iceState checking
+  detail: iceState | checking
+2025-09-26T15:20:02.184Z c_463127 eon0rdq2   [offerer] pcState connecting
+  detail: pcState | connecting
+2025-09-26T15:20:02.204Z c_463127 eon0rdq2   [offerer] candidate relay
+  detail: candidate | relay
+2025-09-26T15:24:39.632Z c_463127 jrhm6hex   [offerer] candidate srflx
+  detail: candidate | srflx
+2025-09-26T15:24:39.637Z c_463127 jrhm6hex   [offerer] iceState connected
+  detail: iceState | connected
+2025-09-26T15:24:39.637Z c_463127 jrhm6hex   [offerer] [remote attach] tracks=[ video:live:true,audio:live:true ] paused= false readyState= 0
+  detail: [remote attach] tracks=[ | video:live:true,audio:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T15:20:02.242Z c_463127 eon0rdq2   [offerer] ICE gathering complete
+  detail: ICE gathering complete
+2025-09-26T15:20:02.242Z c_463127 eon0rdq2   [offerer] iceState connected
+  detail: iceState | connected
+2025-09-26T15:20:02.242Z c_463127 eon0rdq2   [offerer] [remote attach] tracks=[  ] paused= false readyState= 0
+  detail: [remote attach] tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T15:24:39.644Z c_463127 jrhm6hex   [offerer] pcState connected
+  detail: pcState | connected
+2025-09-26T15:24:39.644Z c_463127 jrhm6hex   [offerer] [remote attach] tracks=[ video:live:true,audio:live:true ] paused= false readyState= 0
+  detail: [remote attach] tracks=[ | video:live:true,audio:live:true | ] | paused= | false | readyState= | 0
+2025-09-26T15:20:02.248Z c_463127 eon0rdq2   [offerer] pcState connected
+  detail: pcState | connected
+2025-09-26T15:20:02.248Z c_463127 eon0rdq2   [offerer] [remote attach] tracks=[  ] paused= false readyState= 0
+  detail: [remote attach] tracks=[ |  | ] | paused= | false | readyState= | 0
+2025-09-26T15:24:39.704Z c_463127 jrhm6hex   [offerer] candidate relay
+  detail: candidate | relay
+2025-09-26T15:24:39.710Z c_463127 jrhm6hex   [offerer] candidate relay
+  detail: candidate | relay
+2025-09-26T15:24:39.769Z c_463127 jrhm6hex   [offerer] candidate relay
+  detail: candidate | relay
+2025-09-26T15:24:39.770Z c_463127 jrhm6hex   [offerer] candidate ?
+  detail: candidate | ?
+2025-09-26T15:24:39.770Z c_463127 jrhm6hex   [offerer] ICE gathering complete
+  detail: ICE gathering complete
+2025-09-26T15:20:07.245Z c_463127 eon0rdq2   [offerer] [stats] in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
+  detail: [stats] | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T15:24:44.655Z c_463127 jrhm6hex   [offerer] [stats] in_a=0kbps in_v=0kbps out_a=0kbps out_v=0kbps
+  detail: [stats] | in_a=0kbps | in_v=0kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T15:20:12.244Z c_463127 eon0rdq2   [offerer] [stats] in_a=0kbps in_v=0kbps out_a=64.7kbps out_v=1539.7kbps
+  detail: [stats] | in_a=0kbps | in_v=0kbps | out_a=64.7kbps | out_v=1539.7kbps
+2025-09-26T15:24:49.670Z c_463127 jrhm6hex   [offerer] [stats] in_a=64.5kbps in_v=1547.4kbps out_a=0kbps out_v=0kbps
+  detail: [stats] | in_a=64.5kbps | in_v=1547.4kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T15:20:17.244Z c_463127 eon0rdq2   [offerer] [stats] in_a=0kbps in_v=0kbps out_a=64.2kbps out_v=1709kbps
+  detail: [stats] | in_a=0kbps | in_v=0kbps | out_a=64.2kbps | out_v=1709kbps
+2025-09-26T15:24:54.670Z c_463127 jrhm6hex   [offerer] [stats] in_a=64.2kbps in_v=1697.1kbps out_a=0kbps out_v=0kbps
+  detail: [stats] | in_a=64.2kbps | in_v=1697.1kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T15:20:22.244Z c_463127 eon0rdq2   [offerer] [stats] in_a=0kbps in_v=0kbps out_a=64.3kbps out_v=1699.1kbps
+  detail: [stats] | in_a=0kbps | in_v=0kbps | out_a=64.3kbps | out_v=1699.1kbps
+2025-09-26T15:24:59.678Z c_463127 jrhm6hex   [offerer] [stats] in_a=64.2kbps in_v=1696.1kbps out_a=0kbps out_v=0kbps
+  detail: [stats] | in_a=64.2kbps | in_v=1696.1kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T15:20:27.244Z c_463127 eon0rdq2   [offerer] [stats] in_a=0kbps in_v=0kbps out_a=64.3kbps out_v=1701.7kbps
+  detail: [stats] | in_a=0kbps | in_v=0kbps | out_a=64.3kbps | out_v=1701.7kbps
+2025-09-26T15:25:04.692Z c_463127 jrhm6hex   [offerer] [stats] in_a=64.6kbps in_v=1697kbps out_a=0kbps out_v=0kbps
+  detail: [stats] | in_a=64.6kbps | in_v=1697kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T15:20:32.244Z c_463127 eon0rdq2   [offerer] [stats] in_a=0kbps in_v=0kbps out_a=64.4kbps out_v=1713.2kbps
+  detail: [stats] | in_a=0kbps | in_v=0kbps | out_a=64.4kbps | out_v=1713.2kbps
+2025-09-26T15:25:09.705Z c_463127 jrhm6hex   [offerer] [stats] in_a=64.3kbps in_v=1736.2kbps out_a=0kbps out_v=0kbps
+  detail: [stats] | in_a=64.3kbps | in_v=1736.2kbps | out_a=0kbps | out_v=0kbps
+2025-09-26T15:20:34.444Z c_463127 eon0rdq2   [offerer] recover start {"kind":"audio","trackState":"ended"}
+  detail: recover start | {"kind":"audio","trackState":"ended"}
+2025-09-26T15:20:34.444Z c_463127 eon0rdq2   [offerer] recover pre-recvonly cleanup {"tracksBefore":2,"tracksAfter":1}
+  detail: recover pre-recvonly cleanup | {"tracksBefore":2,"tracksAfter":1}
+2025-09-26T15:20:34.445Z c_463127 eon0rdq2   [offerer] recover start {"kind":"video","trackState":"ended"}
+  detail: recover start | {"kind":"video","trackState":"ended"}
+2025-09-26T15:20:34.445Z c_463127 eon0rdq2   [offerer] recover pre-recvonly cleanup {"tracksBefore":1,"tracksAfter":0}
+  detail: recover pre-recvonly cleanup | {"tracksBefore":1,"tracksAfter":0}
+2025-09-26T15:20:34.445Z c_463127 eon0rdq2   [offerer] entered recvonly immediately after track end
+  detail: entered recvonly immediately after track end
+2025-09-26T15:20:34.445Z c_463127 eon0rdq2   [offerer] rebuild PC and renegotiate
+  detail: rebuild PC and renegotiate
+2025-09-26T15:25:11.937Z c_463127 jrhm6hex   [offerer] rebuild PC and renegotiate
+  detail: rebuild PC and renegotiate
+2025-09-26T15:25:11.939Z c_463127 jrhm6hex   [offerer] newPC start localTracks= 2 audio= 1 video= 1
+  detail: newPC start | localTracks= | 2 | audio= | 1 | video= | 1
+2025-09-26T15:25:11.940Z c_463127 jrhm6hex   [offerer] newPC after addTrack senders [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+  detail: newPC after addTrack senders | [{"kind":"video","state":"live"},{"kind":"audio","state":"live"}]
+2025-09-26T15:25:11.940Z c_463127 jrhm6hex   [offerer] [remote attach] tracks=[  ] paused= true readyState= 0
+  detail: [remote attach] tracks=[ |  | ] | paused= | true | readyState= | 0

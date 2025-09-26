@@ -15,11 +15,12 @@ export class MediaSession {
     this.makingOffer = false;
     this.state = 'idle'; // idle, preparing, active
     this.onStateChange = null;
+    this.pendingNegotiation = false; // Flag for delayed negotiation
   }
 
   async prepareLocalMedia() {
     this.setState('preparing');
-    this.this.log('[media] preparing local media');
+    this.log('[media] preparing local media');
     
     this.localStream = null;
     let gumOk = false;
@@ -28,34 +29,34 @@ export class MediaSession {
       await this.logPermissionsInfo();
       this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       gumOk = true;
-      this.this.log('[media] local media ready (audio+video)');
+      this.log('[media] local media ready (audio+video)');
     } catch (e1) {
-      this.this.log('[media] media error', e1?.name || e1?.message || String(e1));
+      this.log('[media] media error', e1?.name || e1?.message || String(e1));
       try {
         this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         gumOk = true;
-        this.this.log('[media] local media ready (audio only)');
+        this.log('[media] local media ready (audio only)');
       } catch (e2) {
-        this.this.log('[media] media error (audio only)', e2?.name || e2?.message || String(e2));
+        this.log('[media] media error (audio only)', e2?.name || e2?.message || String(e2));
         try {
           this.localStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
           gumOk = true;
-          this.this.log('[media] local media ready (video only)');
+          this.log('[media] local media ready (video only)');
         } catch (e3) {
-          this.this.log('[media] media error (video only)', e3?.name || e3?.message || String(e3));
-          this.this.log('[media] proceeding without local media (recvonly)');
+          this.log('[media] media error (video only)', e3?.name || e3?.message || String(e3));
+          this.log('[media] proceeding without local media (recvonly)');
         }
       }
     }
 
     if (!gumOk && (!this.localStream || (!this.localStream.getAudioTracks().length && !this.localStream.getVideoTracks().length))) {
-      this.this.log('[media] entering recvonly mode');
+      this.log('[media] entering recvonly mode');
       this.localStream = new MediaStream();
     }
 
     vLocal.srcObject = this.localStream;
     this.setupTrackHandlers();
-    this.this.resumePlay(vLocal);
+    this.resumePlay(vLocal);
     
     return gumOk;
   }
@@ -64,10 +65,10 @@ export class MediaSession {
     if (!this.localStream) return;
     
     this.localStream.getTracks().forEach(t => {
-      this.this.log('[media] local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
+      this.log('[media] local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
       t.onended = () => this.handleTrackEnded(t);
-      t.onmute = () => this.this.log('[media] local track mute', t.kind);
-      t.onunmute = () => this.this.log('[media] local track unmute', t.kind);
+      t.onmute = () => this.log('[media] local track mute', t.kind);
+      t.onunmute = () => this.log('[media] local track unmute', t.kind);
     });
   }
 
@@ -273,6 +274,9 @@ export class MediaSession {
         this.rebuildPCAndRenegotiate();
       }
     };
+
+    // Check for pending negotiation after PC is ready
+    this.checkPendingNegotiation();
   }
 
   attachRemoteStreamDebug(stream) {
@@ -310,6 +314,13 @@ export class MediaSession {
   }
 
   async startNegotiation() {
+    // Protect against missing PC
+    if (!this.pc) {
+      this.log('[media] startNegotiation skipped: pc not ready');
+      this.pendingNegotiation = true;
+      return;
+    }
+    
     if (!this.signaling.otherPeer || this.makingOffer) return;
     
     try {
@@ -330,6 +341,21 @@ export class MediaSession {
       this.log('[media] offer ERR', e?.message || e);
     } finally { 
       this.makingOffer = false; 
+    }
+  }
+
+  // Check and execute pending negotiation
+  checkPendingNegotiation() {
+    if (this.pendingNegotiation && this.pc && this.signaling.otherPeer && !this.makingOffer) {
+      this.log('[media] executing pending negotiation');
+      this.pendingNegotiation = false;
+      this.startNegotiation();
+    } else if (this.pendingNegotiation) {
+      this.log('[media] startNegotiation pending', { 
+        hasPC: !!this.pc, 
+        hasOtherPeer: !!this.signaling.otherPeer, 
+        makingOffer: this.makingOffer 
+      });
     }
   }
 

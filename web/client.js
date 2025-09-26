@@ -141,11 +141,19 @@ async function join(){
     if (eventType === 'peers' && otherPeer && !signalingSession.polite) {
       // Start media negotiation when we're the rightful initiator
       if (mediaSession) {
+        if (mediaSession.state === 'idle') {
+          // Media session not ready yet, ensure PC is created first
+          mediaSession.newPC();
+        }
         mediaSession.startNegotiation();
       }
     } else if (eventType === 'peer-joined' && otherPeer && !signalingSession.polite) {
       // Start media negotiation when peer joins
       if (mediaSession) {
+        if (mediaSession.state === 'idle') {
+          // Media session not ready yet, ensure PC is created first
+          mediaSession.newPC();
+        }
         mediaSession.startNegotiation();
       }
     } else if (eventType === 'peer-left') {
@@ -197,6 +205,7 @@ async function join(){
   // Create PC and start negotiation if we have a peer
   mediaSession.newPC();
   if (signalingSession.otherPeer && !signalingSession.polite) {
+    // PC is ready, start negotiation immediately
     await mediaSession.startNegotiation();
   }
 }
