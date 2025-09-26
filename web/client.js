@@ -1,5 +1,8 @@
 ﻿'use strict';
 
+import { SignalingSession } from './signaling-session.js';
+import { MediaSession } from './media-session.js';
+
 // ---------- DOM ----------
 const logEl   = document.getElementById('log');
 const vLocal  = document.getElementById('local');
@@ -126,7 +129,7 @@ async function join(){
   logClientInfo();
 
   // Phase 1: Establish signaling session
-  signalingSession = new SignalingSession();
+  signalingSession = new SignalingSession(log, api, rid, wsRetryLimit, wsRetryDelayMs);
   const signalingOk = await signalingSession.join(token);
   if (!signalingOk) {
     alert('Failed to establish signaling session');
@@ -169,7 +172,7 @@ async function join(){
   signalingSession.attachWS();
 
   // Phase 2: Establish media session
-  mediaSession = new MediaSession(signalingSession);
+  mediaSession = new MediaSession(signalingSession, log, logPermissionsInfo, resumePlay, debugSDP);
   
   // Set up media state change callback
   mediaSession.onStateChange = (newState, oldState) => {

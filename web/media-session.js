@@ -1,7 +1,11 @@
 // ---------- MediaSession Class ----------
-class MediaSession {
-  constructor(signalingSession) {
+export class MediaSession {
+  constructor(signalingSession, logger, logPermissionsInfo, resumePlay, debugSDP) {
     this.signaling = signalingSession;
+    this.log = logger;
+    this.logPermissionsInfo = logPermissionsInfo;
+    this.resumePlay = resumePlay;
+    this.debugSDP = debugSDP;
     this.pc = null;
     this.localStream = null;
     this.pendingCandidates = [];
@@ -15,43 +19,43 @@ class MediaSession {
 
   async prepareLocalMedia() {
     this.setState('preparing');
-    log('[media] preparing local media');
+    this.this.log('[media] preparing local media');
     
     this.localStream = null;
     let gumOk = false;
     
     try {
-      await logPermissionsInfo();
+      await this.logPermissionsInfo();
       this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       gumOk = true;
-      log('[media] local media ready (audio+video)');
+      this.this.log('[media] local media ready (audio+video)');
     } catch (e1) {
-      log('[media] media error', e1?.name || e1?.message || String(e1));
+      this.this.log('[media] media error', e1?.name || e1?.message || String(e1));
       try {
         this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         gumOk = true;
-        log('[media] local media ready (audio only)');
+        this.this.log('[media] local media ready (audio only)');
       } catch (e2) {
-        log('[media] media error (audio only)', e2?.name || e2?.message || String(e2));
+        this.this.log('[media] media error (audio only)', e2?.name || e2?.message || String(e2));
         try {
           this.localStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
           gumOk = true;
-          log('[media] local media ready (video only)');
+          this.this.log('[media] local media ready (video only)');
         } catch (e3) {
-          log('[media] media error (video only)', e3?.name || e3?.message || String(e3));
-          log('[media] proceeding without local media (recvonly)');
+          this.this.log('[media] media error (video only)', e3?.name || e3?.message || String(e3));
+          this.this.log('[media] proceeding without local media (recvonly)');
         }
       }
     }
 
     if (!gumOk && (!this.localStream || (!this.localStream.getAudioTracks().length && !this.localStream.getVideoTracks().length))) {
-      log('[media] entering recvonly mode');
+      this.this.log('[media] entering recvonly mode');
       this.localStream = new MediaStream();
     }
 
     vLocal.srcObject = this.localStream;
     this.setupTrackHandlers();
-    resumePlay(vLocal);
+    this.this.resumePlay(vLocal);
     
     return gumOk;
   }
@@ -60,26 +64,26 @@ class MediaSession {
     if (!this.localStream) return;
     
     this.localStream.getTracks().forEach(t => {
-      log('[media] local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
+      this.this.log('[media] local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
       t.onended = () => this.handleTrackEnded(t);
-      t.onmute = () => log('[media] local track mute', t.kind);
-      t.onunmute = () => log('[media] local track unmute', t.kind);
+      t.onmute = () => this.this.log('[media] local track mute', t.kind);
+      t.onunmute = () => this.this.log('[media] local track unmute', t.kind);
     });
   }
 
   async handleTrackEnded(t) {
-    log('[media] track ended', t.kind, 'state=', t.readyState);
+    this.log('[media] track ended', t.kind, 'state=', t.readyState);
     
     // Immediate recvonly switch for stability
     try {
       const before = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
       try { if (this.localStream) this.localStream.removeTrack(t); } catch {}
       const after = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
-      log('[media] pre-recvonly cleanup', { tracksBefore: before, tracksAfter: after });
+      this.log('[media] pre-recvonly cleanup', { tracksBefore: before, tracksAfter: after });
       if (after === 0) {
         this.localStream = new MediaStream();
         vLocal.srcObject = this.localStream;
-        log('[media] entered recvonly immediately after track end');
+        this.log('[media] entered recvonly immediately after track end');
         await this.rebuildPCAndRenegotiate();
       }
     } catch {}
@@ -89,7 +93,7 @@ class MediaSession {
   }
 
   async recoverTrack(t) {
-    log('[media] recover start', { kind: t.kind, trackState: t.readyState });
+    this.log('[media] recover start', { kind: t.kind, trackState: t.readyState });
     
     let constraints = t.kind === 'video' ? { video: true } : { audio: true };
     let gumTimeoutId;
@@ -97,7 +101,7 @@ class MediaSession {
     
     const timeoutPromise = new Promise((resolve) => {
       gumTimeoutId = setTimeout(() => {
-        log('[media] recover track TIMEOUT', { kind: t.kind, constraints });
+        this.log('[media] recover track TIMEOUT', { kind: t.kind, constraints });
         try {
           const count = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
           if (count === 0) {
@@ -111,14 +115,14 @@ class MediaSession {
     });
 
     try {
-      await logPermissionsInfo();
+      await this.logPermissionsInfo();
       const fresh = await Promise.race([
         navigator.mediaDevices.getUserMedia(constraints),
         timeoutPromise
       ]);
       
       if (!fresh) {
-        log('[media] recover exit (timeout)');
+        this.log('[media] recover exit (timeout)');
         return;
       }
 
@@ -126,9 +130,9 @@ class MediaSession {
       if (newTrack) {
         const sender = this.pc && this.pc.getSenders ? this.pc.getSenders().find(s => s.track && s.track.kind === t.kind) : null;
         if (sender && sender.replaceTrack) {
-          log('[media] replaceTrack attempt', { kind: t.kind, senderTrackState: sender?.track?.readyState || null });
+          this.log('[media] replaceTrack attempt', { kind: t.kind, senderTrackState: sender?.track?.readyState || null });
           await sender.replaceTrack(newTrack);
-          log('[media] replaceTrack success', { kind: t.kind, readyState: newTrack.readyState });
+          this.log('[media] replaceTrack success', { kind: t.kind, readyState: newTrack.readyState });
           
           try { if (this.localStream) this.localStream.removeTrack(t); } catch {}
           try { if (this.localStream) this.localStream.addTrack(newTrack); } catch {}
@@ -136,22 +140,22 @@ class MediaSession {
           
           try {
             const senderStates = (this.pc.getSenders && this.pc.getSenders()) ? this.pc.getSenders().map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })) : [];
-            log('[media] sender states after replace', senderStates);
+            this.log('[media] sender states after replace', senderStates);
           } catch {}
           
-          log('[media] track recovered via replaceTrack', t.kind);
+          this.log('[media] track recovered via replaceTrack', t.kind);
           try { fresh.getTracks().forEach(x => { if (x !== newTrack) x.stop(); }); } catch {}
           await this.rebuildPCAndRenegotiate();
           return;
         } else {
-          log('[media] recover track ERR', 'no sender for kind=' + t.kind, constraints);
+          this.log('[media] recover track ERR', 'no sender for kind=' + t.kind, constraints);
         }
       } else {
-        log('[media] recover track ERR', 'gum returned no tracks', constraints);
+        this.log('[media] recover track ERR', 'gum returned no tracks', constraints);
       }
     } catch (err) {
       this.gumFailCount += 1;
-      log('[media] recover track ERR', err?.name || err?.message || String(err), constraints);
+      this.log('[media] recover track ERR', err?.name || err?.message || String(err), constraints);
       try { if (this.gumFailCount >= 1 && diagEl) diagEl.textContent = 'Разрешите доступ к камере/микрофону и нажмите «Разрешить».'; } catch {}
     } finally {
       try { clearTimeout(gumTimeoutId); } catch {}
@@ -162,24 +166,24 @@ class MediaSession {
       
       try {
         const count = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
-        log('[media] recover finally', { tracksBefore: before, tracksAfter: count });
+        this.log('[media] recover finally', { tracksBefore: before, tracksAfter: count });
         if (count === 0) {
           this.localStream = new MediaStream();
           vLocal.srcObject = this.localStream;
-          log('[media] entered recvonly after track end (no local tracks)');
+          this.log('[media] entered recvonly after track end (no local tracks)');
           await this.rebuildPCAndRenegotiate();
         }
       } catch {}
     }
     
-    log('[media] recover exit');
+    this.log('[media] recover exit');
   }
 
   setState(newState) {
     if (this.state !== newState) {
       const oldState = this.state;
       this.state = newState;
-      log('[media] state change', oldState, '→', newState);
+      this.log('[media] state change', oldState, '→', newState);
       if (this.onStateChange) this.onStateChange(newState, oldState);
     }
   }
@@ -193,7 +197,7 @@ class MediaSession {
       const total = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
       const ac = (this.localStream && this.localStream.getAudioTracks) ? this.localStream.getAudioTracks().length : 0;
       const vc = (this.localStream && this.localStream.getVideoTracks) ? this.localStream.getVideoTracks().length : 0;
-      log('[media] newPC start', 'localTracks=', total, 'audio=', ac, 'video=', vc);
+      this.log('[media] newPC start', 'localTracks=', total, 'audio=', ac, 'video=', vc);
     } catch {}
 
     // Pre-create bidirectional m-lines
@@ -209,7 +213,7 @@ class MediaSession {
       });
       try {
         const senders = (this.pc.getSenders && this.pc.getSenders()) || [];
-        log('[media] newPC after addTrack senders', senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })));
+        this.log('[media] newPC after addTrack senders', senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })));
       } catch {}
     }
 
@@ -217,15 +221,15 @@ class MediaSession {
     const remoteStream = new MediaStream();
     vRemote.srcObject = remoteStream;
     this.attachRemoteStreamDebug(remoteStream);
-    resumePlay(vRemote);
+    this.resumePlay(vRemote);
 
     this.pc.ontrack = (ev) => {
       const s = ev.streams?.[0];
-      log('[media] ontrack kind=', ev.track?.kind, 'state=', ev.track?.readyState, 'enabled=', ev.track?.enabled);
+      this.log('[media] ontrack kind=', ev.track?.kind, 'state=', ev.track?.readyState, 'enabled=', ev.track?.enabled);
       if (s) {
         s.getTracks().forEach(t => remoteStream.addTrack(t));
         this.attachRemoteStreamDebug(remoteStream);
-        resumePlay(vRemote);
+        this.resumePlay(vRemote);
       }
     };
 
@@ -233,18 +237,18 @@ class MediaSession {
       if (e.candidate && this.signaling.otherPeer) {
         this.signaling.send({ type: 'candidate', target: this.signaling.otherPeer, payload: e.candidate });
       }
-      if (!e.candidate) log('[media] ICE gathering complete');
+      if (!e.candidate) this.log('[media] ICE gathering complete');
       else {
         const s = e.candidate.candidate || '';
         const parts = s.split(' '); const ti = parts.indexOf('typ');
         const typ = ti > -1 ? parts[ti+1] : '?';
-        log('[media] candidate', typ);
+        this.log('[media] candidate', typ);
       }
     };
 
     this.pc.oniceconnectionstatechange = () => {
       const st = this.pc.iceConnectionState;
-      log('[media] iceState', st);
+      this.log('[media] iceState', st);
       if (st === 'connected') { 
         this.attachRemoteStreamDebug(remoteStream); 
         this.startStatsMonitor(); 
@@ -258,7 +262,7 @@ class MediaSession {
 
     this.pc.onconnectionstatechange = () => {
       const st = this.pc.connectionState;
-      log('[media] pcState', st);
+      this.log('[media] pcState', st);
       if (st === 'connected') { 
         this.attachRemoteStreamDebug(remoteStream); 
         this.startStatsMonitor(); 
@@ -275,12 +279,12 @@ class MediaSession {
     const tracks = stream.getTracks()
       .map(t => `${t.kind}:${t.readyState}:${t.enabled}`)
       .join(',');
-    log('[media] remote attach tracks=[', tracks, ']',
+    this.log('[media] remote attach tracks=[', tracks, ']',
         'paused=', vRemote?.paused, 'readyState=', vRemote?.readyState ?? '?');
   }
 
   async rebuildPCAndRenegotiate() {
-    log('[media] rebuild PC and renegotiate');
+    this.log('[media] rebuild PC and renegotiate');
     await this.tryRollback();
     this.safeClosePC();
     this.newPC();
@@ -312,18 +316,18 @@ class MediaSession {
       this.makingOffer = true;
       try {
         const senders = (this.pc.getSenders && this.pc.getSenders()) || [];
-        log('[media] before createOffer senders', { count: senders.length, tracks: senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })) });
+        this.log('[media] before createOffer senders', { count: senders.length, tracks: senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })) });
       } catch {}
       const offer = await this.pc.createOffer();
-      if (debugSDP) {
+      if (this.debugSDP) {
         const head = (offer.sdp || '').split('\n').slice(0, 40).join('\\n');
-        log('[media] SDP offer created', head);
+        this.log('[media] SDP offer created', head);
       }
       await this.pc.setLocalDescription(offer);
       this.signaling.send({ type: 'offer', target: this.signaling.otherPeer, payload: this.pc.localDescription });
-      log('[media] offer sent');
+      this.log('[media] offer sent');
     } catch (e) {
-      log('[media] offer ERR', e?.message || e);
+      this.log('[media] offer ERR', e?.message || e);
     } finally { 
       this.makingOffer = false; 
     }
@@ -332,13 +336,13 @@ class MediaSession {
   async handleOffer(from, sdp) {
     try {
       const offer = new RTCSessionDescription(sdp);
-      if (debugSDP) {
+      if (this.debugSDP) {
         const head = (offer.sdp || '').split('\n').slice(0, 40).join('\\n');
-        log('[media] SDP offer received', head);
+        this.log('[media] SDP offer received', head);
       }
       const offerCollision = (this.makingOffer || this.pc.signalingState !== 'stable');
       const ignoreOffer = !this.signaling.polite && offerCollision;
-      log('[media] offer from', from, 'collision=', offerCollision, 'ignore=', ignoreOffer, 'polite=', this.signaling.polite);
+      this.log('[media] offer from', from, 'collision=', offerCollision, 'ignore=', ignoreOffer, 'polite=', this.signaling.polite);
 
       if (ignoreOffer) return;
 
@@ -354,15 +358,15 @@ class MediaSession {
       await this.flushPendingCandidates();
 
       const answer = await this.pc.createAnswer();
-      if (debugSDP) {
+      if (this.debugSDP) {
         const head = (answer.sdp || '').split('\n').slice(0, 40).join('\\n');
-        log('[media] SDP answer created', head);
+        this.log('[media] SDP answer created', head);
       }
       await this.pc.setLocalDescription(answer);
       this.signaling.send({ type: 'answer', target: from, payload: this.pc.localDescription });
-      log('[media] answer sent');
+      this.log('[media] answer sent');
     } catch (e) {
-      log('[media] handleOffer ERR', e?.message || e);
+      this.log('[media] handleOffer ERR', e?.message || e);
       if (/m-?lines?/i.test(String(e?.message || ''))) {
         this.rebuildPCAndRenegotiate();
       }
@@ -372,15 +376,15 @@ class MediaSession {
   async handleAnswer(_from, sdp) {
     try {
       const answerDesc = new RTCSessionDescription(sdp);
-      if (debugSDP) {
+      if (this.debugSDP) {
         const head = (answerDesc.sdp || '').split('\n').slice(0, 40).join('\\n');
-        log('[media] SDP answer received', head);
+        this.log('[media] SDP answer received', head);
       }
       await this.pc.setRemoteDescription(answerDesc);
       await this.flushPendingCandidates();
-      log('[media] answer set');
+      this.log('[media] answer set');
     } catch (e) {
-      log('[media] handleAnswer ERR', e?.message || e);
+      this.log('[media] handleAnswer ERR', e?.message || e);
       if (/m-?lines?/i.test(String(e?.message || ''))) {
         this.rebuildPCAndRenegotiate();
       }
@@ -393,7 +397,7 @@ class MediaSession {
     this.pendingCandidates = [];
     for (const cand of queued) {
       try { await this.pc.addIceCandidate(cand); }
-      catch (e) { log('[media] addIce ERR queued', e?.message || e); }
+      catch (e) { this.log('[media] addIce ERR queued', e?.message || e); }
     }
   }
 
@@ -403,7 +407,7 @@ class MediaSession {
       return;
     }
     try { await this.pc.addIceCandidate(payload); }
-    catch (e) { log('[media] addIce ERR', e.message); }
+    catch (e) { this.log('[media] addIce ERR', e.message); }
   }
 
   async sampleStats() {
@@ -453,7 +457,7 @@ class MediaSession {
         outboundVideo: round(outboundVideo)
       };
     } catch (err) {
-      log('[media] stats error', err?.message || err);
+      this.log('[media] stats error', err?.message || err);
       return null;
     }
   }
@@ -463,7 +467,7 @@ class MediaSession {
     this.statsTimer = setInterval(async () => {
       const stats = await this.sampleStats();
       if (!stats) return;
-      log('[media] stats', 'in_a=' + stats.inboundAudio + 'kbps', 'in_v=' + stats.inboundVideo + 'kbps', 'out_a=' + stats.outboundAudio + 'kbps', 'out_v=' + stats.outboundVideo + 'kbps');
+      this.log('[media] stats', 'in_a=' + stats.inboundAudio + 'kbps', 'in_v=' + stats.inboundVideo + 'kbps', 'out_a=' + stats.outboundAudio + 'kbps', 'out_v=' + stats.outboundVideo + 'kbps');
     }, 5000);
   }
 

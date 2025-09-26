@@ -8,25 +8,29 @@
 ## Новые файлы
 
 ### `web/signaling-session.js`
-- **SignalingSession** класс для управления WebSocket
+- **SignalingSession** класс для управления WebSocket (ES-модуль)
 - Автоматические ретраи и refresh токенов
 - Управление peer идентификацией и politeness
 - Логирование с префиксом `[signal]`
+- Экспортируется как `export class SignalingSession`
 
 ### `web/media-session.js`  
-- **MediaSession** класс с состояниями: `idle → preparing → active`
+- **MediaSession** класс с состояниями: `idle → preparing → active` (ES-модуль)
 - Управление RTCPeerConnection и медиа-треками
 - Автоматическое восстановление треков с таймаутами
 - Логирование с префиксом `[media]`
+- Экспортируется как `export class MediaSession`
 
 ## Изменения в `web/client.js`
+- Превращен в ES-модуль с импортами классов
 - Удалена старая монолитная логика
-- Интеграция с новыми классами
+- Интеграция с новыми классами через конструкторы
 - Обновлены обработчики кнопок и UI
 - Улучшенное логирование
 
 ## Изменения в `web/index.html`
-- Подключены новые JS модули
+- Убраны отдельные подключения JS файлов
+- Остался только ES-модуль `client.js`
 - Сохранена обратная совместимость
 
 ## Ключевые улучшения
@@ -77,6 +81,33 @@
 3. Смена сети (WiFi ↔ мобильный)
 4. Обновление страницы
 5. Попытки третьего участника (room-full)
+
+## Решение проблемы области видимости
+
+### Проблема
+Изначально классы подключались как обычные скрипты, а `client.js` как ES-модуль. Это приводило к ошибке `TypeError: log is not a function`, так как функция `log` была недоступна в глобальной области видимости.
+
+### Решение
+1. **Превратили все файлы в ES-модули**:
+   - `signaling-session.js` → `export class SignalingSession`
+   - `media-session.js` → `export class MediaSession`
+
+2. **Импорт в client.js**:
+   ```javascript
+   import { SignalingSession } from './signaling-session.js';
+   import { MediaSession } from './media-session.js';
+   ```
+
+3. **Передача зависимостей через конструкторы**:
+   ```javascript
+   signalingSession = new SignalingSession(log, api, rid, wsRetryLimit, wsRetryDelayMs);
+   mediaSession = new MediaSession(signalingSession, log, logPermissionsInfo, resumePlay, debugSDP);
+   ```
+
+4. **Упростили HTML**:
+   ```html
+   <script type="module" src="/client.js"></script>
+   ```
 
 ## Обратная совместимость
 - API endpoints остались без изменений
