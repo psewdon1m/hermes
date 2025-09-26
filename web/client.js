@@ -556,18 +556,19 @@ async function join(){
     localStream.getTracks().forEach(t => {
       log('local track', t.kind, 'live', t.readyState, 'enabled=', t.enabled);
       t.onended = async () => {
-        log('local track ended', t.kind, '— try recover');
+        log('recover start', { kind: t.kind, trackState: t.readyState });
         let didRenegotiate = false;
+        let constraints = t.kind === 'video' ? { video:true } : { audio:true };
         try {
-          const constraints = t.kind === 'video' ? { video:true } : { audio:true };
           const fresh = await navigator.mediaDevices.getUserMedia(constraints);
           const newTrack = t.kind === 'video' ? fresh.getVideoTracks()[0] : fresh.getAudioTracks()[0];
           if (newTrack) {
             // Try replace on sender first
             const sender = pc && pc.getSenders ? pc.getSenders().find(s => s.track && s.track.kind === t.kind) : null;
             if (sender && sender.replaceTrack) {
+              log('replaceTrack attempt', { kind: t.kind, senderTrackState: sender?.track?.readyState || null, hasDTMF: !!sender?.dtmf });
               await sender.replaceTrack(newTrack);
-              log('replaceTrack success', t.kind);
+              log('replaceTrack success', { kind: t.kind, readyState: newTrack.readyState });
               // Update localStream only after successful replace
               try { if (localStream) localStream.removeTrack(t); } catch {}
               try { if (localStream) localStream.addTrack(newTrack); } catch {}
@@ -576,17 +577,18 @@ async function join(){
               // Clean up extra fresh tracks
               try { fresh.getTracks().forEach(x => { if (x !== newTrack) x.stop(); }); } catch {}
               await rebuildPCAndRenegotiate();
-              log('renegotiate after replaceTrack done');
+              log('renegotiate done', { callbacks:'replaceTrack' });
               didRenegotiate = true;
+              log('recover exit', { kind: t.kind, didRenegotiate });
               return;
             } else {
-              log('recover track ERR', 'no sender for kind=' + t.kind);
+              log('recover track ERR', 'no sender for kind=' + t.kind, constraints);
             }
           } else {
-            log('recover track ERR', 'no newTrack for kind=' + t.kind);
+            log('recover track ERR', 'gum returned no tracks', constraints);
           }
         } catch (err) {
-          log('recover track ERR', err?.name || err?.message || String(err));
+          log('recover track ERR', err?.name || err?.message || String(err), constraints);
         } finally {
           // Always remove the ended track from localStream so it doesn't block recvonly detection
           const before = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
@@ -594,16 +596,18 @@ async function join(){
           vLocal.srcObject = localStream;
           try {
             const count = (localStream && localStream.getTracks) ? localStream.getTracks().length : 0;
-            log('recover finally', 'tracksBefore=', before, 'tracksAfter=', count);
+            log('recover finally', { tracksBefore: before, tracksAfter: count });
             if (count === 0) {
               localStream = new MediaStream();
               vLocal.srcObject = localStream;
               log('entered recvonly after track end (no local tracks)');
               if (!didRenegotiate) await rebuildPCAndRenegotiate();
-              log('renegotiate after recvonly done');
+              log('renegotiate done', { callbacks:'recvonly' });
+              didRenegotiate = true;
             }
           } catch {}
         }
+        log('recover exit', { kind: t.kind, didRenegotiate });
       };
       t.onmute = () => log('local track mute', t.kind);
       t.onunmute = () => log('local track unmute', t.kind);
