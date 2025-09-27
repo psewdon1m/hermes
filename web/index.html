@@ -95,6 +95,11 @@
       height: 100%;
       object-fit: cover;
       border-radius: 10px;
+      display: none; /* Hidden by default, shown when video stream is available */
+    }
+    
+    .video-area video.show {
+      display: block;
     }
 
     .video-placeholder {
@@ -107,16 +112,21 @@
     @media (min-width: 768px) {
       .video-container {
         flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
       }
       
       .video-area.primary {
-        flex: 2;
-        aspect-ratio: 16/9;
+        width: 300px;
+        height: 300px;
+        flex: none;
       }
       
       .video-area.secondary {
-        flex: 1;
-        aspect-ratio: 9/16;
+        width: 200px;
+        height: 200px;
+        flex: none;
       }
     }
 
@@ -142,19 +152,20 @@
       
       .video-container {
         flex-direction: column;
-        gap: 15px;
+        align-items: center;
+        gap: 20px;
       }
       
       .video-area.primary {
-        flex: 1;
-        aspect-ratio: 16/9;
-        min-height: 200px;
+        width: 250px;
+        height: 250px;
+        flex: none;
       }
       
       .video-area.secondary {
-        flex: 1;
-        aspect-ratio: 16/9;
-        min-height: 200px;
+        width: 200px;
+        height: 200px;
+        flex: none;
       }
     }
 
@@ -163,7 +174,8 @@
       display: flex;
       justify-content: center;
       gap: 20px;
-      padding: 20px 0 40px;
+      padding: 30px 0 40px;
+      margin-top: auto; /* Push buttons to bottom */
     }
 
     .control-button {
@@ -265,12 +277,17 @@
       }
       
       .video-container {
-        gap: 10px;
+        gap: 15px;
       }
       
-      .video-area.primary,
+      .video-area.primary {
+        width: 200px;
+        height: 200px;
+      }
+      
       .video-area.secondary {
-        min-height: 150px;
+        width: 150px;
+        height: 150px;
       }
       
       .control-button {
@@ -341,11 +358,11 @@
     <!-- Video Container -->
     <div class="video-container">
       <div class="video-area primary fade-in" id="remoteVideoArea">
-        <video id="remote" autoplay playsinline class="hidden"></video>
+        <video id="remote" autoplay playsinline></video>
         <div class="video-placeholder">Remote Video</div>
       </div>
       <div class="video-area secondary fade-in" id="localVideoArea">
-        <video id="local" autoplay playsinline muted class="hidden"></video>
+        <video id="local" autoplay playsinline muted></video>
         <div class="video-placeholder">Local Video</div>
       </div>
     </div>

@@ -224,8 +224,7 @@ export class UIManager {
       placeholder.style.display = 'none';
     }
     
-    videoElement.classList.remove('hidden');
-    videoElement.style.display = 'block';
+    videoElement.classList.add('show');
   }
 
   /**
@@ -240,8 +239,7 @@ export class UIManager {
       placeholder.style.display = 'flex';
     }
     
-    videoElement.classList.add('hidden');
-    videoElement.style.display = 'none';
+    videoElement.classList.remove('show');
   }
 
   /**
