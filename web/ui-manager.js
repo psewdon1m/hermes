@@ -28,6 +28,9 @@ export class UIManager {
 
     this.initializeEventListeners();
     this.checkDebugMode();
+    
+    // Start timer immediately for testing
+    this.startCallTimer();
   }
 
   /**
@@ -145,11 +148,16 @@ export class UIManager {
    * Toggle camera state
    */
   toggleCamera() {
+    console.log('[UI] Toggle camera clicked');
+    
     // Use the global toggle function to avoid recursion
     if (typeof window.toggleCameraMedia === 'function') {
+      console.log('[UI] Calling window.toggleCameraMedia()');
       const isEnabled = window.toggleCameraMedia();
+      console.log('[UI] Camera enabled:', isEnabled);
       this.updateCameraState(isEnabled);
     } else {
+      console.log('[UI] window.toggleCameraMedia not available, using fallback');
       // Fallback: just update UI state
       const isActive = this.elements.camBtn.classList.contains('active');
       this.updateCameraState(!isActive);
@@ -160,11 +168,16 @@ export class UIManager {
    * Toggle microphone state
    */
   toggleMicrophone() {
+    console.log('[UI] Toggle microphone clicked');
+    
     // Use the global toggle function to avoid recursion
     if (typeof window.toggleMicrophoneMedia === 'function') {
+      console.log('[UI] Calling window.toggleMicrophoneMedia()');
       const isEnabled = window.toggleMicrophoneMedia();
+      console.log('[UI] Microphone enabled:', isEnabled);
       this.updateMicrophoneState(isEnabled);
     } else {
+      console.log('[UI] window.toggleMicrophoneMedia not available, using fallback');
       // Fallback: just update UI state
       const isActive = this.elements.micBtn.classList.contains('active');
       this.updateMicrophoneState(!isActive);
@@ -175,16 +188,27 @@ export class UIManager {
    * End the call
    */
   endCall() {
+    console.log('[UI] Exit button clicked');
     this.stopCallTimer();
     
     // Trigger leave in existing client code
     const leaveBtn = document.getElementById('leaveBtn');
     if (leaveBtn) {
+      console.log('[UI] Clicking leaveBtn');
       leaveBtn.click();
+    } else {
+      console.log('[UI] leaveBtn not found');
     }
     
-    // Close the tab/window
-    window.close();
+    // Try to close the tab/window, but don't fail if it doesn't work
+    try {
+      console.log('[UI] Attempting to close window');
+      window.close();
+    } catch (e) {
+      console.log('Cannot close window:', e);
+      // Fallback: redirect to a blank page or show message
+      document.body.innerHTML = '<div style="text-align: center; padding: 50px; color: white; font-size: 24px;">Call ended</div>';
+    }
   }
 
   /**

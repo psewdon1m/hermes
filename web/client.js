@@ -219,6 +219,30 @@ async function join(){
     }
   };
 
+  // Add video stream callbacks to update UI
+  const originalPrepareLocalMedia = mediaSession.prepareLocalMedia.bind(mediaSession);
+  mediaSession.prepareLocalMedia = async function() {
+    const result = await originalPrepareLocalMedia();
+    
+    // Show local video in UI
+    if (uiManager && this.localStream) {
+      uiManager.showVideoStream(this.vLocal, true);
+    }
+    
+    return result;
+  };
+
+  // Override the method that handles remote streams
+  const originalHandleRemoteStream = mediaSession.handleRemoteStream.bind(mediaSession);
+  mediaSession.handleRemoteStream = function(remoteStream) {
+    originalHandleRemoteStream(remoteStream);
+    
+    // Show remote video in UI
+    if (uiManager && remoteStream) {
+      uiManager.showVideoStream(this.vRemote, false);
+    }
+  };
+
   // First line of defense: Create PC immediately before media preparation
   mediaSession.newPC();
   
