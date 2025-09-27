@@ -224,9 +224,15 @@ async function join(){
   mediaSession.prepareLocalMedia = async function() {
     const result = await originalPrepareLocalMedia();
     
-    // Show local video in UI
+    // Show local video in UI and sync media state
     if (uiManager && this.localStream) {
-      uiManager.showVideoStream(this.vLocal, true);
+      uiManager.onVideoStreamChanged(this.localStream, true);
+      const [camTrack] = this.localStream.getVideoTracks();
+      const [micTrack] = this.localStream.getAudioTracks();
+      uiManager.onMediaStateChanged({
+        camera: !!camTrack && camTrack.enabled,
+        microphone: !!micTrack && micTrack.enabled,
+      });
     }
     
     return result;
@@ -239,7 +245,7 @@ async function join(){
     
     // Show remote video in UI
     if (uiManager && remoteStream) {
-      uiManager.showVideoStream(this.vRemote, false);
+      uiManager.onVideoStreamChanged(remoteStream, false);
     }
   };
 
@@ -309,11 +315,19 @@ window.toggleMicrophoneMedia = function() {
 
 // Initialize UI Manager
 uiManager = new UIManager();
+window.uiManager = uiManager; // Make it globally accessible
+window.join = join; // Make join function globally accessible
 
 // Auto-join when token already in URL
 if (token) {
   join().catch(e => { log('ERR', e?.message || String(e)); });
 } else {
+  // Show join button when no token
+  const joinButtonRow = document.getElementById('joinButtonRow');
+  if (joinButtonRow) {
+    joinButtonRow.style.display = 'flex';
+  }
+  
   try {
     const saved = sessionStorage.getItem('joinToken');
     if (saved) {

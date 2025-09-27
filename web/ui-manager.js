@@ -28,9 +28,6 @@ export class UIManager {
 
     this.initializeEventListeners();
     this.checkDebugMode();
-    
-    // Start timer immediately for testing
-    this.startCallTimer();
   }
 
   /**
@@ -60,6 +57,15 @@ export class UIManager {
       this.endCall();
       this.addPulseAnimation(this.elements.exitBtn);
     });
+
+    // Join button - start call
+    const joinCallBtn = document.getElementById('joinCallBtn');
+    if (joinCallBtn) {
+      joinCallBtn.addEventListener('click', () => {
+        this.startCall();
+        this.addPulseAnimation(joinCallBtn);
+      });
+    }
   }
 
   /**
@@ -110,12 +116,28 @@ export class UIManager {
   updateTimer() {
     if (!this.callStartTime) return;
     
-    const elapsed = Math.floor((Date.now() - this.callStartTime) / 1000);
-    const minutes = Math.floor(elapsed / 60);
-    const seconds = elapsed % 60;
+    const totalSeconds = Math.floor((Date.now() - this.callStartTime) / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
     
     this.elements.callTimer.textContent = 
-      `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  }
+
+  /**
+   * Start a call
+   */
+  startCall() {
+    console.log('[UI] Start call button clicked');
+    if (typeof window.join === 'function') {
+      window.join().catch(e => {
+        console.error('[UI] Join failed:', e);
+        alert('Failed to join call: ' + (e?.message || String(e)));
+      });
+    } else {
+      console.error('[UI] window.join function not available');
+      alert('Join function not available');
+    }
   }
 
   /**
@@ -200,15 +222,10 @@ export class UIManager {
       console.log('[UI] leaveBtn not found');
     }
     
-    // Try to close the tab/window, but don't fail if it doesn't work
-    try {
-      console.log('[UI] Attempting to close window');
-      window.close();
-    } catch (e) {
-      console.log('Cannot close window:', e);
-      // Fallback: redirect to a blank page or show message
-      document.body.innerHTML = '<div style="text-align: center; padding: 50px; color: white; font-size: 24px;">Call ended</div>';
-    }
+    // Redirect to home page instead of trying to close window
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 1000);
   }
 
   /**
@@ -238,32 +255,28 @@ export class UIManager {
   }
 
   /**
-   * Show video stream in the appropriate area
+   * Handle video stream changes
    */
-  showVideoStream(videoElement, isLocal = false) {
-    const videoArea = isLocal ? this.elements.localVideoArea : this.elements.remoteVideoArea;
-    const placeholder = videoArea.querySelector('.video-placeholder');
-    
-    if (placeholder) {
-      placeholder.style.display = 'none';
-    }
-    
-    videoElement.classList.add('show');
-  }
-
-  /**
-   * Hide video stream and show placeholder
-   */
-  hideVideoStream(isLocal = false) {
-    const videoArea = isLocal ? this.elements.localVideoArea : this.elements.remoteVideoArea;
-    const placeholder = videoArea.querySelector('.video-placeholder');
+  onVideoStreamChanged(stream, isLocal = false) {
     const videoElement = isLocal ? this.elements.localVideo : this.elements.remoteVideo;
+    const videoArea = isLocal ? this.elements.localVideoArea : this.elements.remoteVideoArea;
+    const placeholder = videoArea.querySelector('.video-placeholder');
     
-    if (placeholder) {
-      placeholder.style.display = 'flex';
+    if (stream) {
+      // Show video stream
+      videoElement.srcObject = stream;
+      videoElement.classList.add('show');
+      if (placeholder) {
+        placeholder.style.display = 'none';
+      }
+    } else {
+      // Hide video stream and show placeholder
+      videoElement.srcObject = null;
+      videoElement.classList.remove('show');
+      if (placeholder) {
+        placeholder.style.display = 'flex';
+      }
     }
-    
-    videoElement.classList.remove('show');
   }
 
   /**
