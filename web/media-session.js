@@ -24,6 +24,8 @@ export class MediaSession {
     this.status = 'idle'; // Detailed status tracking
     this.transceivers = new Map(); // Store transceivers by kind for easy access
     this.stallRetryCount = 0; // Counter for outbound stall retries
+    this.connectionStartTime = 0; // Track when connection was established
+    this.lastRebuildTime = 0; // Track last rebuild to prevent too frequent rebuilds
   }
 
   async prepareLocalMedia() {
@@ -339,6 +341,7 @@ export class MediaSession {
       this.log('[media] iceState', st);
       if (st === 'connected') { 
         this.attachRemoteStreamDebug(remoteStream); 
+        this.connectionStartTime = Date.now(); // Record connection time
         this.startStatsMonitor(); 
         this.setState('active');
         this.setStatus('connected', 'ICE connection established');
@@ -355,6 +358,7 @@ export class MediaSession {
       this.log('[media] pcState', st);
       if (st === 'connected') { 
         this.attachRemoteStreamDebug(remoteStream); 
+        this.connectionStartTime = Date.now(); // Record connection time
         this.startStatsMonitor(); 
         this.setState('active');
         this.setStatus('connected', 'PeerConnection established');
@@ -383,8 +387,18 @@ export class MediaSession {
   }
 
   async rebuildPCAndRenegotiate() {
+    const now = Date.now();
+    const timeSinceLastRebuild = now - this.lastRebuildTime;
+    
+    // Prevent too frequent rebuilds (minimum 5 seconds between rebuilds)
+    if (timeSinceLastRebuild < 5000) {
+      this.log('[media] rebuild skipped: too soon (', Math.round(timeSinceLastRebuild/1000), 's ago)');
+      return;
+    }
+    
     this.log('[media] rebuild PC and renegotiate');
     this.setStatus('recovering', 'rebuilding PC');
+    this.lastRebuildTime = now;
     await this.tryRollback();
     this.safeClosePC();
     this.newPC();
@@ -628,13 +642,18 @@ export class MediaSession {
 
   startStatsMonitor() {
     if (this.statsTimer || !this.pc) return;
-    this.statsTimer = setInterval(async () => {
+    
+    // Start monitoring after a delay to allow connection to stabilize
+    setTimeout(() => {
+      if (!this.pc) return; // Check if PC still exists
+      this.statsTimer = setInterval(async () => {
       const stats = await this.sampleStats();
       if (!stats) return;
       this.log('[media] stats', 'in_a=' + stats.inboundAudio + 'kbps', 'in_v=' + stats.inboundVideo + 'kbps', 'out_a=' + stats.outboundAudio + 'kbps', 'out_v=' + stats.outboundVideo + 'kbps');
       
-      // Check for outbound traffic issues
-      if (this.localTracksReady && stats.outboundAudio === 0 && stats.outboundVideo === 0) {
+      // Check for outbound traffic issues (only after connection is stable)
+      const connectionAge = Date.now() - this.connectionStartTime;
+      if (this.localTracksReady && stats.outboundAudio === 0 && stats.outboundVideo === 0 && connectionAge > 10000) {
         // Check if tracks are intentionally disabled
         const senders = this.pc.getSenders();
         const hasEnabledTracks = senders.some(sender => 
@@ -654,8 +673,11 @@ export class MediaSession {
       } else if (stats.outboundAudio > 0 || stats.outboundVideo > 0) {
         // Reset counter when traffic is flowing
         this.stallRetryCount = 0;
+      } else if (connectionAge <= 10000) {
+        this.log('[media] outbound zero: connection still establishing (age=', Math.round(connectionAge/1000), 's)');
       }
-    }, 5000);
+      }, 5000);
+    }, 3000); // 3 second delay before starting stats monitoring
   }
 
   stopStatsMonitor() {
