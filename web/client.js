@@ -219,34 +219,21 @@ async function join(){
     }
   };
 
-  // Add video stream callbacks to update UI
-  const originalPrepareLocalMedia = mediaSession.prepareLocalMedia.bind(mediaSession);
-  mediaSession.prepareLocalMedia = async function() {
-    const result = await originalPrepareLocalMedia();
-    
-    // Show local video in UI and sync media state
-    if (uiManager && this.localStream) {
-      uiManager.onVideoStreamChanged(this.localStream, true);
-      const [camTrack] = this.localStream.getVideoTracks();
-      const [micTrack] = this.localStream.getAudioTracks();
-      uiManager.onMediaStateChanged({
-        camera: !!camTrack && camTrack.enabled,
-        microphone: !!micTrack && micTrack.enabled,
-      });
-    }
-    
-    return result;
+  // Set up video stream callbacks
+  mediaSession.onLocalStream = (stream) => {
+    console.log('[client] Local stream received:', stream);
+    const [camTrack] = stream.getVideoTracks();
+    const [micTrack] = stream.getAudioTracks();
+    uiManager.onVideoStreamChanged(stream, true);
+    uiManager.onMediaStateChanged({
+      camera: !!camTrack && camTrack.enabled,
+      microphone: !!micTrack && micTrack.enabled,
+    });
   };
 
-  // Override the method that handles remote streams
-  const originalHandleRemoteStream = mediaSession.handleRemoteStream.bind(mediaSession);
-  mediaSession.handleRemoteStream = function(remoteStream) {
-    originalHandleRemoteStream(remoteStream);
-    
-    // Show remote video in UI
-    if (uiManager && remoteStream) {
-      uiManager.onVideoStreamChanged(remoteStream, false);
-    }
+  mediaSession.onRemoteStream = (stream) => {
+    console.log('[client] Remote stream received:', stream);
+    uiManager.onVideoStreamChanged(stream, false);
   };
 
   // First line of defense: Create PC immediately before media preparation
