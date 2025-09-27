@@ -2,6 +2,7 @@
 
 import { SignalingSession } from './signaling-session.js';
 import { MediaSession } from './media-session.js';
+import { UIManager } from './ui-manager.js';
 
 // ---------- DOM ----------
 const logEl   = document.getElementById('log');
@@ -107,6 +108,7 @@ document.addEventListener('visibilitychange', () => {
 // ---------- Global instances ----------
 let signalingSession = null;
 let mediaSession = null;
+let uiManager = null;
 
 // ICE restart functionality moved to MediaSession
 
@@ -162,6 +164,15 @@ async function join(){
         mediaSession.rebuildPCAndRenegotiate();
       }
     }
+    
+    // Update UI based on peer status
+    if (uiManager) {
+      if (eventType === 'peer-joined' && otherPeer) {
+        uiManager.onCallStarted();
+      } else if (eventType === 'peer-left') {
+        uiManager.onCallEnded();
+      }
+    }
   };
 
   signalingSession.onMessage = (msg) => {
@@ -197,6 +208,15 @@ async function join(){
           break;
       }
     }
+    
+    // Update UI based on media state
+    if (uiManager) {
+      if (newState === 'active') {
+        uiManager.onCallStarted();
+      } else if (newState === 'idle') {
+        uiManager.onCallEnded();
+      }
+    }
   };
 
   // First line of defense: Create PC immediately before media preparation
@@ -214,40 +234,57 @@ async function join(){
 
 btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)); alert('Join failed'); }); };
 
-// Mic/Cam toggles: do not stop tracks; use enabled=false to keep RTP alive
-btnCam.onclick = () => {
+// Media toggle functions - extracted for reuse and made global
+window.toggleCameraMedia = function() {
   try {
     if (!mediaSession || !mediaSession.localStream) {
       log('[media] video toggle: no media session');
-      return;
+      return false;
     }
     const videoTracks = mediaSession.localStream.getVideoTracks() || [];
     if (videoTracks.length) {
       const t = videoTracks[0];
       t.enabled = !t.enabled;
       log('[media] video toggle', t.enabled ? 'on' : 'off');
+      return t.enabled;
     } else {
       log('[media] video toggle: no video track');
+      return false;
     }
-  } catch (e) { log('[media] video toggle ERR', e?.message || e); }
+  } catch (e) { 
+    log('[media] video toggle ERR', e?.message || e); 
+    return false;
+  }
 };
 
-btnMic.onclick = () => {
+window.toggleMicrophoneMedia = function() {
   try {
     if (!mediaSession || !mediaSession.localStream) {
       log('[media] audio toggle: no media session');
-      return;
+      return false;
     }
     const audioTracks = mediaSession.localStream.getAudioTracks() || [];
     if (audioTracks.length) {
       const t = audioTracks[0];
       t.enabled = !t.enabled;
       log('[media] audio toggle', t.enabled ? 'on' : 'off');
+      return t.enabled;
     } else {
       log('[media] audio toggle: no audio track');
+      return false;
     }
-  } catch (e) { log('[media] audio toggle ERR', e?.message || e); }
+  } catch (e) { 
+    log('[media] audio toggle ERR', e?.message || e); 
+    return false;
+  }
 };
+
+// Mic/Cam toggles: UIManager handles the click events
+// These handlers are removed to avoid double-triggering
+// UIManager will call the toggle functions directly
+
+// Initialize UI Manager
+uiManager = new UIManager();
 
 // Auto-join when token already in URL
 if (token) {
