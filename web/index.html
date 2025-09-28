@@ -199,6 +199,50 @@
       transform: translateX(-50%);
     }
 
+    .placeholder-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(20, 20, 20, 0.8);
+      border: 2px solid #D9D9D9;
+      border-radius: 20px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .placeholder-overlay.is-visible {
+      display: flex;
+    }
+
+    .placeholder-overlay:hover {
+      background: rgba(20, 20, 20, 0.9);
+      border-color: #ffffff;
+    }
+
+    .overlay-content {
+      text-align: center;
+      color: #D9D9D9;
+      font-family: 'Alfa Slab One', cursive;
+    }
+
+    .overlay-content p {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.4;
+    }
+
+    .video-placeholder.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
     /* ===== DESKTOP STYLES (базовые стили) ===== */
     /* Все стили выше являются desktop стилями */
 
@@ -248,13 +292,17 @@
         width: min(12vw, 80px);
         height: min(12vw, 80px);
       }
+
+      .overlay-content p {
+        font-size: 16px;
+      }
     }
 
     /* ===== MOBILE STYLES (max-width: 768px) ===== */
     @media (max-width: 768px) {
       .logo {
         font-size: 32px;
-        top: 10px;
+        top: 15px;
         left: 20px;
       }
 
@@ -286,13 +334,17 @@
       .controls-container {
         bottom: 20px;
         padding: 0 20px;
-        flex-direction: column;
-        gap: 15px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 0;
       }
 
       .center-buttons {
         gap: 20px;
-        order: 1;
+        order: 0;
+        display: flex;
+        align-items: flex-end;
       }
 
       .control-button {
@@ -302,12 +354,12 @@
       }
 
       .control-button.link {
-        order: 2;
-        align-self: flex-start;
+        order: 0;
+        align-self: flex-end;
       }
 
       .control-button.exit {
-        order: 3;
+        order: 0;
         align-self: flex-end;
       }
 
@@ -315,13 +367,17 @@
         width: min(15vw, 60px);
         height: min(15vw, 60px);
       }
+
+      .overlay-content p {
+        font-size: 14px;
+      }
     }
 
     /* ===== SMALL MOBILE STYLES (max-width: 480px) ===== */
     @media (max-width: 480px) {
       .logo {
         font-size: 28px;
-        top: 8px;
+        top: 12px;
         left: 15px;
       }
 
@@ -347,7 +403,10 @@
       .controls-container {
         bottom: 15px;
         padding: 0 15px;
-        gap: 12px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 0;
       }
 
       .control-button {
@@ -358,11 +417,25 @@
 
       .center-buttons {
         gap: 15px;
+        display: flex;
+        align-items: flex-end;
+      }
+
+      .control-button.link {
+        align-self: flex-end;
+      }
+
+      .control-button.exit {
+        align-self: flex-end;
       }
 
       .placeholder-cross {
         width: min(12vw, 50px);
         height: min(12vw, 50px);
+      }
+
+      .overlay-content p {
+        font-size: 12px;
       }
     }
   </style>
@@ -375,6 +448,11 @@
   <div class="main-content">
     <div class="video-placeholder" id="remoteVideoArea">
       <div class="placeholder-cross"></div>
+      <div class="placeholder-overlay" id="remotePlaybackPrompt">
+        <div class="overlay-content">
+          <p>Нажмите, чтобы начать видео</p>
+        </div>
+      </div>
     </div>
     <div class="video-placeholder" id="localVideoArea">
       <div class="placeholder-cross"></div>

@@ -57,9 +57,15 @@ async function api(path, body){
   return r.json();
 }
 
-async function resumePlay(el){
-  if (!el) return;
-  try { await el.play(); } catch {}
+async function resumePlay(el, onFailure){
+  if (!el) return false;
+  try {
+    await el.play();
+    return true;
+  } catch (err) {
+    if (onFailure) onFailure(err);
+    return false;
+  }
 }
 
 function detectClient(){
@@ -228,6 +234,9 @@ async function join(){
         vLocal.style.top = '0';
         vLocal.style.left = '0';
         vLocal.style.zIndex = '2';
+        
+        // Скрываем плейсхолдер при появлении локального видео
+        localVideoArea.classList.add('hidden');
       }
       
       // Синхронизируем состояние кнопок
@@ -238,6 +247,12 @@ async function join(){
       }
       if (audioTracks.length > 0) {
         window.uiControls.updateMicrophoneState(audioTracks[0].enabled);
+      }
+    } else {
+      // Если поток исчез, показываем плейсхолдер обратно
+      const localVideoArea = document.getElementById('localVideoArea');
+      if (localVideoArea) {
+        localVideoArea.classList.remove('hidden');
       }
     }
   };
@@ -258,6 +273,22 @@ async function join(){
         vRemote.style.top = '0';
         vRemote.style.left = '0';
         vRemote.style.zIndex = '2';
+        
+        // Скрываем плейсхолдер при появлении удаленного видео
+        remoteVideoArea.classList.add('hidden');
+        
+        // Пытаемся запустить видео, при неудаче показываем overlay
+        resumePlay(vRemote, () => {
+          window.uiControls?.showRemotePlaybackPrompt();
+        });
+      }
+    } else {
+      // Если поток исчез, показываем плейсхолдер обратно
+      const remoteVideoArea = document.getElementById('remoteVideoArea');
+      if (remoteVideoArea) {
+        remoteVideoArea.classList.remove('hidden');
+        // Скрываем overlay если он был показан
+        window.uiControls?.hideRemotePlaybackPrompt();
       }
     }
   };
@@ -294,6 +325,17 @@ window.toggleCameraMedia = () => {
       if (window.uiControls) {
         window.uiControls.updateCameraState(t.enabled);
       }
+      
+      // Показываем/скрываем плейсхолдер в зависимости от состояния видео
+      const localVideoArea = document.getElementById('localVideoArea');
+      if (localVideoArea) {
+        if (t.enabled) {
+          localVideoArea.classList.add('hidden');
+        } else {
+          localVideoArea.classList.remove('hidden');
+        }
+      }
+      
       return t.enabled;
     } else {
       log('[media] video toggle: no video track');
@@ -353,6 +395,12 @@ window.endCall = () => {
     if (vLocal) vLocal.srcObject = null;
     if (vRemote) vRemote.srcObject = null;
     
+    // Показываем плейсхолдеры обратно
+    const localVideoArea = document.getElementById('localVideoArea');
+    const remoteVideoArea = document.getElementById('remoteVideoArea');
+    if (localVideoArea) localVideoArea.classList.remove('hidden');
+    if (remoteVideoArea) remoteVideoArea.classList.remove('hidden');
+    
     // Сбрасываем состояние кнопок
     if (window.uiControls) {
       window.uiControls.updateCameraState(true);
@@ -378,7 +426,33 @@ window.requestMediaRetry = () => {
   }
 };
 
+// Глобальная функция для запуска удаленного видео
+window.resumeRemotePlayback = async () => {
+  const ok = await resumePlay(vRemote);
+  if (ok) {
+    window.uiControls?.hideRemotePlaybackPrompt();
+    // Скрываем плейсхолдер при успешном запуске
+    const remoteVideoArea = document.getElementById('remoteVideoArea');
+    if (remoteVideoArea) {
+      remoteVideoArea.classList.add('hidden');
+    }
+  }
+};
+
 // Старые обработчики убраны - теперь используется UIControls
+
+// Глобальные обработчики для запуска видео
+document.addEventListener('click', () => {
+  if (window.resumeRemotePlayback) {
+    window.resumeRemotePlayback();
+  }
+});
+
+document.addEventListener('touchstart', () => {
+  if (window.resumeRemotePlayback) {
+    window.resumeRemotePlayback();
+  }
+});
 
 // Auto-join when token already in URL
 if (token) {

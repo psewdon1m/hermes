@@ -221,4 +221,27 @@ export class UIControls {
       prompt.style.display = 'none';
     }
   }
+
+  // UI для запуска удаленного видео
+  showRemotePlaybackPrompt() {
+    const overlay = document.getElementById('remotePlaybackPrompt');
+    if (overlay) {
+      overlay.classList.add('is-visible');
+      
+      // Добавляем обработчик клика
+      overlay.onclick = () => {
+        if (window.resumeRemotePlayback) {
+          window.resumeRemotePlayback();
+        }
+      };
+    }
+  }
+
+  hideRemotePlaybackPrompt() {
+    const overlay = document.getElementById('remotePlaybackPrompt');
+    if (overlay) {
+      overlay.classList.remove('is-visible');
+      overlay.onclick = null; // Убираем обработчик
+    }
+  }
 }
