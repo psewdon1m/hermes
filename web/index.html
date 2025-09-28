@@ -1,76 +1,250 @@
 <!doctype html>
 <html lang="ru">
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Call v0.1</title>
-<style>
-  :root { color-scheme: light dark; }
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0}
-  header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #4443}
-  main{padding:16px;display:grid;gap:12px;grid-template-columns:360px 1fr}
-  .panel{border:1px solid #4443;border-radius:10px;padding:12px}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  input[type=text]{padding:8px 10px;border-radius:8px;border:1px solid #4446;min-width:280px}
-  button{padding:8px 12px;border:1px solid #4446;border-radius:8px;background:#f5f5f5;cursor:pointer}
-  button.primary{background:#4c8bf5;color:#fff;border-color:#4c8bf5}
-  button:disabled{opacity:.6;cursor:not-allowed}
-  video{width:100%;background:#000;border-radius:8px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .log{white-space:pre-wrap;font-size:12px;background:#111;color:#eee;padding:8px;border-radius:6px;height:220px;overflow:auto}
-  .hint{color:#888;font-size:12px}
-  .badges{display:flex;gap:6px;flex-wrap:wrap}
-  .badge{font-size:12px;padding:4px 8px;border:1px solid #4446;border-radius:999px}
-  .ok{background:#2e7d32;color:#fff;border-color:#2e7d32}
-  .warn{background:#ef6c00;color:#fff;border-color:#ef6c00}
-  .err{background:#c62828;color:#fff;border-color:#c62828}
-  .muted{opacity:.7}
-  pre{margin:0}
-</style>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>tgcall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Agbalumo&family=Alfa+Slab+One&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #141414;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 1920px;
+      min-height: 1080px;
+    }
+
+    /* Масштабирование для разных размеров экрана */
+    @media (max-width: 1920px) and (max-height: 1080px) {
+      body {
+        transform: scale(min(calc(100vw / 1920), calc(100vh / 1080)));
+        transform-origin: top left;
+        width: 1920px;
+        height: 1080px;
+      }
+    }
+
+    @media (max-width: 1920px) and (min-height: 1081px) {
+      body {
+        transform: scale(calc(100vw / 1920));
+        transform-origin: top left;
+        width: 1920px;
+        height: 1080px;
+      }
+    }
+
+    @media (min-width: 1921px) and (max-height: 1080px) {
+      body {
+        transform: scale(calc(100vh / 1080));
+        transform-origin: top left;
+        width: 1920px;
+        height: 1080px;
+      }
+    }
+
+    .main-content {
+      position: absolute;
+      top: 125px;
+      left: 80px;
+      right: 80px;
+      bottom: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2vw;
+      z-index: 5;
+    }
+
+    .logo {
+      position: absolute;
+      top: 10px;
+      left: 80px;
+      font-family: 'Agbalumo', cursive;
+      font-size: 48px;
+      font-weight: 400;
+      color: #D9D9D9;
+      z-index: 10;
+    }
+
+    .timer {
+      position: absolute;
+      top: 30px;
+      right: 80px;
+      font-family: 'Alfa Slab One', cursive;
+      font-size: 36px;
+      font-weight: 400;
+      color: #D9D9D9;
+      z-index: 10;
+    }
+
+    .controls-container {
+      position: absolute;
+      bottom: 28px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 80px;
+      z-index: 10;
+    }
+
+    .center-buttons {
+      display: flex;
+      gap: 40px;
+    }
+
+    .control-button {
+      width: 154px;
+      height: 48px;
+      border: none;
+      border-radius: 24px;
+      font-family: 'Alfa Slab One', cursive;
+      font-size: 24px;
+      font-weight: 400;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      overflow: hidden;
+    }
+
+    .control-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .control-button:active {
+      transform: translateY(0) scale(0.95);
+      transition: all 0.1s ease;
+    }
+
+    .control-button.link {
+      background-color: #D9D9D9;
+      color: #262626;
+      border: none;
+    }
+
+    .control-button.link:active {
+      background-color: #262626;
+      color: #D9D9D9;
+      border: 1px solid #262626;
+    }
+
+    .control-button.copied {
+      background-color: #141414;
+      color: #D9D9D9;
+      border: 2px solid #D9D9D9;
+    }
+
+    .control-button.cam,
+    .control-button.mic {
+      background-color: #D9D9D9;
+      color: #262626;
+      border: 1px solid #D9D9D9;
+    }
+
+    .control-button.cam.disabled,
+    .control-button.mic.disabled {
+      background-color: #141414;
+      color: #D9D9D9;
+      border: 1px solid #D9D9D9;
+    }
+
+    .control-button.exit {
+      background-color: #141414;
+      color: #D9D9D9;
+      border: 1px solid #D9D9D9;
+    }
+
+    .control-button.exit:hover {
+      background-color: #D9D9D9;
+      color: #262626;
+    }
+
+    .video-placeholder {
+      width: clamp(500px, 50vw, 869px);
+      height: clamp(10px, 70vh, 1575px);
+      aspect-ratio: 869 / 675;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      background: 
+        linear-gradient(to right, #D9D9D9 0%, #D9D9D9 50%, transparent 50%, transparent 100%),
+        linear-gradient(to bottom, #D9D9D9 0%, #D9D9D9 50%, transparent 50%, transparent 100%),
+        linear-gradient(to left, #D9D9D9 0%, #D9D9D9 50%, transparent 50%, transparent 100%),
+        linear-gradient(to top, #D9D9D9 0%, #D9D9D9 50%, transparent 50%, transparent 100%);
+      background-size: 40px 2px, 2px 40px, 40px 2px, 2px 40px;
+      background-position: 0 0, 0 0, 100% 100%, 100% 100%;
+      background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-width: 0;
+    }
+  </style>
+</head>
 
 <body>
-<header>
-  <strong>Call v0.1</strong>
-  <div class="badges">
-    <span id="pcState" class="badge">PC:new</span>
-    <span id="iceState" class="badge">ICE:new</span>
-    <span id="candType" class="badge">cand:-</span>
+  <div class="logo">tgcall</div>
+  <div class="timer">14:56</div>
+  
+  <div class="main-content">
+    <div class="video-placeholder"></div>
+    <div class="video-placeholder"></div>
   </div>
-</header>
 
-<main>
-  <section class="panel">
-    <h3>Подключение</h3>
-    <div class="row">
-      <input id="token" type="text" placeholder="JWT token из ?token=..." />
+  <div class="controls-container">
+    <button class="control-button link" id="linkBtn">link</button>
+    <div class="center-buttons">
+      <button class="control-button cam" id="camBtn">cam</button>
+      <button class="control-button mic" id="micBtn">mic</button>
     </div>
-    <div class="row">
-      <button id="joinBtn" class="primary">Join</button>
-      <button id="leaveBtn">Leave</button>
-      <button id="camBtn">Cam</button>
-      <button id="micBtn">Mic</button>
-    </div>
-    <p class="hint">Если открыть страницу как <code>/join?token=…</code>, поле заполнится автоматически.</p>
+    <button class="control-button exit" id="exitBtn">exit</button>
+  </div>
 
-    <h4>Диагностика</h4>
-    <div id="diag" class="hint"></div>
-  </section>
+  <script>
+    let linkButtonTimeout = null;
+    
+    document.getElementById('linkBtn').addEventListener('click', function() {
+      const button = this;
+      
+      // Очищаем предыдущий таймер если он есть
+      if (linkButtonTimeout) {
+        clearTimeout(linkButtonTimeout);
+      }
+      
+      // Меняем текст на "copied" с новыми цветами
+      button.textContent = 'copied';
+      button.classList.add('copied');
+      
+      // Возвращаем к нормальному состоянию через 1.5 секунды
+      linkButtonTimeout = setTimeout(() => {
+        button.textContent = 'link';
+        button.classList.remove('copied');
+        linkButtonTimeout = null;
+      }, 1500);
+    });
 
-  <section class="panel">
-    <div class="grid">
-      <div>
-        <div class="row" style="justify-content:space-between"><strong>Local</strong><span id="localInfo" class="hint"></span></div>
-        <video id="local" autoplay playsinline muted></video>
-      </div>
-      <div>
-        <div class="row" style="justify-content:space-between"><strong>Remote</strong><span id="remoteInfo" class="hint"></span></div>
-        <video id="remote" autoplay playsinline></video>
-      </div>
-    </div>
-    <h4>Логи</h4>
-    <pre id="log" class="log"></pre>
-  </section>
-</main>
+    // Переключение состояния кнопки cam
+    document.getElementById('camBtn').addEventListener('click', function() {
+      this.classList.toggle('disabled');
+    });
 
-<script type="module" src="/client.js"></script>
+    // Переключение состояния кнопки mic
+    document.getElementById('micBtn').addEventListener('click', function() {
+      this.classList.toggle('disabled');
+    });
+  </script>
 </body>
 </html>

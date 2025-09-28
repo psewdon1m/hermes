@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Call v0.1</title>
+<style>
+  :root { color-scheme: light dark; }
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0}
+  header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #4443}
+  main{padding:16px;display:grid;gap:12px;grid-template-columns:360px 1fr}
+  .panel{border:1px solid #4443;border-radius:10px;padding:12px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input[type=text]{padding:8px 10px;border-radius:8px;border:1px solid #4446;min-width:280px}
+  button{padding:8px 12px;border:1px solid #4446;border-radius:8px;background:#f5f5f5;cursor:pointer}
+  button.primary{background:#4c8bf5;color:#fff;border-color:#4c8bf5}
+  button:disabled{opacity:.6;cursor:not-allowed}
+  video{width:100%;background:#000;border-radius:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .log{white-space:pre-wrap;font-size:12px;background:#111;color:#eee;padding:8px;border-radius:6px;height:220px;overflow:auto}
+  .hint{color:#888;font-size:12px}
+  .badges{display:flex;gap:6px;flex-wrap:wrap}
+  .badge{font-size:12px;padding:4px 8px;border:1px solid #4446;border-radius:999px}
+  .ok{background:#2e7d32;color:#fff;border-color:#2e7d32}
+  .warn{background:#ef6c00;color:#fff;border-color:#ef6c00}
+  .err{background:#c62828;color:#fff;border-color:#c62828}
+  .muted{opacity:.7}
+  pre{margin:0}
+</style>
+
+<body>
+<header>
+  <strong>Call v0.1</strong>
+  <div class="badges">
+    <span id="pcState" class="badge">PC:new</span>
+    <span id="iceState" class="badge">ICE:new</span>
+    <span id="candType" class="badge">cand:-</span>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <h3>Подключение</h3>
+    <div class="row">
+      <input id="token" type="text" placeholder="JWT token из ?token=..." />
+    </div>
+    <div class="row">
+      <button id="joinBtn" class="primary">Join</button>
+      <button id="leaveBtn">Leave</button>
+      <button id="camBtn">Cam</button>
+      <button id="micBtn">Mic</button>
+    </div>
+    <p class="hint">Если открыть страницу как <code>/join?token=…</code>, поле заполнится автоматически.</p>
+
+    <h4>Диагностика</h4>
+    <div id="diag" class="hint"></div>
+  </section>
+
+  <section class="panel">
+    <div class="grid">
+      <div>
+        <div class="row" style="justify-content:space-between"><strong>Local</strong><span id="localInfo" class="hint"></span></div>
+        <video id="local" autoplay playsinline muted></video>
+      </div>
+      <div>
+        <div class="row" style="justify-content:space-between"><strong>Remote</strong><span id="remoteInfo" class="hint"></span></div>
+        <video id="remote" autoplay playsinline></video>
+      </div>
+    </div>
+    <h4>Логи</h4>
+    <pre id="log" class="log"></pre>
+  </section>
+</main>
+
+<script type="module" src="/client.js"></script>
+</body>
+</html>
