@@ -224,6 +224,10 @@ async function join(){
         vLocal.style.height = '100%';
         vLocal.style.objectFit = 'cover';
         vLocal.style.borderRadius = '12px';
+        vLocal.style.position = 'absolute';
+        vLocal.style.top = '0';
+        vLocal.style.left = '0';
+        vLocal.style.zIndex = '2';
       }
       
       // Синхронизируем состояние кнопок
@@ -250,6 +254,10 @@ async function join(){
         vRemote.style.height = '100%';
         vRemote.style.objectFit = 'cover';
         vRemote.style.borderRadius = '12px';
+        vRemote.style.position = 'absolute';
+        vRemote.style.top = '0';
+        vRemote.style.left = '0';
+        vRemote.style.zIndex = '2';
       }
     }
   };

@@ -22,36 +22,6 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      min-width: 1920px;
-      min-height: 1080px;
-    }
-
-    /* Масштабирование для разных размеров экрана */
-    @media (max-width: 1920px) and (max-height: 1080px) {
-      body {
-        transform: scale(min(calc(100vw / 1920), calc(100vh / 1080)));
-        transform-origin: top left;
-        width: 1920px;
-        height: 1080px;
-      }
-    }
-
-    @media (max-width: 1920px) and (min-height: 1081px) {
-      body {
-        transform: scale(calc(100vw / 1920));
-        transform-origin: top left;
-        width: 1920px;
-        height: 1080px;
-      }
-    }
-
-    @media (min-width: 1921px) and (max-height: 1080px) {
-      body {
-        transform: scale(calc(100vh / 1080));
-        transform-origin: top left;
-        width: 1920px;
-        height: 1080px;
-      }
     }
 
     .main-content {
@@ -177,7 +147,7 @@
       height: clamp(10px, 70vh, 1575px);
       aspect-ratio: 869 / 675;
       border: 2px solid transparent;
-      border-radius: 20px;
+      border-radius: 12px;
       background: 
         linear-gradient(to right, #D9D9D9 0%, #D9D9D9 50%, transparent 50%, transparent 100%),
         linear-gradient(to bottom, #D9D9D9 0%, #D9D9D9 50%, transparent 50%, transparent 100%),
@@ -191,6 +161,209 @@
       justify-content: center;
       flex: 1;
       min-width: 0;
+      position: relative;
+    }
+
+    .placeholder-cross {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(16vw, 120px);
+      height: min(16vw, 120px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .placeholder-cross::before,
+    .placeholder-cross::after {
+      content: '';
+      position: absolute;
+      background-color: #D9D9D9;
+      border-radius: 2px;
+    }
+
+    .placeholder-cross::before {
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      transform: translateY(-50%);
+    }
+
+    .placeholder-cross::after {
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      transform: translateX(-50%);
+    }
+
+    /* ===== DESKTOP STYLES (базовые стили) ===== */
+    /* Все стили выше являются desktop стилями */
+
+    /* ===== TABLET STYLES (max-width: 1200px) ===== */
+    @media (max-width: 1200px) {
+      .logo {
+        font-size: 40px;
+        top: 15px;
+        left: 40px;
+      }
+
+      .timer {
+        font-size: 30px;
+        top: 25px;
+        right: 40px;
+      }
+
+      .main-content {
+        top: 100px;
+        left: 40px;
+        right: 40px;
+        bottom: 120px;
+        gap: 1.5vw;
+      }
+
+      .video-placeholder {
+        width: clamp(400px, 45vw, 700px);
+        height: clamp(300px, 60vh, 540px);
+      }
+
+      .controls-container {
+        bottom: 20px;
+        padding: 0 40px;
+      }
+
+      .control-button {
+        width: 120px;
+        height: 40px;
+        font-size: 20px;
+      }
+
+      .center-buttons {
+        gap: 30px;
+      }
+
+      .placeholder-cross {
+        width: min(12vw, 80px);
+        height: min(12vw, 80px);
+      }
+    }
+
+    /* ===== MOBILE STYLES (max-width: 768px) ===== */
+    @media (max-width: 768px) {
+      .logo {
+        font-size: 32px;
+        top: 10px;
+        left: 20px;
+      }
+
+      .timer {
+        font-size: 24px;
+        top: 15px;
+        right: 20px;
+      }
+
+      .main-content {
+        top: 80px;
+        left: 20px;
+        right: 20px;
+        bottom: 140px;
+        flex-direction: column;
+        gap: 20px;
+        justify-content: flex-start;
+        align-items: center;
+        padding-top: 20px;
+      }
+
+      .video-placeholder {
+        width: 100%;
+        max-width: 400px;
+        height: clamp(200px, 40vh, 300px);
+        aspect-ratio: 4/3;
+      }
+
+      .controls-container {
+        bottom: 20px;
+        padding: 0 20px;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .center-buttons {
+        gap: 20px;
+        order: 1;
+      }
+
+      .control-button {
+        width: 100px;
+        height: 36px;
+        font-size: 18px;
+      }
+
+      .control-button.link {
+        order: 2;
+        align-self: flex-start;
+      }
+
+      .control-button.exit {
+        order: 3;
+        align-self: flex-end;
+      }
+
+      .placeholder-cross {
+        width: min(15vw, 60px);
+        height: min(15vw, 60px);
+      }
+    }
+
+    /* ===== SMALL MOBILE STYLES (max-width: 480px) ===== */
+    @media (max-width: 480px) {
+      .logo {
+        font-size: 28px;
+        top: 8px;
+        left: 15px;
+      }
+
+      .timer {
+        font-size: 20px;
+        top: 12px;
+        right: 15px;
+      }
+
+      .main-content {
+        top: 60px;
+        left: 15px;
+        right: 15px;
+        bottom: 160px;
+        gap: 15px;
+        padding-top: 15px;
+      }
+
+      .video-placeholder {
+        height: clamp(150px, 35vh, 250px);
+      }
+
+      .controls-container {
+        bottom: 15px;
+        padding: 0 15px;
+        gap: 12px;
+      }
+
+      .control-button {
+        width: 80px;
+        height: 32px;
+        font-size: 16px;
+      }
+
+      .center-buttons {
+        gap: 15px;
+      }
+
+      .placeholder-cross {
+        width: min(12vw, 50px);
+        height: min(12vw, 50px);
+      }
     }
   </style>
 </head>
@@ -200,8 +373,12 @@
   <div class="timer" id="callTimer">00:00</div>
   
   <div class="main-content">
-    <div class="video-placeholder" id="remoteVideoArea"></div>
-    <div class="video-placeholder" id="localVideoArea"></div>
+    <div class="video-placeholder" id="remoteVideoArea">
+      <div class="placeholder-cross"></div>
+    </div>
+    <div class="video-placeholder" id="localVideoArea">
+      <div class="placeholder-cross"></div>
+    </div>
   </div>
 
   <div class="controls-container">
