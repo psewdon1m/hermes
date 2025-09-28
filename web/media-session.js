@@ -18,6 +18,8 @@ export class MediaSession {
     this.makingOffer = false;
     this.state = 'idle'; // idle, preparing, active
     this.onStateChange = null;
+    this.onLocalStream = null; // Callback for local stream
+    this.onRemoteStream = null; // Callback for remote stream
     this.pendingNegotiation = false; // Flag for delayed negotiation
     this.pendingRemoteOffer = null; // Store remote offer when PC is not ready
     this.localTracksReady = false; // Flag indicating local tracks are ready for negotiation
@@ -68,6 +70,11 @@ export class MediaSession {
     this.vLocal.srcObject = this.localStream;
     this.setupTrackHandlers();
     this.resumePlay(this.vLocal);
+    
+    // Вызываем колбэк для локального потока
+    if (this.onLocalStream && this.localStream) {
+      this.onLocalStream(this.localStream);
+    }
     
     // Attach tracks to existing PC if it exists
     this.attachLocalTracksToPC();
@@ -321,6 +328,11 @@ export class MediaSession {
       // Always update debug and resume playback
       this.attachRemoteStreamDebug(remoteStream);
       this.resumePlay(this.vRemote);
+      
+      // Вызываем колбэк для удаленного потока
+      if (this.onRemoteStream && remoteStream && remoteStream.getTracks().length > 0) {
+        this.onRemoteStream(remoteStream);
+      }
     };
 
     this.pc.onicecandidate = (e) => {

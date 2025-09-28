@@ -197,11 +197,11 @@
 
 <body>
   <div class="logo">tgcall</div>
-  <div class="timer">14:56</div>
+  <div class="timer" id="callTimer">00:00</div>
   
   <div class="main-content">
-    <div class="video-placeholder"></div>
-    <div class="video-placeholder"></div>
+    <div class="video-placeholder" id="remoteVideoArea"></div>
+    <div class="video-placeholder" id="localVideoArea"></div>
   </div>
 
   <div class="controls-container">
@@ -213,38 +213,22 @@
     <button class="control-button exit" id="exitBtn">exit</button>
   </div>
 
-  <script>
-    let linkButtonTimeout = null;
+  <!-- Скрытые элементы для совместимости с client.js -->
+  <div style="display: none;">
+    <video id="local" autoplay playsinline muted></video>
+    <video id="remote" autoplay playsinline></video>
+    <div id="log"></div>
+    <div id="diag"></div>
+    <button id="joinBtn">Join</button>
+  </div>
+
+  <script type="module">
+    import { UIControls } from './ui-controls.js';
     
-    document.getElementById('linkBtn').addEventListener('click', function() {
-      const button = this;
-      
-      // Очищаем предыдущий таймер если он есть
-      if (linkButtonTimeout) {
-        clearTimeout(linkButtonTimeout);
-      }
-      
-      // Меняем текст на "copied" с новыми цветами
-      button.textContent = 'copied';
-      button.classList.add('copied');
-      
-      // Возвращаем к нормальному состоянию через 1.5 секунды
-      linkButtonTimeout = setTimeout(() => {
-        button.textContent = 'link';
-        button.classList.remove('copied');
-        linkButtonTimeout = null;
-      }, 1500);
-    });
-
-    // Переключение состояния кнопки cam
-    document.getElementById('camBtn').addEventListener('click', function() {
-      this.classList.toggle('disabled');
-    });
-
-    // Переключение состояния кнопки mic
-    document.getElementById('micBtn').addEventListener('click', function() {
-      this.classList.toggle('disabled');
-    });
+    // Инициализируем UI контролы
+    window.uiControls = new UIControls();
   </script>
+  
+  <script type="module" src="/client.js"></script>
 </body>
 </html>

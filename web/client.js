@@ -188,13 +188,68 @@ async function join(){
       switch (newState) {
         case 'preparing':
           diagEl.textContent = 'Подготовка медиа...';
+          // Останавливаем таймер при подготовке
+          if (window.uiControls) {
+            window.uiControls.stopCallTimer();
+          }
           break;
         case 'active':
           diagEl.textContent = 'Медиа-поток установлен';
+          // Запускаем таймер при активном состоянии
+          if (window.uiControls) {
+            window.uiControls.startCallTimer();
+          }
           break;
         case 'idle':
           diagEl.textContent = 'Ожидание медиа...';
+          // Останавливаем таймер при простое
+          if (window.uiControls) {
+            window.uiControls.stopCallTimer();
+          }
           break;
+      }
+    }
+  };
+
+  // Добавляем обработчики для видео-потоков
+  mediaSession.onLocalStream = (stream) => {
+    if (stream && window.uiControls) {
+      // Вставляем локальное видео в плейсхолдер
+      const localVideoArea = document.getElementById('localVideoArea');
+      if (localVideoArea && vLocal) {
+        vLocal.srcObject = stream;
+        localVideoArea.appendChild(vLocal);
+        vLocal.style.display = 'block';
+        vLocal.style.width = '100%';
+        vLocal.style.height = '100%';
+        vLocal.style.objectFit = 'cover';
+        vLocal.style.borderRadius = '12px';
+      }
+      
+      // Синхронизируем состояние кнопок
+      const videoTracks = stream.getVideoTracks();
+      const audioTracks = stream.getAudioTracks();
+      if (videoTracks.length > 0) {
+        window.uiControls.updateCameraState(videoTracks[0].enabled);
+      }
+      if (audioTracks.length > 0) {
+        window.uiControls.updateMicrophoneState(audioTracks[0].enabled);
+      }
+    }
+  };
+
+  mediaSession.onRemoteStream = (stream) => {
+    if (stream && window.uiControls) {
+      // Вставляем удаленное видео в плейсхолдер
+      const remoteVideoArea = document.getElementById('remoteVideoArea');
+      if (remoteVideoArea && vRemote) {
+        vRemote.srcObject = stream;
+        remoteVideoArea.appendChild(vRemote);
+        vRemote.style.display = 'block';
+        vRemote.style.width = '100%';
+        vRemote.style.height = '100%';
+        vRemote.style.objectFit = 'cover';
+        vRemote.style.borderRadius = '12px';
       }
     }
   };
@@ -212,55 +267,120 @@ async function join(){
   }
 }
 
-btnJoin.onclick = () => { join().catch(e => { log('ERR', e?.message || String(e)); alert('Join failed'); }); };
+// btnJoin.onclick убран - в рабочем билде токен всегда в URL
 
-// Mic/Cam toggles: do not stop tracks; use enabled=false to keep RTP alive
-btnCam.onclick = () => {
+// Глобальные функции для нового UI
+window.toggleCameraMedia = () => {
   try {
     if (!mediaSession || !mediaSession.localStream) {
       log('[media] video toggle: no media session');
-      return;
+      return false;
     }
     const videoTracks = mediaSession.localStream.getVideoTracks() || [];
     if (videoTracks.length) {
       const t = videoTracks[0];
       t.enabled = !t.enabled;
       log('[media] video toggle', t.enabled ? 'on' : 'off');
+      
+      // Синхронизируем UI
+      if (window.uiControls) {
+        window.uiControls.updateCameraState(t.enabled);
+      }
+      return t.enabled;
     } else {
       log('[media] video toggle: no video track');
+      return false;
     }
-  } catch (e) { log('[media] video toggle ERR', e?.message || e); }
+  } catch (e) { 
+    log('[media] video toggle ERR', e?.message || e); 
+    return false;
+  }
 };
 
-btnMic.onclick = () => {
+window.toggleMicrophoneMedia = () => {
   try {
     if (!mediaSession || !mediaSession.localStream) {
       log('[media] audio toggle: no media session');
-      return;
+      return false;
     }
     const audioTracks = mediaSession.localStream.getAudioTracks() || [];
     if (audioTracks.length) {
       const t = audioTracks[0];
       t.enabled = !t.enabled;
       log('[media] audio toggle', t.enabled ? 'on' : 'off');
+      
+      // Синхронизируем UI
+      if (window.uiControls) {
+        window.uiControls.updateMicrophoneState(t.enabled);
+      }
+      return t.enabled;
     } else {
       log('[media] audio toggle: no audio track');
+      return false;
     }
-  } catch (e) { log('[media] audio toggle ERR', e?.message || e); }
+  } catch (e) { 
+    log('[media] audio toggle ERR', e?.message || e); 
+    return false;
+  }
 };
+
+window.endCall = () => {
+  try {
+    log('[ui] ending call...');
+    
+    // Останавливаем таймер
+    if (window.uiControls) {
+      window.uiControls.stopCallTimer();
+    }
+    
+    // Закрываем сессии
+    if (mediaSession) {
+      mediaSession.close();
+    }
+    if (signalingSession) {
+      signalingSession.close();
+    }
+    
+    // Очищаем UI
+    if (vLocal) vLocal.srcObject = null;
+    if (vRemote) vRemote.srcObject = null;
+    
+    // Сбрасываем состояние кнопок
+    if (window.uiControls) {
+      window.uiControls.updateCameraState(true);
+      window.uiControls.updateMicrophoneState(true);
+    }
+    
+    // Пытаемся закрыть вкладку (если возможно)
+    try {
+      window.close();
+    } catch (e) {
+      // Если не можем закрыть, перенаправляем на главную
+      window.location.href = '/';
+    }
+  } catch (e) {
+    log('[ui] end call ERR', e?.message || e);
+  }
+};
+
+// Старые обработчики убраны - теперь используется UIControls
 
 // Auto-join when token already in URL
 if (token) {
   join().catch(e => { log('ERR', e?.message || String(e)); });
 } else {
-  try {
-    const saved = sessionStorage.getItem('joinToken');
-    if (saved) {
-      const u = new URL(location.href);
-      u.searchParams.set('token', saved);
-      location.replace(u.toString());
+  // В рабочем билде токен всегда должен быть в URL
+  // Если токена нет, показываем ошибку
+  log('ERR: No token provided in URL');
+  
+  // Скрываем кнопки, так как без токена они не работают
+  // Используем setTimeout чтобы дождаться инициализации UI
+  setTimeout(() => {
+    const controls = document.querySelector('.controls-container');
+    if (controls) {
+      controls.style.display = 'none';
     }
-  } catch {}
+  }, 100);
 }
 
 // Media stats functionality moved to MediaSession class
