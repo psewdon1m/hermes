@@ -81,6 +81,14 @@
       - ./log-output:/var/log/calls
     restart: unless-stopped
 
+  bot:
+    build: ./bot
+    restart: unless-stopped
+    environment:
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN}
+    volumes:
+      - ./bot:/app
+
 volumes: {}
 
 
