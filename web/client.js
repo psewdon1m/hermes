@@ -442,6 +442,11 @@ window.requestMediaRetry = () => {
 
 // Глобальная функция для запуска удаленного видео
 window.resumeRemotePlayback = async () => {
+  // Проверяем, что флаг еще не установлен и поток существует с дорожками
+  if (remotePlaybackGranted || !vRemote?.srcObject || vRemote.srcObject.getTracks().length === 0) {
+    return; // Не трогаем play() если условия не выполнены
+  }
+  
   const ok = await resumePlay(vRemote);
   if (ok) {
     // Устанавливаем флаг успешного запуска
@@ -459,14 +464,20 @@ window.resumeRemotePlayback = async () => {
 
 // Глобальные обработчики для запуска видео
 document.addEventListener('click', () => {
-  if (window.resumeRemotePlayback) {
-    window.resumeRemotePlayback();
+  // Проверяем, что флаг еще не установлен и поток существует с дорожками
+  if (!remotePlaybackGranted && vRemote?.srcObject && vRemote.srcObject.getTracks().length > 0) {
+    if (window.resumeRemotePlayback) {
+      window.resumeRemotePlayback();
+    }
   }
 });
 
 document.addEventListener('touchstart', () => {
-  if (window.resumeRemotePlayback) {
-    window.resumeRemotePlayback();
+  // Проверяем, что флаг еще не установлен и поток существует с дорожками
+  if (!remotePlaybackGranted && vRemote?.srcObject && vRemote.srcObject.getTracks().length > 0) {
+    if (window.resumeRemotePlayback) {
+      window.resumeRemotePlayback();
+    }
   }
 });
 
