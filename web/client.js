@@ -277,14 +277,14 @@ async function join(){
         vRemote.style.left = '0';
         vRemote.style.zIndex = '2';
         
-        // Скрываем плейсхолдер при появлении удаленного видео
-        remoteVideoArea.classList.add('hidden');
-        
-        // Пытаемся запустить видео, показываем overlay только если еще не было успешного запуска
+        // Пытаемся запустить видео, скрываем плейсхолдер только после успешного запуска
         resumePlay(vRemote).then(ok => {
           if (ok) {
             // Устанавливаем флаг при успешном автозапуске
             remotePlaybackGranted = true;
+            // Скрываем плейсхолдер только после успешного запуска
+            remoteVideoArea.classList.add('hidden');
+            window.uiControls?.hideRemotePlaybackPrompt();
           } else if (!remotePlaybackGranted) {
             // Показываем overlay только если еще не было успешного запуска
             window.uiControls?.showRemotePlaybackPrompt();
