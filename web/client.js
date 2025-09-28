@@ -62,9 +62,34 @@ async function api(path, body){
 
 async function resumePlay(el, onFailure){
   if (!el) return false;
+  
+  // Если элемент уже играет
+  if (!el.paused && !el.ended && el.readyState >= 2) {
+    return true;
+  }
+  
   try {
     await el.play();
-    return true;
+    
+    // Ждем события playing или таймаут 500мс
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        // Если через 500мс readyState < 2, считаем неудачей
+        if (el.readyState < 2) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      }, 500);
+      
+      const onPlaying = () => {
+        clearTimeout(timeout);
+        el.removeEventListener('playing', onPlaying);
+        resolve(true);
+      };
+      
+      el.addEventListener('playing', onPlaying);
+    });
   } catch (err) {
     if (onFailure) onFailure(err);
     return false;
@@ -232,7 +257,7 @@ async function join(){
         vLocal.style.width = '100%';
         vLocal.style.height = '100%';
         vLocal.style.objectFit = 'cover';
-        vLocal.style.borderRadius = '12px';
+        vLocal.style.borderRadius = '20px';
         vLocal.style.position = 'absolute';
         vLocal.style.top = '0';
         vLocal.style.left = '0';
@@ -271,25 +296,36 @@ async function join(){
         vRemote.style.width = '100%';
         vRemote.style.height = '100%';
         vRemote.style.objectFit = 'cover';
-        vRemote.style.borderRadius = '12px';
+        vRemote.style.borderRadius = '20px';
         vRemote.style.position = 'absolute';
         vRemote.style.top = '0';
         vRemote.style.left = '0';
         vRemote.style.zIndex = '2';
         
-        // Пытаемся запустить видео, скрываем плейсхолдер только после успешного запуска
-        resumePlay(vRemote).then(ok => {
-          if (ok) {
-            // Устанавливаем флаг при успешном автозапуске
-            remotePlaybackGranted = true;
-            // Скрываем плейсхолдер только после успешного запуска
-            remoteVideoArea.classList.add('hidden');
-            window.uiControls?.hideRemotePlaybackPrompt();
-          } else if (!remotePlaybackGranted) {
-            // Показываем overlay только если еще не было успешного запуска
+        // Добавляем слушатели событий
+        vRemote.addEventListener('playing', () => {
+          remotePlaybackGranted = true;
+          remoteVideoArea.classList.add('hidden');
+          window.uiControls?.hideRemotePlaybackPrompt();
+        });
+        
+        vRemote.addEventListener('pause', () => {
+          if (vRemote.readyState < 2) {
+            remotePlaybackGranted = false;
+            remoteVideoArea.classList.remove('hidden');
             window.uiControls?.showRemotePlaybackPrompt();
           }
         });
+        
+        // Проверяем количество треков и пытаемся запустить только если есть видео
+        if (stream.getVideoTracks().length > 0) {
+          resumePlay(vRemote).then(ok => {
+            if (!ok && !remotePlaybackGranted) {
+              // Показываем overlay только если автозапуск не удался
+              window.uiControls?.showRemotePlaybackPrompt();
+            }
+          });
+        }
       }
     } else {
       // Если поток исчез, показываем плейсхолдер обратно
@@ -449,14 +485,17 @@ window.resumeRemotePlayback = async () => {
   
   const ok = await resumePlay(vRemote);
   if (ok) {
-    // Устанавливаем флаг успешного запуска
-    remotePlaybackGranted = true;
+    // Флаг и скрытие плейсхолдера теперь управляются через события playing/pause
+    // Здесь только скрываем overlay
     window.uiControls?.hideRemotePlaybackPrompt();
-    // Скрываем плейсхолдер при успешном запуске
-    const remoteVideoArea = document.getElementById('remoteVideoArea');
-    if (remoteVideoArea) {
-      remoteVideoArea.classList.add('hidden');
-    }
+  } else {
+    // Fallback: если через 1 секунду видео не запустилось, показываем подсказку
+    setTimeout(() => {
+      if (!remotePlaybackGranted) {
+        log('[ui] video playback fallback - showing prompt');
+        window.uiControls?.showRemotePlaybackPrompt();
+      }
+    }, 1000);
   }
 };
 
