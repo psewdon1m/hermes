@@ -188,23 +188,23 @@ async function join(){
       switch (newState) {
         case 'preparing':
           diagEl.textContent = 'Подготовка медиа...';
-          // Останавливаем таймер при подготовке
+          // Ставим таймер на паузу при подготовке
           if (window.uiControls) {
-            window.uiControls.stopCallTimer();
+            window.uiControls.stopCallTimer(false);
           }
           break;
         case 'active':
           diagEl.textContent = 'Медиа-поток установлен';
-          // Запускаем таймер при активном состоянии
+          // Запускаем/возобновляем таймер при активном состоянии
           if (window.uiControls) {
             window.uiControls.startCallTimer();
           }
           break;
         case 'idle':
           diagEl.textContent = 'Ожидание медиа...';
-          // Останавливаем таймер при простое
+          // Ставим таймер на паузу при простое
           if (window.uiControls) {
-            window.uiControls.stopCallTimer();
+            window.uiControls.stopCallTimer(false);
           }
           break;
       }
@@ -328,9 +328,9 @@ window.endCall = () => {
   try {
     log('[ui] ending call...');
     
-    // Останавливаем таймер
+    // Останавливаем и сбрасываем таймер
     if (window.uiControls) {
-      window.uiControls.stopCallTimer();
+      window.uiControls.stopCallTimer(true);
     }
     
     // Закрываем сессии
@@ -360,6 +360,13 @@ window.endCall = () => {
     }
   } catch (e) {
     log('[ui] end call ERR', e?.message || e);
+  }
+};
+
+// Глобальная функция для повторного запроса медиа
+window.requestMediaRetry = () => {
+  if (mediaSession && mediaSession.pendingMediaRetry) {
+    mediaSession.pendingMediaRetry();
   }
 };
 

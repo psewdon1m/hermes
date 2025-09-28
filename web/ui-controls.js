@@ -111,23 +111,32 @@ export class UIControls {
 
   // Таймер звонка
   startCallTimer() {
-    // Защита от повторного запуска
+    // Если таймер уже запущен, не перезапускаем
     if (this.timerInterval) {
-      return; // Таймер уже запущен
+      return;
     }
     
-    this.callStartTime = Date.now();
+    // Если callStartTime уже есть, переиспользуем его (возобновление)
+    if (!this.callStartTime) {
+      this.callStartTime = Date.now();
+    }
+    
     this.timerInterval = setInterval(() => {
       this.updateTimer();
     }, 1000);
   }
 
-  stopCallTimer() {
+  stopCallTimer(reset = false) {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-    this.resetTimer();
+    
+    // Сбрасываем время только при полном завершении
+    if (reset) {
+      this.callStartTime = null;
+      this.resetTimer();
+    }
   }
 
   updateTimer() {
@@ -147,6 +156,69 @@ export class UIControls {
     const timerElement = document.getElementById('callTimer');
     if (timerElement) {
       timerElement.textContent = '00:00';
+    }
+  }
+
+  // UI для разрешений медиа
+  showPermissionPrompt() {
+    // Создаем промпт если его нет
+    let prompt = document.getElementById('permissionPrompt');
+    if (!prompt) {
+      prompt = document.createElement('div');
+      prompt.id = 'permissionPrompt';
+      prompt.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #262626;
+        color: #D9D9D9;
+        padding: 30px;
+        border-radius: 12px;
+        border: 2px solid #D9D9D9;
+        z-index: 1000;
+        text-align: center;
+        font-family: 'Alfa Slab One', cursive;
+        max-width: 400px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      `;
+      
+      prompt.innerHTML = `
+        <h3 style="margin: 0 0 20px 0; font-size: 24px;">Разрешить доступ</h3>
+        <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.4;">
+          Для участия в звонке необходимо разрешить доступ к камере и микрофону.
+        </p>
+        <button id="permissionRetryBtn" style="
+          background: #D9D9D9;
+          color: #262626;
+          border: none;
+          border-radius: 24px;
+          padding: 12px 24px;
+          font-family: 'Alfa Slab One', cursive;
+          font-size: 18px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        ">Разрешить доступ</button>
+      `;
+      
+      document.body.appendChild(prompt);
+      
+      // Обработчик кнопки
+      document.getElementById('permissionRetryBtn').addEventListener('click', () => {
+        this.hidePermissionPrompt();
+        if (window.requestMediaRetry) {
+          window.requestMediaRetry();
+        }
+      });
+    }
+    
+    prompt.style.display = 'block';
+  }
+
+  hidePermissionPrompt() {
+    const prompt = document.getElementById('permissionPrompt');
+    if (prompt) {
+      prompt.style.display = 'none';
     }
   }
 }

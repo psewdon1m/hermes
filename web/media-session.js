@@ -28,43 +28,73 @@ export class MediaSession {
     this.stallRetryCount = 0; // Counter for outbound stall retries
     this.connectionStartTime = 0; // Track when connection was established
     this.lastRebuildTime = 0; // Track last rebuild to prevent too frequent rebuilds
+    this.pendingMediaRetry = null; // Function for retrying media requests
   }
 
-  async prepareLocalMedia() {
+  async prepareLocalMedia(retry = false) {
     this.setState('preparing');
     this.setStatus('media-request', 'requesting local devices');
     this.log('[media] preparing local media');
     
+    // Очищаем предыдущие попытки
+    this.pendingMediaRetry = null;
+    if (window.uiControls) {
+      window.uiControls.hidePermissionPrompt?.();
+    }
+    
     this.localStream = null;
-    let gumOk = false;
+    let audioOk = false;
+    let videoOk = false;
     
     try {
       await this.logPermissionsInfo();
-      this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      gumOk = true;
-      this.log('[media] local media ready (audio+video)');
-    } catch (e1) {
-      this.log('[media] media error', e1?.name || e1?.message || String(e1));
+      
+      // Шаг 1: Запрашиваем аудио
+      this.log('[media] requesting audio permission...');
+      this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      audioOk = true;
+      this.log('[media] audio permission granted');
+      
+      // Шаг 2: Запрашиваем видео и добавляем к существующему потоку
+      this.log('[media] requesting video permission...');
       try {
-        this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        gumOk = true;
-        this.log('[media] local media ready (audio only)');
-      } catch (e2) {
-        this.log('[media] media error (audio only)', e2?.name || e2?.message || String(e2));
-        try {
-          this.localStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-          gumOk = true;
-          this.log('[media] local media ready (video only)');
-        } catch (e3) {
-          this.log('[media] media error (video only)', e3?.name || e3?.message || String(e3));
-          this.log('[media] proceeding without local media (recvonly)');
-        }
+        const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+        videoStream.getVideoTracks().forEach(track => {
+          this.localStream.addTrack(track);
+        });
+        videoOk = true;
+        this.log('[media] video permission granted');
+      } catch (videoError) {
+        this.log('[media] video permission denied', videoError?.name || videoError?.message || String(videoError));
+        // Продолжаем без видео
+      }
+      
+    } catch (audioError) {
+      this.log('[media] audio permission denied', audioError?.name || audioError?.message || String(audioError));
+      
+      // Если аудио не удалось, пробуем только видео
+      try {
+        this.localStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+        videoOk = true;
+        this.log('[media] video-only permission granted');
+      } catch (videoError) {
+        this.log('[media] video permission also denied', videoError?.name || videoError?.message || String(videoError));
       }
     }
 
-    if (!gumOk && (!this.localStream || (!this.localStream.getAudioTracks().length && !this.localStream.getVideoTracks().length))) {
+    // Если ничего не получилось, создаем пустой поток
+    if (!audioOk && !videoOk) {
       this.log('[media] entering recvonly mode');
       this.localStream = new MediaStream();
+      
+      // Сохраняем функцию для повторной попытки
+      this.pendingMediaRetry = () => this.prepareLocalMedia(true);
+      this.setStatus('media-permission', 'awaiting user approval');
+      
+      // Показываем промпт для разрешений
+      if (window.uiControls) {
+        window.uiControls.showPermissionPrompt?.();
+      }
     }
 
     this.vLocal.srcObject = this.localStream;
@@ -78,6 +108,9 @@ export class MediaSession {
     
     // Attach tracks to existing PC if it exists
     this.attachLocalTracksToPC();
+    
+    // Вычисляем общий статус успеха
+    const gumOk = audioOk || videoOk;
     
     // Set media-ready status
     this.setStatus('media-ready', gumOk ? 'local tracks obtained' : 'recvonly mode');
