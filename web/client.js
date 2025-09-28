@@ -12,6 +12,9 @@ const btnCam  = document.getElementById('camBtn');
 const btnMic  = document.getElementById('micBtn');
 const diagEl  = document.getElementById('diag');
 
+// ---------- State ----------
+let remotePlaybackGranted = false; // Флаг успешного запуска удаленного видео
+
 // ---------- Helpers ----------
 const url   = new URL(location.href);
 const token = url.searchParams.get('token') || '';
@@ -277,9 +280,15 @@ async function join(){
         // Скрываем плейсхолдер при появлении удаленного видео
         remoteVideoArea.classList.add('hidden');
         
-        // Пытаемся запустить видео, при неудаче показываем overlay
-        resumePlay(vRemote, () => {
-          window.uiControls?.showRemotePlaybackPrompt();
+        // Пытаемся запустить видео, показываем overlay только если еще не было успешного запуска
+        resumePlay(vRemote).then(ok => {
+          if (ok) {
+            // Устанавливаем флаг при успешном автозапуске
+            remotePlaybackGranted = true;
+          } else if (!remotePlaybackGranted) {
+            // Показываем overlay только если еще не было успешного запуска
+            window.uiControls?.showRemotePlaybackPrompt();
+          }
         });
       }
     } else {
@@ -289,6 +298,8 @@ async function join(){
         remoteVideoArea.classList.remove('hidden');
         // Скрываем overlay если он был показан
         window.uiControls?.hideRemotePlaybackPrompt();
+        // Сбрасываем флаг воспроизведения
+        remotePlaybackGranted = false;
       }
     }
   };
@@ -395,6 +406,9 @@ window.endCall = () => {
     if (vLocal) vLocal.srcObject = null;
     if (vRemote) vRemote.srcObject = null;
     
+    // Сбрасываем флаг воспроизведения
+    remotePlaybackGranted = false;
+    
     // Показываем плейсхолдеры обратно
     const localVideoArea = document.getElementById('localVideoArea');
     const remoteVideoArea = document.getElementById('remoteVideoArea');
@@ -430,6 +444,8 @@ window.requestMediaRetry = () => {
 window.resumeRemotePlayback = async () => {
   const ok = await resumePlay(vRemote);
   if (ok) {
+    // Устанавливаем флаг успешного запуска
+    remotePlaybackGranted = true;
     window.uiControls?.hideRemotePlaybackPrompt();
     // Скрываем плейсхолдер при успешном запуске
     const remoteVideoArea = document.getElementById('remoteVideoArea');
