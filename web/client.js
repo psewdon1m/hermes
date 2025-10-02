@@ -13,7 +13,10 @@ const btnMic  = document.getElementById('micBtn');
 const diagEl  = document.getElementById('diag');
 
 // ---------- State ----------
-let remotePlaybackGranted = false; // Флаг успешного запуска удаленного видео
+let remotePlaybackGranted = false; // Текущее состояние воспроизведения удаленного видео (эпизодическое)
+const knownPlaybackUserKey = 'knownRemotePlaybackUser'; // Персистентный «знакомый пользователь»
+function getKnownPlaybackUser(){ try { return localStorage.getItem(knownPlaybackUserKey) === '1'; } catch { return false; } }
+function setKnownPlaybackUser(v){ try { if (v) localStorage.setItem(knownPlaybackUserKey, '1'); else localStorage.removeItem(knownPlaybackUserKey); } catch {} }
 
 // ---------- Helpers ----------
 const url   = new URL(location.href);
@@ -71,7 +74,7 @@ async function resumePlay(el, onFailure){
   try {
     await el.play();
     
-    // Ждем события playing или таймаут 500мс
+    // Ждем события playing или таймаут 800мс
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
         // Если через 500мс readyState < 2, считаем неудачей
@@ -80,11 +83,13 @@ async function resumePlay(el, onFailure){
         } else {
           resolve(true);
         }
-      }, 500);
+      }, 800);
       
       const onPlaying = () => {
         clearTimeout(timeout);
         el.removeEventListener('playing', onPlaying);
+        // Успешное воспроизведение — отмечаем пользователя как «знакомого»
+        try { if (el === vRemote) setKnownPlaybackUser(true); } catch {}
         resolve(true);
       };
       
@@ -215,6 +220,7 @@ async function join(){
 
   // Phase 2: Establish media session
   mediaSession = new MediaSession(signalingSession, log, logPermissionsInfo, resumePlay, debugSDP, vLocal, vRemote, diagEl);
+  window.mediaSession = mediaSession;
   
   // Set up media state change callback
   mediaSession.onStateChange = (newState, oldState) => {
@@ -305,6 +311,7 @@ async function join(){
         // Добавляем слушатели событий
         vRemote.addEventListener('playing', () => {
           remotePlaybackGranted = true;
+          try { setKnownPlaybackUser(true); } catch {}
           remoteVideoArea.classList.add('hidden');
           window.uiControls?.hideRemotePlaybackPrompt();
         });
@@ -319,7 +326,23 @@ async function join(){
         
         // Проверяем количество треков и пытаемся запустить только если есть видео
         if (stream.getVideoTracks().length > 0) {
-          resumePlay(vRemote).then(ok => {
+          const attemptAutoResume = async () => {
+            // Не используем remotePlaybackGranted как персистентный признак
+            // Отталкиваемся от «знакомого пользователя», но текущее состояние сбрасываем перед попытками
+            remotePlaybackGranted = false;
+            const wasKnown = getKnownPlaybackUser();
+            const maxTries = wasKnown ? 3 : 1;
+            const delay = 1000;
+            for (let i = 0; i < maxTries; i++) {
+              const ok = await resumePlay(vRemote);
+              if (ok) return true;
+              await new Promise(r => setTimeout(r, delay));
+            }
+            // Все попытки неудачны — сбрасываем «знакомого пользователя»
+            setKnownPlaybackUser(false);
+            return false;
+          };
+          attemptAutoResume().then(ok => {
             if (!ok && !remotePlaybackGranted) {
               // Показываем overlay только если автозапуск не удался
               window.uiControls?.showRemotePlaybackPrompt();
@@ -494,6 +517,8 @@ window.resumeRemotePlayback = async () => {
       if (!remotePlaybackGranted) {
         log('[ui] video playback fallback - showing prompt');
         window.uiControls?.showRemotePlaybackPrompt();
+        // Явный провал — сбрасываем персистентный признак
+        setKnownPlaybackUser(false);
       }
     }, 1000);
   }

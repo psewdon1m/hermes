@@ -4,8 +4,10 @@ export class UIControls {
     this.linkButtonTimeout = null;
     this.callStartTime = null;
     this.timerInterval = null;
+    this.deviceLists = { videoinput: [], audioinput: [], audiooutput: [] };
     
     this.initializeEventListeners();
+    this.initDeviceSelectors();
   }
 
   initializeEventListeners() {
@@ -145,17 +147,18 @@ export class UIControls {
     const elapsed = Date.now() - this.callStartTime;
     const hours = Math.floor(elapsed / 3600000);
     const minutes = Math.floor((elapsed % 3600000) / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
     
     const timerElement = document.getElementById('callTimer');
     if (timerElement) {
-      timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
   }
 
   resetTimer() {
     const timerElement = document.getElementById('callTimer');
     if (timerElement) {
-      timerElement.textContent = '00:00';
+      timerElement.textContent = '00:00:00';
     }
   }
 
@@ -243,5 +246,87 @@ export class UIControls {
       overlay.classList.remove('is-visible');
       overlay.onclick = null; // Убираем обработчик
     }
+  }
+
+  // ====== Device selectors UI ======
+  async initDeviceSelectors() {
+    try {
+      // Build simple dropdowns area if not present
+      let bar = document.getElementById('deviceSelectors');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'deviceSelectors';
+        bar.style.cssText = 'position:absolute; top:72px; left:80px; right:80px; display:flex; gap:12px; z-index:10;';
+        const tpl = `
+          <select id="cameraSelect" style="padding:6px 10px; border-radius:8px;"></select>
+          <select id="speakerSelect" style="padding:6px 10px; border-radius:8px;"></select>
+        `;
+        bar.innerHTML = tpl;
+        document.body.appendChild(bar);
+      }
+
+      await this.refreshDeviceLists();
+
+      const camSel = document.getElementById('cameraSelect');
+      const spkSel = document.getElementById('speakerSelect');
+      this.fillOptions(camSel, this.deviceLists.videoinput, 'Камера');
+      this.fillOptions(spkSel, this.deviceLists.audiooutput, 'Динамик');
+
+      camSel.onchange = async (e) => {
+        const id = e.target.value;
+        if (window.mediaSession && window.mediaSession.switchCamera) {
+          await window.mediaSession.switchCamera(id);
+        }
+      };
+
+      spkSel.onchange = async (e) => {
+        const id = e.target.value;
+        if (window.mediaSession && window.mediaSession.setOutputDevice) {
+          await window.mediaSession.setOutputDevice(id);
+        }
+      };
+
+      try { navigator.mediaDevices.addEventListener('devicechange', () => this.refreshDeviceLists()); } catch {}
+    } catch (e) {
+      console.warn('Device selectors init failed', e);
+    }
+  }
+
+  async refreshDeviceLists() {
+    try {
+      if (window.mediaSession && window.mediaSession.enumerateDevices) {
+        const lists = await window.mediaSession.enumerateDevices();
+        this.deviceLists.videoinput = lists.videoinput || [];
+        this.deviceLists.audiooutput = lists.audiooutput || [];
+        this.deviceLists.audioinput = lists.audioinput || [];
+      } else {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        this.deviceLists = { videoinput: [], audioinput: [], audiooutput: [] };
+        devices.forEach(d => { this.deviceLists[d.kind]?.push(d); });
+      }
+
+      // Update selects if exist
+      const camSel = document.getElementById('cameraSelect');
+      const spkSel = document.getElementById('speakerSelect');
+      if (camSel) this.fillOptions(camSel, this.deviceLists.videoinput, 'Камера');
+      if (spkSel) this.fillOptions(spkSel, this.deviceLists.audiooutput, 'Динамик');
+    } catch (e) {
+      console.warn('refreshDeviceLists failed', e);
+    }
+  }
+
+  fillOptions(selectEl, devices, placeholder) {
+    if (!selectEl) return;
+    while (selectEl.firstChild) selectEl.removeChild(selectEl.firstChild);
+    const def = document.createElement('option');
+    def.value = '';
+    def.textContent = placeholder || 'Выбрать';
+    selectEl.appendChild(def);
+    devices.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.deviceId;
+      opt.textContent = d.label || `${placeholder} ${selectEl.children.length}`;
+      selectEl.appendChild(opt);
+    });
   }
 }
