@@ -29,8 +29,6 @@ export class MediaSession {
     this.connectionStartTime = 0; // Track when connection was established
     this.lastRebuildTime = 0; // Track last rebuild to prevent too frequent rebuilds
     this.pendingMediaRetry = null; // Function for retrying media requests
-    this.currentVideoDeviceId = null; // Selected camera device id
-    this.supportsSetSinkId = typeof this.vRemote?.setSinkId === 'function';
   }
 
   async prepareLocalMedia(retry = false) {
@@ -690,7 +688,7 @@ export class MediaSession {
   startStatsMonitor() {
     if (this.statsTimer || !this.pc) return;
     
-    // Start monitoring after a shorter delay to detect stalls sooner
+    // Start monitoring after a delay to allow connection to stabilize
     setTimeout(() => {
       if (!this.pc) return; // Check if PC still exists
       this.statsTimer = setInterval(async () => {
@@ -700,7 +698,7 @@ export class MediaSession {
       
       // Check for outbound traffic issues (only after connection is stable)
       const connectionAge = Date.now() - this.connectionStartTime;
-      if (this.localTracksReady && stats.outboundAudio === 0 && stats.outboundVideo === 0 && connectionAge > 3000) {
+      if (this.localTracksReady && stats.outboundAudio === 0 && stats.outboundVideo === 0 && connectionAge > 10000) {
         // Check if tracks are intentionally disabled
         const senders = this.pc.getSenders();
         const hasEnabledTracks = senders.some(sender => 
@@ -720,11 +718,11 @@ export class MediaSession {
       } else if (stats.outboundAudio > 0 || stats.outboundVideo > 0) {
         // Reset counter when traffic is flowing
         this.stallRetryCount = 0;
-      } else if (connectionAge <= 3000) {
+      } else if (connectionAge <= 10000) {
         this.log('[media] outbound zero: connection still establishing (age=', Math.round(connectionAge/1000), 's)');
       }
-      }, 2000);
-    }, 1500); // 1.5s delay before starting stats monitoring
+      }, 5000);
+    }, 3000); // 3 second delay before starting stats monitoring
   }
 
   stopStatsMonitor() {
@@ -739,86 +737,5 @@ export class MediaSession {
     this.safeClosePC();
     this.setState('idle');
     this.setStatus('idle', 'media session closed');
-  }
-
-  // ===== Device management =====
-  async enumerateDevices() {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const result = {
-        audioinput: [],
-        audiooutput: [],
-        videoinput: []
-      };
-      devices.forEach(d => {
-        if (d.kind === 'audioinput') result.audioinput.push(d);
-        if (d.kind === 'audiooutput') result.audiooutput.push(d);
-        if (d.kind === 'videoinput') result.videoinput.push(d);
-      });
-      return result;
-    } catch (e) {
-      this.log('[media] enumerateDevices ERR', e?.message || e);
-      return { audioinput: [], audiooutput: [], videoinput: [] };
-    }
-  }
-
-  async switchCamera(deviceId) {
-    try {
-      this.log('[media] switchCamera request', deviceId);
-      // Acquire a new video track from the requested camera
-      const fresh = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } }, audio: false });
-      const newTrack = fresh.getVideoTracks()[0];
-      if (!newTrack) {
-        this.log('[media] switchCamera ERR no video track');
-        return false;
-      }
-
-      // Store selected device id
-      this.currentVideoDeviceId = deviceId;
-
-      // Replace track on sender if exists, else add
-      const sender = this.pc && this.pc.getSenders ? this.pc.getSenders().find(s => s.track && s.track.kind === 'video') : null;
-      if (sender && sender.replaceTrack) {
-        await sender.replaceTrack(newTrack);
-        this.log('[media] switchCamera replaceTrack success');
-      } else if (this.pc) {
-        this.pc.addTrack(newTrack, this.localStream || fresh);
-        this.log('[media] switchCamera addTrack fallback');
-      }
-
-      // Update localStream
-      try {
-        if (!this.localStream) this.localStream = new MediaStream();
-        const old = this.localStream.getVideoTracks()[0];
-        if (old) { try { old.stop(); } catch {} try { this.localStream.removeTrack(old); } catch {} }
-        this.localStream.addTrack(newTrack);
-        this.vLocal.srcObject = this.localStream;
-      } catch {}
-
-      // Stop extra tracks from gum
-      try { fresh.getTracks().forEach(t => { if (t !== newTrack) t.stop(); }); } catch {}
-
-      // Renegotiate
-      this.requestNegotiation('camera switched');
-      return true;
-    } catch (e) {
-      this.log('[media] switchCamera ERR', e?.name || e?.message || String(e));
-      return false;
-    }
-  }
-
-  async setOutputDevice(deviceId) {
-    if (!this.supportsSetSinkId) {
-      this.log('[media] setSinkId not supported');
-      return false;
-    }
-    try {
-      await this.vRemote.setSinkId(deviceId);
-      this.log('[media] output device set', deviceId);
-      return true;
-    } catch (e) {
-      this.log('[media] setOutputDevice ERR', e?.message || e);
-      return false;
-    }
   }
 }
