@@ -86,6 +86,9 @@
     restart: unless-stopped
     environment:
       - TG_BOT_TOKEN=${TG_BOT_TOKEN}
+      - CALL_API_BASE=${CALL_API_BASE}
+    depends_on:
+      - api
     volumes:
       - ./bot:/app
 

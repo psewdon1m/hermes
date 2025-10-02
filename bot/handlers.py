@@ -2,6 +2,7 @@ import logging
 from aiogram import Router, F
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
+from call_api import create_call
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -41,21 +42,51 @@ async def create_call_handler(message: Message, user_id: int = None):
     if user_id is None:
         user_id = message.from_user.id
     
-    # Простейший ответ для первого этапа
-    simple_text = (
-        "🎥 Функция создания звонка будет доступна в следующей версии!\n\n"
-        "Пока что бот работает в тестовом режиме."
-    )
+    # Отправляем сообщение о начале создания звонка
+    status_message = await message.answer("🔄 Создаю звонок...")
     
-    # Простая клавиатура
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🔄 Попробовать снова", callback_data="create_call")]
-        ]
-    )
-    
-    await message.answer(simple_text, reply_markup=keyboard)
-    logger.info(f"User {user_id} tried to create call (test mode)")
+    try:
+        # Определяем initiator ID
+        initiator = str(user_id)
+        
+        # Вызываем API для создания звонка
+        data = await create_call(initiator)
+        
+        # Формируем ответ пользователю
+        success_text = (
+            f"✅ Звонок создан успешно!\n\n"
+            f"🔗 Ссылка для присоединения:\n"
+            f"{data['joinUrl']}\n\n"
+            f"Поделитесь этой ссылкой с участником звонка."
+        )
+        
+        # Создаем клавиатуру с кнопкой открытия ссылки
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="🔗 Открыть ссылку", url=data["joinUrl"])],
+                [InlineKeyboardButton(text="🔄 Создать новый звонок", callback_data="create_call")]
+            ]
+        )
+        
+        await status_message.edit_text(success_text, reply_markup=keyboard)
+        logger.info(f"Call created successfully for user {user_id}: {data.get('callId')}")
+        
+    except Exception as e:
+        logger.error(f"Error creating call for user {user_id}: {e}")
+        
+        # Дружелюбное сообщение об ошибке
+        error_text = (
+            "❌ Произошла ошибка при создании звонка.\n\n"
+            "Попробуйте еще раз через несколько секунд."
+        )
+        
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="🔄 Попробовать снова", callback_data="create_call")]
+            ]
+        )
+        
+        await status_message.edit_text(error_text, reply_markup=keyboard)
 
 @router.message()
 async def handle_other_messages(message: Message):
