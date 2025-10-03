@@ -145,17 +145,18 @@ export class UIControls {
     const elapsed = Date.now() - this.callStartTime;
     const hours = Math.floor(elapsed / 3600000);
     const minutes = Math.floor((elapsed % 3600000) / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
     
     const timerElement = document.getElementById('callTimer');
     if (timerElement) {
-      timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
   }
 
   resetTimer() {
     const timerElement = document.getElementById('callTimer');
     if (timerElement) {
-      timerElement.textContent = '00:00';
+      timerElement.textContent = '00:00:00';
     }
   }
 
@@ -222,26 +223,5 @@ export class UIControls {
     }
   }
 
-  // UI для запуска удаленного видео
-  showRemotePlaybackPrompt() {
-    const overlay = document.getElementById('remotePlaybackPrompt');
-    if (overlay) {
-      overlay.classList.add('is-visible');
-      
-      // Добавляем обработчик клика
-      overlay.onclick = () => {
-        if (window.resumeRemotePlayback) {
-          window.resumeRemotePlayback();
-        }
-      };
-    }
-  }
-
-  hideRemotePlaybackPrompt() {
-    const overlay = document.getElementById('remotePlaybackPrompt');
-    if (overlay) {
-      overlay.classList.remove('is-visible');
-      overlay.onclick = null; // Убираем обработчик
-    }
-  }
+  // Промпт запуска удаленного видео удален — управление перенесено в pre-join overlay
 }

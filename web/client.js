@@ -13,7 +13,7 @@ const btnMic  = document.getElementById('micBtn');
 const diagEl  = document.getElementById('diag');
 
 // ---------- State ----------
-let remotePlaybackGranted = false; // Флаг успешного запуска удаленного видео
+let remotePlaybackGranted = false; // Флаг успешного запуска удаленного видео (overlay flow removed)
 
 // ---------- Helpers ----------
 const url   = new URL(location.href);
@@ -306,25 +306,18 @@ async function join(){
         vRemote.addEventListener('playing', () => {
           remotePlaybackGranted = true;
           remoteVideoArea.classList.add('hidden');
-          window.uiControls?.hideRemotePlaybackPrompt();
         });
         
         vRemote.addEventListener('pause', () => {
           if (vRemote.readyState < 2) {
             remotePlaybackGranted = false;
             remoteVideoArea.classList.remove('hidden');
-            window.uiControls?.showRemotePlaybackPrompt();
           }
         });
         
         // Проверяем количество треков и пытаемся запустить только если есть видео
         if (stream.getVideoTracks().length > 0) {
-          resumePlay(vRemote).then(ok => {
-            if (!ok && !remotePlaybackGranted) {
-              // Показываем overlay только если автозапуск не удался
-              window.uiControls?.showRemotePlaybackPrompt();
-            }
-          });
+          resumePlay(vRemote);
         }
       }
     } else {
@@ -332,8 +325,6 @@ async function join(){
       const remoteVideoArea = document.getElementById('remoteVideoArea');
       if (remoteVideoArea) {
         remoteVideoArea.classList.remove('hidden');
-        // Скрываем overlay если он был показан
-        window.uiControls?.hideRemotePlaybackPrompt();
         // Сбрасываем флаг воспроизведения
         remotePlaybackGranted = false;
       }
@@ -477,48 +468,11 @@ window.requestMediaRetry = () => {
 };
 
 // Глобальная функция для запуска удаленного видео
-window.resumeRemotePlayback = async () => {
-  // Проверяем, что флаг еще не установлен и поток существует с дорожками
-  if (remotePlaybackGranted || !vRemote?.srcObject || vRemote.srcObject.getTracks().length === 0) {
-    return; // Не трогаем play() если условия не выполнены
-  }
-  
-  const ok = await resumePlay(vRemote);
-  if (ok) {
-    // Флаг и скрытие плейсхолдера теперь управляются через события playing/pause
-    // Здесь только скрываем overlay
-    window.uiControls?.hideRemotePlaybackPrompt();
-  } else {
-    // Fallback: если через 1 секунду видео не запустилось, показываем подсказку
-    setTimeout(() => {
-      if (!remotePlaybackGranted) {
-        log('[ui] video playback fallback - showing prompt');
-        window.uiControls?.showRemotePlaybackPrompt();
-      }
-    }, 1000);
-  }
-};
+// resumeRemotePlayback removed — pre-join overlay will handle user gesture
 
 // Старые обработчики убраны - теперь используется UIControls
 
-// Глобальные обработчики для запуска видео
-document.addEventListener('click', () => {
-  // Проверяем, что флаг еще не установлен и поток существует с дорожками
-  if (!remotePlaybackGranted && vRemote?.srcObject && vRemote.srcObject.getTracks().length > 0) {
-    if (window.resumeRemotePlayback) {
-      window.resumeRemotePlayback();
-    }
-  }
-});
-
-document.addEventListener('touchstart', () => {
-  // Проверяем, что флаг еще не установлен и поток существует с дорожками
-  if (!remotePlaybackGranted && vRemote?.srcObject && vRemote.srcObject.getTracks().length > 0) {
-    if (window.resumeRemotePlayback) {
-      window.resumeRemotePlayback();
-    }
-  }
-});
+// Global click/touch handlers removed — pre-join overlay will drive playback
 
 // Auto-join when token already in URL
 if (token) {
