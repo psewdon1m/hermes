@@ -29,6 +29,8 @@ export class MediaSession {
     this.connectionStartTime = 0; // Track when connection was established
     this.lastRebuildTime = 0; // Track last rebuild to prevent too frequent rebuilds
     this.pendingMediaRetry = null; // Function for retrying media requests
+    this.cameraTrackBackup = null; // Stored camera track when screen sharing
+    this.screenShareStream = null; // Active screen share stream
   }
 
   async prepareLocalMedia(retry = false) {
@@ -544,6 +546,152 @@ export class MediaSession {
     if (this.pc && this.pc.signalingState === 'stable') {
       this.startNegotiation();
     }
+  }
+
+  getVideoSender() {
+    if (!this.pc || !this.pc.getSenders) return null;
+    try {
+      return this.pc.getSenders().find(sender => sender.track && sender.track.kind === 'video') || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async switchVideoSource(track, reason = 'video source change') {
+    if (!track) return false;
+    if (!this.localStream) {
+      this.localStream = new MediaStream();
+    }
+
+    try {
+      this.localStream.getVideoTracks()
+        .filter(existing => existing !== track)
+        .forEach(existing => {
+          try { this.localStream.removeTrack(existing); } catch {}
+        });
+      if (!this.localStream.getVideoTracks().includes(track)) {
+        this.localStream.addTrack(track);
+      }
+      this.vLocal.srcObject = this.localStream;
+      await this.resumePlay(this.vLocal);
+    } catch (err) {
+      this.log('[media] switchVideoSource ERR local stream', err?.message || err);
+    }
+
+    try {
+      const sender = this.getVideoSender();
+      if (sender && sender.replaceTrack) {
+        await sender.replaceTrack(track);
+      } else if (this.pc) {
+        this.log('[media] switchVideoSource: addTrack fallback');
+        this.pc.addTrack(track, this.localStream);
+      }
+    } catch (err) {
+      this.log('[media] switchVideoSource ERR replace', err?.message || err);
+    }
+
+    this.localTracksReady = true;
+    this.requestNegotiation(reason);
+    return true;
+  }
+
+  async startScreenShare() {
+    if (this.screenShareStream) {
+      this.log('[media] screen share already active');
+      return true;
+    }
+    try {
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const displayTrack = displayStream.getVideoTracks()[0];
+      if (!displayTrack) {
+        displayStream.getTracks().forEach(t => t.stop());
+        this.log('[media] screen share ERR', 'no video track');
+        return false;
+      }
+
+      this.cameraTrackBackup = this.localStream?.getVideoTracks?.()[0] || this.cameraTrackBackup || null;
+      if (this.cameraTrackBackup) {
+        this.cameraTrackBackup.enabled = true;
+      }
+
+      displayTrack.onended = () => {
+        this.log('[media] screen share track ended by user');
+        this.stopScreenShare().catch(() => {});
+      };
+
+      this.screenShareStream = displayStream;
+      try {
+        displayStream.getTracks().forEach(track => {
+          if (track !== displayTrack) {
+            try { track.stop(); } catch {}
+          }
+        });
+      } catch {}
+      await this.switchVideoSource(displayTrack, 'screen-share start');
+      this.log('[media] screen share started', displayTrack.label || '');
+      if (window.setScreenShareState) {
+        window.setScreenShareState(true);
+      } else if (window.uiControls) {
+        window.uiControls.updateScreenState(true);
+      }
+      return true;
+    } catch (err) {
+      this.log('[media] screen share start ERR', err?.name || err?.message || String(err));
+      return false;
+    }
+  }
+
+  async stopScreenShare() {
+    if (!this.screenShareStream && !this.cameraTrackBackup) {
+      this.log('[media] stop screen share: nothing to stop');
+      if (window.uiControls) {
+        window.uiControls.updateScreenState(false);
+      }
+      return false;
+    }
+    try {
+      if (this.screenShareStream) {
+        this.screenShareStream.getTracks().forEach(track => {
+          try { track.stop(); } catch {}
+        });
+      }
+    } finally {
+      this.screenShareStream = null;
+    }
+
+    let restored = false;
+    const cameraTrack = this.cameraTrackBackup && this.cameraTrackBackup.readyState === 'live'
+      ? this.cameraTrackBackup
+      : (this.localStream?.getVideoTracks?.().find(t => t.readyState === 'live') || null);
+
+    if (cameraTrack) {
+      try {
+        cameraTrack.enabled = true;
+        await this.switchVideoSource(cameraTrack, 'screen-share stop');
+        restored = true;
+      } catch (err) {
+        this.log('[media] restore camera after screen share ERR', err?.message || err);
+      }
+    } else {
+      this.log('[media] screen share stop: no camera track available, attempting media recovery');
+      try {
+        await this.prepareLocalMedia(true);
+        restored = true;
+      } catch (err) {
+        this.log('[media] screen share stop recovery ERR', err?.message || err);
+      }
+    }
+
+    this.cameraTrackBackup = null;
+    if (window.setScreenShareState) {
+      window.setScreenShareState(false);
+    } else if (window.uiControls) {
+      window.uiControls.updateScreenState(false);
+    }
+    if (!restored) {
+      this.log('[media] screen share stop: camera not restored, remaining in recvonly');
+    }
+    return true;
   }
 
   async handleOffer(from, sdp) {

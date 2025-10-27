@@ -14,6 +14,187 @@ const diagEl  = document.getElementById('diag');
 
 // ---------- State ----------
 let remotePlaybackGranted = false; // Флаг успешного запуска удаленного видео (overlay flow removed)
+let speakerOutputEnabled = true;
+let screenShareActive = false;
+
+window.setScreenShareState = (isActive, updateUI = true) => {
+  screenShareActive = !!isActive;
+  if (updateUI && window.uiControls) {
+    window.uiControls.updateScreenState(screenShareActive);
+  }
+  return screenShareActive;
+};
+
+const fallbackMedia = {
+  localStream: null,
+  cameraOn: false,
+  micOn: false,
+  screenStream: null,
+  prevCameraOn: false
+};
+
+function setLocalDisplayStream(stream) {
+  const display = document.getElementById('localVideoDisplay');
+  if (!display || !vLocal) return;
+  if (!display.contains(vLocal)) {
+    vLocal.setAttribute('playsinline', '');
+    vLocal.muted = true;
+    display.appendChild(vLocal);
+  }
+
+  if (stream) {
+    display.classList.add('has-media');
+    vLocal.style.display = 'block';
+    vLocal.srcObject = stream;
+    resumePlay(vLocal);
+  } else {
+    display.classList.remove('has-media');
+    if (vLocal.srcObject) {
+      vLocal.srcObject = null;
+    }
+    vLocal.style.display = 'none';
+  }
+}
+
+async function ensureFallbackLocalStream() {
+  if (fallbackMedia.localStream) return fallbackMedia.localStream;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    fallbackMedia.localStream = stream;
+    const videoTracks = stream.getVideoTracks();
+    const audioTracks = stream.getAudioTracks();
+    fallbackMedia.cameraOn = videoTracks.length ? videoTracks[0].enabled !== false : false;
+    fallbackMedia.micOn = audioTracks.length ? audioTracks[0].enabled !== false : false;
+    setLocalDisplayStream(stream);
+    if (window.uiControls) {
+      if (videoTracks.length) window.uiControls.updateCameraState(videoTracks[0].enabled);
+      if (audioTracks.length) window.uiControls.updateMicrophoneState(audioTracks[0].enabled);
+    }
+    return stream;
+  } catch (err) {
+    log('[fallback] getUserMedia ERR', err?.name || err?.message || String(err));
+    return null;
+  }
+}
+
+function showPlaceholderIfNoVideo() {
+  const hasVideo =
+    (fallbackMedia.screenStream && fallbackMedia.screenStream.getVideoTracks().some(t => t.enabled)) ||
+    (fallbackMedia.localStream && fallbackMedia.localStream.getVideoTracks().some(t => t.enabled));
+  if (!hasVideo) {
+    setLocalDisplayStream(null);
+  }
+}
+
+function cleanupFallbackMedia() {
+  if (fallbackMedia.screenStream) {
+    try { fallbackMedia.screenStream.getTracks().forEach(t => t.stop()); } catch {}
+    fallbackMedia.screenStream = null;
+  }
+  if (fallbackMedia.localStream) {
+    try { fallbackMedia.localStream.getTracks().forEach(t => t.stop()); } catch {}
+    fallbackMedia.localStream = null;
+  }
+  fallbackMedia.cameraOn = false;
+  fallbackMedia.micOn = false;
+  fallbackMedia.prevCameraOn = false;
+  setLocalDisplayStream(null);
+}
+
+async function fallbackToggleCamera() {
+  const stream = await ensureFallbackLocalStream();
+  if (!stream) return fallbackMedia.cameraOn;
+  const videoTracks = stream.getVideoTracks();
+  if (!videoTracks.length) return fallbackMedia.cameraOn;
+  const track = videoTracks[0];
+  track.enabled = !track.enabled;
+  fallbackMedia.cameraOn = track.enabled;
+  if (track.enabled) {
+    setLocalDisplayStream(stream);
+  } else if (!fallbackMedia.screenStream) {
+    showPlaceholderIfNoVideo();
+  }
+  return track.enabled;
+}
+
+async function fallbackToggleMicrophone() {
+  const stream = await ensureFallbackLocalStream();
+  if (!stream) return fallbackMedia.micOn;
+  const audioTracks = stream.getAudioTracks();
+  if (!audioTracks.length) return fallbackMedia.micOn;
+  const track = audioTracks[0];
+  track.enabled = !track.enabled;
+  fallbackMedia.micOn = track.enabled;
+  return track.enabled;
+}
+
+async function fallbackStartScreenShare() {
+  try {
+    const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    const displayTrack = displayStream.getVideoTracks()[0];
+    if (displayTrack) {
+      displayTrack.addEventListener('ended', () => {
+        fallbackStopScreenShare();
+      });
+    }
+    fallbackMedia.screenStream = displayStream;
+    fallbackMedia.prevCameraOn = fallbackMedia.cameraOn;
+    if (fallbackMedia.localStream) {
+      const localVideoTracks = fallbackMedia.localStream.getVideoTracks();
+      if (localVideoTracks.length) {
+        localVideoTracks[0].enabled = false;
+      }
+      fallbackMedia.cameraOn = false;
+      if (window.uiControls) {
+        window.uiControls.updateCameraState(false);
+      }
+    }
+    setLocalDisplayStream(displayStream);
+    window.setScreenShareState(true);
+    return true;
+  } catch (err) {
+    log('[fallback] screen share start ERR', err?.name || err?.message || String(err));
+    return false;
+  }
+}
+
+async function fallbackStopScreenShare() {
+  if (fallbackMedia.screenStream) {
+    try { fallbackMedia.screenStream.getTracks().forEach(t => t.stop()); } catch {}
+    fallbackMedia.screenStream = null;
+  }
+  window.setScreenShareState(false);
+  if (fallbackMedia.localStream) {
+    const localVideoTracks = fallbackMedia.localStream.getVideoTracks();
+    if (fallbackMedia.prevCameraOn && localVideoTracks.length) {
+      localVideoTracks[0].enabled = true;
+      fallbackMedia.cameraOn = true;
+      setLocalDisplayStream(fallbackMedia.localStream);
+      if (window.uiControls) {
+        window.uiControls.updateCameraState(true);
+      }
+    } else {
+      fallbackMedia.cameraOn = localVideoTracks.length ? localVideoTracks[0].enabled : false;
+      if (fallbackMedia.cameraOn) {
+        setLocalDisplayStream(fallbackMedia.localStream);
+      } else {
+        showPlaceholderIfNoVideo();
+        if (window.uiControls) {
+          window.uiControls.updateCameraState(false);
+        }
+      }
+    }
+  } else {
+    fallbackMedia.cameraOn = false;
+    showPlaceholderIfNoVideo();
+    if (window.uiControls) {
+      window.uiControls.updateCameraState(false);
+    }
+  }
+  fallbackMedia.prevCameraOn = false;
+  return true;
+}
+
 
 // ---------- Helpers ----------
 const url   = new URL(location.href);
@@ -347,11 +528,11 @@ async function join(){
 // btnJoin.onclick убран - в рабочем билде токен всегда в URL
 
 // Глобальные функции для нового UI
-window.toggleCameraMedia = () => {
+window.toggleCameraMedia = async () => {
   try {
     if (!mediaSession || !mediaSession.localStream) {
-      log('[media] video toggle: no media session');
-      return false;
+      const result = await fallbackToggleCamera();
+      return result;
     }
     const videoTracks = mediaSession.localStream.getVideoTracks() || [];
     if (videoTracks.length) {
@@ -377,19 +558,20 @@ window.toggleCameraMedia = () => {
       return t.enabled;
     } else {
       log('[media] video toggle: no video track');
-      return false;
+      return fallbackMedia.cameraOn;
     }
   } catch (e) { 
     log('[media] video toggle ERR', e?.message || e); 
-    return false;
+    const result = await fallbackToggleCamera();
+    return result;
   }
 };
 
-window.toggleMicrophoneMedia = () => {
+window.toggleMicrophoneMedia = async () => {
   try {
     if (!mediaSession || !mediaSession.localStream) {
-      log('[media] audio toggle: no media session');
-      return false;
+      const result = await fallbackToggleMicrophone();
+      return result;
     }
     const audioTracks = mediaSession.localStream.getAudioTracks() || [];
     if (audioTracks.length) {
@@ -404,17 +586,78 @@ window.toggleMicrophoneMedia = () => {
       return t.enabled;
     } else {
       log('[media] audio toggle: no audio track');
-      return false;
+      const result = await fallbackToggleMicrophone();
+      return result;
     }
   } catch (e) { 
     log('[media] audio toggle ERR', e?.message || e); 
-    return false;
+    const result = await fallbackToggleMicrophone();
+    return result;
+  }
+};
+
+window.toggleSpeakerOutput = () => {
+  try {
+    speakerOutputEnabled = !speakerOutputEnabled;
+    if (vRemote) {
+      vRemote.muted = !speakerOutputEnabled;
+      if (speakerOutputEnabled) {
+        try { vRemote.volume = 1; } catch {}
+      }
+    }
+    log('[media] speaker toggle', speakerOutputEnabled ? 'on' : 'off');
+    if (window.uiControls) {
+      window.uiControls.updateSpeakerState(speakerOutputEnabled);
+    }
+    return speakerOutputEnabled;
+  } catch (e) {
+    log('[media] speaker toggle ERR', e?.message || e);
+    return speakerOutputEnabled;
+  }
+};
+
+window.toggleScreenShare = async () => {
+  try {
+    if (!mediaSession) {
+      if (!screenShareActive) {
+        const started = await fallbackStartScreenShare();
+        const result = started ? true : screenShareActive;
+        log('[media] screen toggle (fallback)', result ? 'on' : 'off');
+        return result;
+      } else {
+        await fallbackStopScreenShare();
+        log('[media] screen toggle (fallback)', 'off');
+        return false;
+      }
+    }
+    const activeBefore = !!mediaSession.screenShareStream;
+    if (!activeBefore) {
+      const started = await mediaSession.startScreenShare?.();
+      const targetState = started ? true : !!mediaSession.screenShareStream;
+      window.setScreenShareState(targetState);
+      log('[media] screen toggle', targetState ? 'on' : 'off');
+      return targetState;
+    } else {
+      const stopped = await mediaSession.stopScreenShare?.();
+      const targetState = (stopped !== false) ? false : !!mediaSession.screenShareStream;
+      window.setScreenShareState(targetState);
+      log('[media] screen toggle', targetState ? 'on' : 'off');
+      return targetState;
+    }
+  } catch (e) {
+    log('[media] screen toggle ERR', e?.message || e);
+    return screenShareActive;
   }
 };
 
 window.endCall = () => {
   try {
     log('[ui] ending call...');
+    // Stop active screen share if any
+    if (mediaSession && mediaSession.stopScreenShare) {
+      try { mediaSession.stopScreenShare(); } catch {}
+    }
+
     
     // Останавливаем и сбрасываем таймер
     if (window.uiControls) {
@@ -446,8 +689,21 @@ window.endCall = () => {
     if (window.uiControls) {
       window.uiControls.updateCameraState(true);
       window.uiControls.updateMicrophoneState(true);
+      window.uiControls.updateSpeakerState(true);
     }
-    
+    if (window.setScreenShareState) {
+      window.setScreenShareState(false);
+    } else if (window.uiControls) {
+      window.uiControls.updateScreenState(false);
+    }
+    speakerOutputEnabled = true;
+    screenShareActive = false;
+    if (vRemote) {
+      vRemote.muted = false;
+    }
+    cleanupFallbackMedia();
+
+
     // Пытаемся закрыть вкладку (если возможно)
     try {
       window.close();
@@ -484,15 +740,20 @@ if (token) {
   
   // Скрываем кнопки, так как без токена они не работают
   // Используем setTimeout чтобы дождаться инициализации UI
-  setTimeout(() => {
-    const controls = document.querySelector('.controls-container');
-    if (controls) {
-      controls.style.display = 'none';
-    }
-  }, 100);
+  const diagContainer = document.getElementById('diag');
+  if (diagContainer) {
+    diagContainer.textContent = 'Добавьте ?token=... к URL, чтобы присоединиться к звонку.';
+  }
+  const controls = document.querySelector('.controls-container');
+  if (controls) {
+    controls.classList.add('inactive');
+  }
 }
 
 // Media stats functionality moved to MediaSession class
+
+
+
 
 
 
