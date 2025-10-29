@@ -1,5 +1,6 @@
 # Release Log
 
+- 1.86 (2025-10-29 21:19): refreshed no-video placeholder graphic to match overlay styling.
 - 1.85 (2025-10-29 21:08): added pre-join overlay, mic indicators, fullscreen toggles, and overlay-aware media handling.
 - 1.84 (2025-10-27 20:03): refreshed call UI with asset bundle, fallback media handling, screen share + speaker controls.
 - 1.83 (2025-10-02): removed deprecated 'tab to start' overlay logic; prep for new pre-join flow.
