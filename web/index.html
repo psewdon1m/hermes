@@ -24,6 +24,193 @@
       overflow: hidden;
     }
 
+    .call-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: #141414;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .call-overlay.call-overlay--visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .call-overlay__panel {
+      flex: 0 0 auto;
+      width: min(calc(100vw - 80px), 560px);
+      height: min(calc(100vh - 160px), 720px);
+      background-color: #3ea094;
+      border: none;
+      border-radius: 14px;
+      padding: clamp(24px, 4vw, 32px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(10px, 1.5vw, 40px);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+      position: relative;
+      transform-origin: center;
+      transition: transform 0.2s ease;
+      margin: 80px 0;
+    }
+
+    .call-overlay__preview {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(20, 20, 20, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .call-overlay__preview video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 14px;
+    }
+
+    .call-overlay__preview-fallback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(20, 20, 20, 0.85);
+    }
+
+    .call-overlay__preview-fallback:not(.visible) {
+      display: none;
+    }
+
+    .call-overlay__preview-fallback img {
+      height: 100%;
+      width: auto;
+      max-height: 100%;
+      max-width: none;
+      opacity: 0.85;
+      filter: grayscale(20%);
+      object-fit: contain;
+    }
+
+    .call-overlay__actions {
+      display: flex;
+      gap: 24px;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .call-overlay__actions .control-button {
+      width: 230px;
+      height: 230px;
+      border-radius: 4px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      font-size: 0;
+    }
+
+    .call-overlay__actions .control-button.primary {
+      background-color: #141414;
+      color: #d9d9d9;
+      border: 1px solid #000000;
+      box-shadow: none;
+    }
+
+    .call-overlay__actions .control-button.primary .button-icon {
+      width: 32px;
+      height: 32px;
+      filter: invert(92%);
+      opacity: 0.9;
+      transition: filter 0.2s ease, opacity 0.2s ease;
+    }
+
+    .call-overlay__actions .control-button.primary.active {
+      background-color: #23a094;
+      color: #000000;
+      border: 1px solid #000000;
+    }
+
+    .call-overlay__actions .control-button.primary.active .button-icon {
+      filter: none;
+      opacity: 1;
+    }
+
+    .call-overlay__actions .control-button.primary.inactive {
+      background-color: #f890ea;
+      border: 1px solid #000000;
+      color: #000000;
+      filter: none;
+    }
+
+    .call-overlay__actions .control-button.primary:hover {
+      transform: scale(1.05) translateY(-6px);
+      box-shadow: 4px 4px 0 0 #000000;
+    }
+
+    .call-overlay__enter {
+      width: clamp(200px, 100%, 480px);
+      height: 96px;
+      border-radius: 4px;
+      background-color: #f190ec;
+      color: #000000;
+      border: 1px solid #000000;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 18px;
+      text-transform: lowercase;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      margin: 0 auto;
+    }
+
+    .call-overlay__enter:hover {
+      transform: scale(1.05) translateY(-6px);
+      box-shadow: 4px 4px 0 0 #ffffff;
+      background-color: #f190ec;
+      color: #000000;
+    }
+
+    .call-overlay__close {
+      position: absolute;
+      top: 0;
+      right: 0;
+      transform: translate(50%, -50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 0px solid #dddddd;
+      background-color: #f190ec;
+      color: #d9d9d9;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .call-overlay__close:hover {
+      transform: translate(50%, -50%) scale(1.05);
+      box-shadow: 2px 2px 0 0 #000000;
+    }
+
     .main-content {
       position: absolute;
       top: 125px;
@@ -109,9 +296,79 @@
     .button-icon {
       width: 20px;
       height: 20px;
-      filter: invert(92%);
+      filter: invert(100%);
       opacity: 0.9;
       transition: filter 0.2s ease, opacity 0.2s ease;
+    }
+
+    .call-overlay__actions .control-button.primary {
+      width: 230px;
+      height: 230px;
+    }
+
+    .call-overlay__actions .control-button.primary .button-icon {
+      width: 32px;
+      height: 32px;
+    }
+    .mic-indicator {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 28px;
+      height: 28px;
+      border: none;
+      padding: 0;
+      border-radius: 8px;
+      background: rgba(20, 20, 20, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 6;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .mic-indicator.visible {
+      display: flex;
+    }
+    .mic-indicator:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+    .mic-indicator.visible:active:not(:disabled) {
+      transform: scale(0.94);
+    }
+    .mic-indicator.feedback {
+      animation: micIndicatorPulse 0.6s ease;
+    }
+    .mic-indicator-icon {
+      width: 16px;
+      height: 16px;
+      background-color: #f190ec;
+      -webkit-mask: url('src/speaker.svg') center/contain no-repeat;
+      mask: url('src/speaker.svg') center/contain no-repeat;
+    }
+    .video-fallback {
+      position: absolute;
+      inset: 12px;
+      border-radius: 16px;
+      background: rgba(20, 20, 20, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 4;
+      overflow: hidden;
+    }
+    .video-fallback.visible {
+      display: flex;
+    }
+    .video-fallback-image {
+      height: 100%;
+      width: auto;
+      max-height: 100%;
+      max-width: none;
+      filter: grayscale(20%);
+      opacity: 0.85;
+      object-fit: contain;
     }
 .control-button.primary.active {
   border: 1px solid #000000;
@@ -120,11 +377,11 @@
 }
 
     .control-button.primary.active .button-icon {
-      filter: invert(100%);
+      filter: none;
       opacity: 1;
     }
     .control-button.primary.inactive {
-      background-color: #FF90E8;
+      background-color: #f890ea;
       border: 1px solid #000000;
     }
 
@@ -158,7 +415,7 @@
     }
 
     .control-button.primary.inactive:hover {
-      background-color: #FF90E8;
+      background-color: #f890ea;
       box-shadow: 4px 4px 0 0 #dddddd;
     }
 
@@ -188,7 +445,7 @@
     .control-button.exit:hover {
       transform: scale(1.05) translateY(-6px);
       box-shadow: 4px 4px 0 0 #ffffff;
-      background-color: #f890ea;
+      background-color: #f190ec;
       color: #000000;
       transition: all 0.3s ease;
     }
@@ -327,6 +584,64 @@
     .video-placeholder.has-media .placeholder-cross,
     .video-placeholder.has-media .placeholder-text {
       display: none;
+    }
+
+    #localVideoDisplay video[data-mirror="1"],
+    video#local[data-mirror="1"],
+    .call-overlay__preview video[data-mirror="1"] {
+      transform: scaleX(-1);
+    }
+
+    .fullscreen-button {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #000000;
+      border-radius: 6px;
+      background-color: rgba(20, 20, 20, 0.85);
+      color: #D9D9D9;
+      cursor: pointer;
+      z-index: 30;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .fullscreen-button:hover {
+      background-color: #23a094;
+      color: #000000;
+    }
+
+    .video-placeholder.fullscreen-active .fullscreen-button,
+    .video-placeholder:fullscreen .fullscreen-button {
+      background-color: #141414;
+      color: #D9D9D9;
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .video-placeholder.fullscreen-active .fullscreen-button:hover,
+    .video-placeholder:fullscreen .fullscreen-button:hover {
+      background-color: #f190ec;
+      color: #000000;
+      transform: scale(1.05);
+    }
+
+    .video-placeholder:fullscreen,
+    .video-placeholder.fullscreen-active {
+      width: 100%;
+      height: 100%;
+      background-color: #000000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-placeholder:fullscreen video,
+    .video-placeholder.fullscreen-active video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
 
@@ -468,6 +783,30 @@
         width: 20px;
         height: 20px;
       }
+      .mic-indicator {
+        top: 10px;
+        left: 10px;
+        width: 26px;
+        height: 26px;
+      }
+      .mic-indicator-icon {
+        width: 14px;
+        height: 14px;
+      }
+      .mic-indicator {
+        top: 10px;
+        left: 10px;
+        width: 26px;
+        height: 26px;
+      }
+      .mic-indicator-icon {
+        width: 14px;
+        height: 14px;
+      }
+      .video-fallback {
+        inset: 10px;
+        border-radius: 14px;
+      }
 
 
       .control-button.primary.disabled {
@@ -509,7 +848,7 @@
       .control-button.exit:hover {
         transform: scale(1.05) translateY(-6px);
         box-shadow: 4px 4px 0 0 #ffffff;
-        background-color: #f890ea;
+        background-color: #f190ec;
         color: #000000;
       }
 
@@ -621,6 +960,44 @@
         height: 18px;
       }
 
+      .call-overlay__actions .control-button.primary {
+        width: 230px;
+        height: 230px;
+      }
+
+      .call-overlay__actions .control-button.primary .button-icon {
+        width: 32px;
+        height: 32px;
+      }
+      .mic-indicator {
+        top: 10px;
+        left: 10px;
+        width: 24px;
+        height: 24px;
+      }
+      .mic-indicator-icon {
+        width: 12px;
+        height: 12px;
+      }
+      .video-fallback {
+        inset: 10px;
+        border-radius: 12px;
+      }
+      .mic-indicator {
+        top: 10px;
+        left: 10px;
+        width: 24px;
+        height: 24px;
+      }
+      .mic-indicator-icon {
+        width: 12px;
+        height: 12px;
+      }
+      .video-fallback {
+        inset: 8px;
+        border-radius: 10px;
+      }
+
 
       .control-button.primary.disabled {
         background-color: #23a094;
@@ -668,7 +1045,7 @@
       .control-button.exit:hover {
         transform: scale(1.05) translateY(-6px);
         box-shadow: 4px 4px 0 0 #ffffff;
-        background-color: #f890ea;
+        background-color: #f190ec;
         color: #000000;
       }
 
@@ -677,6 +1054,38 @@
         background-color: rgba(255, 255, 255, 0.1);
       }
     }
+    @media (max-width: 645px) {
+      .call-overlay__panel {
+        width: min(calc(100vw - 80px), 480px);
+        height: auto;
+        gap: 24px;
+        padding: 24px;
+      }
+
+      .call-overlay__actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .call-overlay__actions .control-button,
+      .call-overlay__actions .control-button.primary {
+        width: 170px;
+        height: 170px;
+      }
+
+      .call-overlay__actions .control-button.primary .button-icon {
+        width: 32px;
+        height: 32px;
+      }
+
+      .call-overlay__enter {
+        width: clamp(200px, 100%, 420px);
+      }
+    }
+
     @media (max-width: 480px) {
       .top-visual {
         top: 2px;
@@ -716,6 +1125,23 @@
         column-gap: 15px;
         row-gap: 15px;
         margin-top: 15px;
+      }
+
+      .call-overlay__panel {
+        width: min(calc(100vw - 80px), 360px);
+        padding: 20px;
+        gap: 20px;
+      }
+
+      .call-overlay__actions {
+        gap: 12px;
+        align-items: center;
+      }
+
+      .call-overlay__enter {
+        width: clamp(180px, 95%, 280px);
+        height: 80px;
+        font-size: 16px;
       }
 
       #remoteVideoDisplay,
@@ -769,6 +1195,37 @@
         height: 16px;
       }
 
+      .call-overlay__actions .control-button,
+      .call-overlay__actions .control-button.primary {
+        width: 160px;
+        height: 160px;
+      }
+
+      .call-overlay__actions .control-button.primary .button-icon {
+        width: 16px;
+        height: 16px;
+      }
+      .mic-indicator {
+        top: 8px;
+        left: 8px;
+        width: 22px;
+        height: 22px;
+      }
+      .mic-indicator-icon {
+        width: 12px;
+        height: 12px;
+      }
+      .mic-indicator {
+        top: 8px;
+        left: 8px;
+        width: 22px;
+        height: 22px;
+      }
+      .mic-indicator-icon {
+        width: 12px;
+        height: 12px;
+      }
+
 
       .control-button.primary.disabled {
         background-color: #23a094;
@@ -819,7 +1276,7 @@
       .control-button.exit:hover {
         transform: scale(1.05) translateY(-6px);
         box-shadow: 4px 4px 0 0 #ffffff;
-        background-color: #f890ea;
+        background-color: #f190ec;
         color: #000000;
       }
 
@@ -838,31 +1295,65 @@
   <div class="top-visual" id="topVisual" data-button="topVisual">
     <span class="logo-text">tgcall</span>
   </div>
+  <div class="call-overlay call-overlay--visible" data-role="call-overlay" data-mode="prejoin">
+    <div class="call-overlay__panel">
+      <button class="call-overlay__close" type="button" data-role="overlay-exit" aria-label="Leave call">&times;</button>
+      <div class="call-overlay__preview" data-role="overlay-preview-container">
+        <video data-role="overlay-preview" autoplay playsinline muted></video>
+        <div class="call-overlay__preview-fallback visible" data-role="overlay-preview-fallback">
+          <img src="src/no_video.png" alt="">
+        </div>
+      </div>
+      <div class="call-overlay__actions">
+        <button class="control-button primary cam active" type="button" data-role="overlay-cam" aria-label="Toggle camera">
+          <img src="src/camera.svg" alt="Camera" class="button-icon">
+        </button>
+        <button class="control-button primary mic active" type="button" data-role="overlay-mic" aria-label="Toggle microphone">
+          <img src="src/microphone.svg" alt="Microphone" class="button-icon">
+        </button>
+      </div>
+      <button class="call-overlay__enter" type="button" data-role="overlay-enter">enter</button>
+    </div>
+  </div>
   
   <div class="main-content">
-    <!-- Скрытые плейсхолдеры для логики -->
-    <div class="video-placeholder hidden-logic" id="remoteVideoArea">
-      <div class="placeholder-cross"></div>
-    </div>
+    <!-- Hidden placeholders for logic -->
     <div class="video-placeholder hidden-logic" id="localVideoArea">
       <div class="placeholder-cross"></div>
     </div>
+    <div class="video-placeholder hidden-logic" id="remoteVideoArea">
+      <div class="placeholder-cross"></div>
+    </div>
     
-    <!-- Визуальные элементы для отображения -->
+    <!-- Visual elements for display -->
+    <div class="video-placeholder" id="localVideoDisplay">
+      <button class="mic-indicator" type="button" data-role="local-mic-indicator" aria-label="Microphone muted">
+        <span class="mic-indicator-icon"></span>
+      </button>
+      <div class="video-fallback" data-role="local-video-fallback" aria-hidden="true">
+        <img src="src/no_video.png" alt="" class="video-fallback-image">
+      </div>
+      <button class="fullscreen-button" type="button" aria-label="toggle fullscreen for local video">full</button>
+      <button class="copy-link-button" id="localCopyLinkButton" data-role="mirror-source">
+        <div class="placeholder-cross"></div>
+        <div class="placeholder-text">press to copy call link</div>
+      </button>
+    </div>
     <div class="video-placeholder" id="remoteVideoDisplay">
+      <button class="mic-indicator" type="button" data-role="remote-mic-indicator" aria-label="Remote microphone muted">
+        <span class="mic-indicator-icon"></span>
+      </button>
+      <div class="video-fallback" data-role="remote-video-fallback" aria-hidden="true">
+        <img src="src/no_video.png" alt="" class="video-fallback-image">
+      </div>
+      <button class="fullscreen-button" type="button" aria-label="toggle fullscreen for remote video">full</button>
       <button class="copy-link-button" id="linkBtn">
         <div class="placeholder-cross"></div>
         <div class="placeholder-text">press to copy call link</div>
       </button>
     </div>
-    <div class="video-placeholder" id="localVideoDisplay">
-      <button class="copy-link-button" id="localCopyLinkButton">
-        <div class="placeholder-cross"></div>
-        <div class="placeholder-text">press to copy call link</div>
-      </button>
-    </div>
     
-    <!-- Элемент для скринкаста -->
+    <!-- Placeholder for screencast -->
   </div>
 
   <div class="controls-container">
@@ -884,7 +1375,7 @@
   </div>
 
 
-  <!-- Скрытые элементы для совместимости с client.js -->
+  <!-- Hidden elements for client.js compatibility -->
   <div style="display: none;">
     <video id="local" autoplay playsinline muted></video>
     <video id="remote" autoplay playsinline></video>
@@ -896,17 +1387,10 @@
   <script type="module">
     import { UIControls } from './ui-controls.js';
     
-    // Инициализируем UI контролы
+    // Initialize UI controls
     window.uiControls = new UIControls();
   </script>
   
   <script type="module" src="/client.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-

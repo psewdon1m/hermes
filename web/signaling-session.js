@@ -23,6 +23,7 @@ export class SignalingSession {
     this.onPeerUpdate = null;
     this.onMessage = null;
     this.status = 'idle';
+    this.onStatusChange = null;
   }
 
   setStatus(newStatus, reason = '') {
@@ -30,6 +31,13 @@ export class SignalingSession {
       const oldStatus = this.status;
       this.status = newStatus;
       this.log('[status]', oldStatus, '->', newStatus, reason ? `(${reason})` : '');
+      if (typeof this.onStatusChange === 'function') {
+        try {
+          this.onStatusChange(newStatus, oldStatus, reason);
+        } catch (err) {
+          this.log('[signal] onStatusChange error', err?.message || err);
+        }
+      }
     }
   }
 

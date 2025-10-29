@@ -8,16 +8,48 @@ export class UIControls {
     this.microphoneEnabled = true;
     this.speakerEnabled = true;
     this.screenSharing = false;
+    this.remoteMicrophoneEnabled = true;
+    this.remoteMicNudgeHandler = null;
+    this.localMicIndicator = null;
+    this.remoteMicIndicator = null;
+    this.micButton = null;
+    this.localVideoFallback = null;
+    this.remoteVideoFallback = null;
+    this.localVideoActive = true;
+    this.remoteVideoActive = true;
+    this.overlayVisible = false;
+    this.overlayMode = 'prejoin';
+    this.overlay = document.querySelector('[data-role="call-overlay"]');
+    this.overlayPreview = this.overlay?.querySelector('[data-role="overlay-preview"]') || null;
+    this.overlayFallback = this.overlay?.querySelector('[data-role="overlay-preview-fallback"]') || null;
+    this.overlayCamButton = this.overlay?.querySelector('[data-role="overlay-cam"]') || null;
+    this.overlayMicButton = this.overlay?.querySelector('[data-role="overlay-mic"]') || null;
+    this.overlayExitButton = this.overlay?.querySelector('[data-role="overlay-exit"]') || null;
+    this.overlayPreviewContainer = this.overlay?.querySelector('[data-role="overlay-preview-container"]') || null;
+    this.overlayPreviewStream = null;
+    this.overlayEnterButton = this.overlay?.querySelector('[data-role="overlay-enter"]') || null;
+    this.overlayPanel = this.overlay?.querySelector('.call-overlay__panel') || null;
 
     this.initializeEventListeners();
     this.updateCameraState(this.cameraEnabled);
     this.updateMicrophoneState(this.microphoneEnabled);
     this.updateSpeakerState(this.speakerEnabled);
     this.updateScreenState(this.screenSharing);
+    this.refreshLocalMicIndicator();
+    this.refreshRemoteMicIndicator();
+    this.refreshLocalVideoFallback();
+    this.refreshRemoteVideoFallback();
+    this.refreshOverlayPreview();
+    this.updateOverlayScale();
+    this.attachOverlayScaleListeners();
+    this.showCallOverlay('prejoin');
   }
 
   initializeEventListeners() {
     this.setupCopyLinkButtons();
+    this.setupFullscreenButtons();
+    this.setupMicIndicators();
+    this.setupOverlayControls();
     this.attachControlButton('camBtn', () => this.handleCamClick());
     this.attachControlButton('micBtn', () => this.handleMicClick());
     this.attachControlButton('spkBtn', () => this.handleSpeakerClick());
@@ -37,6 +69,165 @@ export class UIControls {
         button.dataset.defaultText = defaultText.trim() || 'press to copy call link';
       }
       button.addEventListener('click', () => this.handleLinkClick(button));
+    });
+  }
+
+  setupFullscreenButtons() {
+    const placeholders = Array.from(document.querySelectorAll('.video-placeholder'));
+    placeholders.forEach((container) => {
+      const button = container.querySelector('.fullscreen-button');
+      if (!button) return;
+      if (!button.dataset.fullLabel) {
+        button.dataset.fullLabel = button.textContent.trim() || 'full';
+      }
+      if (!button.dataset.exitLabel) {
+        button.dataset.exitLabel = 'exit';
+      }
+      button.addEventListener('click', async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await this.toggleFullscreen(container);
+      });
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      this.syncFullscreenButtons();
+    });
+    this.syncFullscreenButtons();
+  }
+
+  setupMicIndicators() {
+    this.localMicIndicator = document.querySelector('[data-role="local-mic-indicator"]');
+    this.remoteMicIndicator = document.querySelector('[data-role="remote-mic-indicator"]');
+    this.micButton = document.getElementById('micBtn');
+    this.localVideoFallback = document.querySelector('[data-role="local-video-fallback"]');
+    this.remoteVideoFallback = document.querySelector('[data-role="remote-video-fallback"]');
+
+    if (this.localMicIndicator) {
+      this.localMicIndicator.disabled = true;
+    }
+
+    if (this.remoteMicIndicator) {
+      this.remoteMicIndicator.addEventListener('click', (event) => {
+        if (!this.remoteMicIndicator.classList.contains('visible')) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (this.remoteMicIndicator.disabled) return;
+        this.triggerRemoteMicIndicatorFeedback();
+        this.remoteMicIndicator.disabled = true;
+        try {
+          if (typeof this.remoteMicNudgeHandler === 'function') {
+            this.remoteMicNudgeHandler();
+          }
+        } finally {
+          setTimeout(() => {
+            if (this.remoteMicIndicator) {
+              this.remoteMicIndicator.disabled = !this.remoteMicIndicator.classList.contains('visible');
+            }
+          }, 900);
+        }
+      });
+    }
+
+    if (this.micButton) {
+      this.micButton.addEventListener('animationend', (event) => {
+        if (event.animationName === 'micButtonNudge') {
+          this.micButton.classList.remove('mic-nudge');
+        }
+      });
+    }
+
+    this.refreshLocalVideoFallback();
+    this.refreshRemoteVideoFallback();
+  }
+
+  setupOverlayControls() {
+    if (!this.overlay) return;
+    if (this.overlayCamButton) {
+      this.overlayCamButton.addEventListener('click', () => this.handleCamClick());
+    }
+    if (this.overlayMicButton) {
+      this.overlayMicButton.addEventListener('click', () => this.handleMicClick());
+    }
+    if (this.overlayExitButton) {
+      this.overlayExitButton.addEventListener('click', () => this.handleExitClick());
+    }
+    if (this.overlayEnterButton) {
+      this.overlayEnterButton.addEventListener('click', () => {
+        this.hideCallOverlay();
+        if (typeof window.handleOverlayEnter === 'function') {
+          try {
+            window.handleOverlayEnter();
+          } catch (err) {
+            console.error('[ui] overlay enter handler failed', err);
+          }
+        }
+      });
+    }
+  }
+
+  attachOverlayScaleListeners() {
+    if (typeof window === 'undefined' || !this.overlayPanel) return;
+    const viewport = window.visualViewport;
+    this.overlayScaleHandler = () => this.updateOverlayScale();
+    window.addEventListener('resize', this.overlayScaleHandler, { passive: true });
+    if (viewport) {
+      viewport.addEventListener('resize', this.overlayScaleHandler, { passive: true });
+    }
+  }
+
+  updateOverlayScale() {
+    if (!this.overlayPanel) return;
+    let scaleBase = 1;
+    if (window.visualViewport?.scale) {
+      scaleBase = window.visualViewport.scale;
+    } else if (window.devicePixelRatio) {
+      scaleBase = window.devicePixelRatio;
+    }
+    const scale = scaleBase ? 1 / scaleBase : 1;
+    const clampedScale = Math.min(Math.max(scale, 0.6), 2);
+    this.overlayPanel.style.transform = `scale(${clampedScale})`;
+  }
+
+  async toggleFullscreen(container) {
+    try {
+      if (!document.fullscreenElement) {
+        if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        }
+        return;
+      }
+
+      if (document.fullscreenElement === container) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      } else {
+        try {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          }
+        } finally {
+          if (container.requestFullscreen) {
+            await container.requestFullscreen();
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to toggle fullscreen:', err);
+    }
+  }
+
+  syncFullscreenButtons() {
+    const activeEl = document.fullscreenElement;
+    const placeholders = document.querySelectorAll('.video-placeholder');
+    placeholders.forEach((container) => {
+      const button = container.querySelector('.fullscreen-button');
+      if (!button) return;
+      const isActive = activeEl === container;
+      container.classList.toggle('fullscreen-active', isActive);
+      button.textContent = isActive ? (button.dataset.exitLabel || 'exit') : (button.dataset.fullLabel || 'full');
+      button.setAttribute('aria-label', isActive ? 'exit fullscreen' : 'enter fullscreen');
     });
   }
 
@@ -181,18 +372,31 @@ export class UIControls {
 
   updateCameraState(isEnabled) {
     this.cameraEnabled = !!isEnabled;
-    const button = document.getElementById('camBtn');
-    if (!button) return;
-    button.classList.remove('disabled', 'active', 'inactive');
-    button.classList.add(this.cameraEnabled ? 'active' : 'inactive');
+    const mainButton = document.getElementById('camBtn');
+    if (mainButton) {
+      mainButton.classList.remove('disabled', 'active', 'inactive');
+      mainButton.classList.add(this.cameraEnabled ? 'active' : 'inactive');
+    }
+    if (this.overlayCamButton) {
+      this.overlayCamButton.classList.remove('disabled', 'active', 'inactive');
+      this.overlayCamButton.classList.add(this.cameraEnabled ? 'active' : 'inactive');
+    }
+    this.refreshLocalMicIndicator();
+    this.refreshOverlayPreview();
   }
 
   updateMicrophoneState(isEnabled) {
     this.microphoneEnabled = !!isEnabled;
-    const button = document.getElementById('micBtn');
-    if (!button) return;
-    button.classList.remove('disabled', 'active', 'inactive');
-    button.classList.add(this.microphoneEnabled ? 'active' : 'inactive');
+    const mainButton = document.getElementById('micBtn');
+    if (mainButton) {
+      mainButton.classList.remove('disabled', 'active', 'inactive');
+      mainButton.classList.add(this.microphoneEnabled ? 'active' : 'inactive');
+    }
+    if (this.overlayMicButton) {
+      this.overlayMicButton.classList.remove('disabled', 'active', 'inactive');
+      this.overlayMicButton.classList.add(this.microphoneEnabled ? 'active' : 'inactive');
+    }
+    this.refreshLocalMicIndicator();
   }
 
   updateSpeakerState(isEnabled) {
@@ -218,6 +422,152 @@ export class UIControls {
       } else if (!this.cameraEnabled) {
         localDisplay.classList.remove('has-media');
       }
+      this.refreshLocalMicIndicator();
+      this.refreshLocalVideoFallback();
+    }
+  }
+
+  refreshLocalMicIndicator() {
+    const container = document.getElementById('localVideoDisplay');
+    this.applyMicIndicator(container, !this.microphoneEnabled);
+  }
+
+  refreshRemoteMicIndicator() {
+    const container = document.getElementById('remoteVideoDisplay');
+    this.applyMicIndicator(container, !this.remoteMicrophoneEnabled);
+  }
+
+  setRemoteMicrophoneState(isEnabled) {
+    this.remoteMicrophoneEnabled = !!isEnabled;
+    this.refreshRemoteMicIndicator();
+  }
+
+  onRemoteMicNudge(handler) {
+    this.remoteMicNudgeHandler = typeof handler === 'function' ? handler : null;
+  }
+
+  flashMicrophoneButton(times = 3) {
+    const button = this.micButton || document.getElementById('micBtn');
+    if (!button) return;
+    const iterations = Math.max(1, Number(times) || 1);
+    button.style.setProperty('--mic-nudge-iterations', iterations);
+    button.classList.remove('mic-nudge');
+    // force reflow to restart animation
+    void button.offsetWidth;
+    button.classList.add('mic-nudge');
+  }
+
+  triggerRemoteMicIndicatorFeedback() {
+    if (!this.remoteMicIndicator) return;
+    this.remoteMicIndicator.classList.add('feedback');
+    setTimeout(() => {
+      if (this.remoteMicIndicator) {
+        this.remoteMicIndicator.classList.remove('feedback');
+      }
+    }, 600);
+  }
+
+  setLocalVideoActive(isVideoActive) {
+    this.localVideoActive = !!isVideoActive;
+    this.refreshLocalVideoFallback();
+    this.refreshOverlayPreview();
+  }
+
+  setRemoteVideoActive(isVideoActive) {
+    this.remoteVideoActive = !!isVideoActive;
+    this.refreshRemoteVideoFallback();
+  }
+
+  refreshLocalVideoFallback() {
+    const container = document.getElementById('localVideoDisplay');
+    if (!container || !this.localVideoFallback) return;
+    const hasMedia = container.classList.contains('has-media');
+    const shouldShow = hasMedia && !this.localVideoActive;
+    this.localVideoFallback.classList.toggle('visible', !!shouldShow);
+  }
+
+  refreshRemoteVideoFallback() {
+    const container = document.getElementById('remoteVideoDisplay');
+    if (!container || !this.remoteVideoFallback) return;
+    const hasMedia = container.classList.contains('has-media');
+    const shouldShow = hasMedia && !this.remoteVideoActive;
+    this.remoteVideoFallback.classList.toggle('visible', !!shouldShow);
+  }
+
+  setOverlayPreviewStream(stream, isCameraStream = true) {
+    if (!this.overlayPreview) return;
+    if (!isCameraStream && stream) {
+      return;
+    }
+    const targetStream = isCameraStream ? stream : null;
+    if (this.overlayPreview.srcObject !== targetStream) {
+      this.overlayPreview.srcObject = targetStream || null;
+      if (targetStream && typeof this.overlayPreview.play === 'function') {
+        try {
+          const playResult = this.overlayPreview.play();
+          if (playResult && typeof playResult.catch === 'function') {
+            playResult.catch(() => {});
+          }
+        } catch {}
+      }
+    }
+    if (isCameraStream && targetStream) {
+      this.overlayPreview.dataset.mirror = '1';
+    } else if (this.overlayPreview.dataset?.mirror) {
+      delete this.overlayPreview.dataset.mirror;
+    }
+    this.overlayPreviewStream = targetStream || null;
+    this.refreshOverlayPreview();
+  }
+
+  refreshOverlayPreview() {
+    if (!this.overlayFallback) return;
+    const hasStream = !!(this.overlayPreview && this.overlayPreview.srcObject);
+    const shouldShowFallback = !hasStream || !this.localVideoActive;
+    this.overlayFallback.classList.toggle('visible', shouldShowFallback);
+  }
+
+  showCallOverlay(mode = 'prejoin') {
+    if (!this.overlay) return;
+    this.overlayMode = mode;
+    this.overlay.dataset.mode = mode;
+    this.overlay.classList.add('call-overlay--visible');
+    this.overlayVisible = true;
+    this.updateOverlayScale();
+  }
+
+  hideCallOverlay() {
+    if (!this.overlay) return;
+    this.overlay.classList.remove('call-overlay--visible');
+    this.overlayVisible = false;
+  }
+
+  applyMicIndicator(container, shouldShowMuted) {
+    if (!container) return;
+    const indicator = container.querySelector('.mic-indicator');
+    if (!indicator) return;
+    const hasMedia = container.classList.contains('has-media');
+    const isVisible = !!shouldShowMuted && hasMedia;
+    indicator.classList.toggle('visible', isVisible);
+    const role = indicator.dataset.role || '';
+    if (role === 'local-mic-indicator') {
+      indicator.disabled = true;
+      indicator.setAttribute('aria-label', isVisible ? 'Microphone muted' : 'Microphone active');
+      indicator.title = isVisible ? 'Microphone is muted' : '';
+    } else if (role === 'remote-mic-indicator') {
+      indicator.disabled = !isVisible;
+      indicator.setAttribute('aria-label', isVisible ? 'Remote microphone muted - request unmute' : 'Remote microphone active');
+      indicator.title = isVisible ? 'Ask participant to enable microphone' : '';
+      indicator.classList.remove('feedback');
+    } else {
+      indicator.disabled = !isVisible;
+      indicator.title = '';
+    }
+    indicator.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+    if (role === 'local-mic-indicator') {
+      this.refreshLocalVideoFallback();
+    } else if (role === 'remote-mic-indicator') {
+      this.refreshRemoteVideoFallback();
     }
   }
 

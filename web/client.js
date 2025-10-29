@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 import { SignalingSession } from './signaling-session.js';
 import { MediaSession } from './media-session.js';
@@ -13,14 +13,26 @@ const btnMic  = document.getElementById('micBtn');
 const diagEl  = document.getElementById('diag');
 
 // ---------- State ----------
-let remotePlaybackGranted = false; // Флаг успешного запуска удаленного видео (overlay flow removed)
+let remotePlaybackGranted = false; // Tracks whether remote playback has been unlocked (overlay flow removed)
 let speakerOutputEnabled = true;
 let screenShareActive = false;
+let micNudgeHandlerRegistered = false;
+let prejoinOverlayDismissed = false;
+
+window.handleOverlayEnter = () => {
+  prejoinOverlayDismissed = true;
+  if (window.uiControls) {
+    window.uiControls.hideCallOverlay();
+  }
+  resumePlay(vLocal);
+  resumePlay(vRemote);
+};
 
 window.setScreenShareState = (isActive, updateUI = true) => {
   screenShareActive = !!isActive;
   if (updateUI && window.uiControls) {
     window.uiControls.updateScreenState(screenShareActive);
+  updateLocalVideoActiveState();
   }
   return screenShareActive;
 };
@@ -33,7 +45,51 @@ const fallbackMedia = {
   prevCameraOn: false
 };
 
-function setLocalDisplayStream(stream) {
+let signalingSession = null;
+let mediaSession = null;
+
+function hasActiveVideoTrack(stream) {
+  if (!stream || typeof stream.getVideoTracks !== 'function') return false;
+  try {
+    return stream.getVideoTracks().some(track =>
+      track &&
+      track.readyState === 'live' &&
+      track.enabled !== false &&
+      track.muted !== true
+    );
+  } catch {
+    return false;
+  }
+}
+
+function updateLocalVideoActiveState() {
+  let active = false;
+  if (screenShareActive) {
+    if (mediaSession?.screenShareStream) {
+      active = hasActiveVideoTrack(mediaSession.screenShareStream);
+    } else if (hasActiveVideoTrack(fallbackMedia.screenStream)) {
+      active = true;
+    }
+  }
+  if (!active) {
+    if (mediaSession?.localStream) {
+      active = hasActiveVideoTrack(mediaSession.localStream);
+    } else if (hasActiveVideoTrack(fallbackMedia.localStream)) {
+      active = true;
+    }
+  }
+  if (window.uiControls?.setLocalVideoActive) {
+    window.uiControls.setLocalVideoActive(active);
+  }
+}
+
+function updateRemoteVideoActiveState(stream = vRemote?.srcObject) {
+  if (window.uiControls?.setRemoteVideoActive) {
+    window.uiControls.setRemoteVideoActive(hasActiveVideoTrack(stream));
+  }
+}
+
+function setLocalDisplayStream(stream, mirror = false) {
   const display = document.getElementById('localVideoDisplay');
   if (!display || !vLocal) return;
   if (!display.contains(vLocal)) {
@@ -46,6 +102,11 @@ function setLocalDisplayStream(stream) {
     display.classList.add('has-media');
     vLocal.style.display = 'block';
     vLocal.srcObject = stream;
+    if (mirror) {
+      vLocal.dataset.mirror = '1';
+    } else {
+      delete vLocal.dataset.mirror;
+    }
     resumePlay(vLocal);
   } else {
     display.classList.remove('has-media');
@@ -53,7 +114,16 @@ function setLocalDisplayStream(stream) {
       vLocal.srcObject = null;
     }
     vLocal.style.display = 'none';
+    delete vLocal.dataset.mirror;
   }
+  if (window.uiControls?.setOverlayPreviewStream) {
+    const isCameraStream = stream ? !!mirror : true;
+    window.uiControls.setOverlayPreviewStream(stream, isCameraStream);
+  }
+  if (window.uiControls?.refreshLocalMicIndicator) {
+    window.uiControls.refreshLocalMicIndicator();
+  }
+  updateLocalVideoActiveState();
 }
 
 async function ensureFallbackLocalStream() {
@@ -65,7 +135,7 @@ async function ensureFallbackLocalStream() {
     const audioTracks = stream.getAudioTracks();
     fallbackMedia.cameraOn = videoTracks.length ? videoTracks[0].enabled !== false : false;
     fallbackMedia.micOn = audioTracks.length ? audioTracks[0].enabled !== false : false;
-    setLocalDisplayStream(stream);
+    setLocalDisplayStream(stream, true);
     if (window.uiControls) {
       if (videoTracks.length) window.uiControls.updateCameraState(videoTracks[0].enabled);
       if (audioTracks.length) window.uiControls.updateMicrophoneState(audioTracks[0].enabled);
@@ -82,7 +152,18 @@ function showPlaceholderIfNoVideo() {
     (fallbackMedia.screenStream && fallbackMedia.screenStream.getVideoTracks().some(t => t.enabled)) ||
     (fallbackMedia.localStream && fallbackMedia.localStream.getVideoTracks().some(t => t.enabled));
   if (!hasVideo) {
-    setLocalDisplayStream(null);
+    if (fallbackMedia.screenStream) {
+      setLocalDisplayStream(fallbackMedia.screenStream, false);
+    } else if (fallbackMedia.localStream) {
+      setLocalDisplayStream(fallbackMedia.localStream, true);
+    } else {
+      setLocalDisplayStream(null);
+    }
+    if (window.uiControls?.setLocalVideoActive) {
+      window.uiControls.setLocalVideoActive(false);
+    }
+  } else {
+    updateLocalVideoActiveState();
   }
 }
 
@@ -99,6 +180,31 @@ function cleanupFallbackMedia() {
   fallbackMedia.micOn = false;
   fallbackMedia.prevCameraOn = false;
   setLocalDisplayStream(null);
+  updateLocalVideoActiveState();
+}
+
+function ensureMicNudgeHandler() {
+  if (micNudgeHandlerRegistered) return;
+  if (!window.uiControls || typeof window.uiControls.onRemoteMicNudge !== 'function') {
+    setTimeout(ensureMicNudgeHandler, 250);
+    return;
+  }
+  window.uiControls.onRemoteMicNudge(() => {
+    if (!signalingSession || !signalingSession.otherPeer) return;
+    signalingSession.send({
+      type: 'mic-nudge',
+      target: signalingSession.otherPeer,
+      payload: { ts: Date.now() }
+    });
+  });
+  micNudgeHandlerRegistered = true;
+}
+
+function handleMicNudge(from) {
+  log('[signal] mic nudge received', from || null);
+  if (window.uiControls && typeof window.uiControls.flashMicrophoneButton === 'function') {
+    window.uiControls.flashMicrophoneButton(3);
+  }
 }
 
 async function fallbackToggleCamera() {
@@ -110,10 +216,11 @@ async function fallbackToggleCamera() {
   track.enabled = !track.enabled;
   fallbackMedia.cameraOn = track.enabled;
   if (track.enabled) {
-    setLocalDisplayStream(stream);
+    setLocalDisplayStream(stream, true);
   } else if (!fallbackMedia.screenStream) {
     showPlaceholderIfNoVideo();
   }
+  updateLocalVideoActiveState();
   return track.enabled;
 }
 
@@ -149,7 +256,7 @@ async function fallbackStartScreenShare() {
         window.uiControls.updateCameraState(false);
       }
     }
-    setLocalDisplayStream(displayStream);
+    setLocalDisplayStream(displayStream, false);
     window.setScreenShareState(true);
     return true;
   } catch (err) {
@@ -169,14 +276,14 @@ async function fallbackStopScreenShare() {
     if (fallbackMedia.prevCameraOn && localVideoTracks.length) {
       localVideoTracks[0].enabled = true;
       fallbackMedia.cameraOn = true;
-      setLocalDisplayStream(fallbackMedia.localStream);
+      setLocalDisplayStream(fallbackMedia.localStream, true);
       if (window.uiControls) {
         window.uiControls.updateCameraState(true);
       }
     } else {
       fallbackMedia.cameraOn = localVideoTracks.length ? localVideoTracks[0].enabled : false;
       if (fallbackMedia.cameraOn) {
-        setLocalDisplayStream(fallbackMedia.localStream);
+        setLocalDisplayStream(fallbackMedia.localStream, true);
       } else {
         showPlaceholderIfNoVideo();
         if (window.uiControls) {
@@ -244,7 +351,7 @@ async function api(path, body){
 async function resumePlay(el, onFailure){
   if (!el) return false;
   
-  // Если элемент уже играет
+  // Nothing to do if the element is already playing
   if (!el.paused && !el.ended && el.readyState >= 2) {
     return true;
   }
@@ -252,10 +359,10 @@ async function resumePlay(el, onFailure){
   try {
     await el.play();
     
-    // Ждем события playing или таймаут 500мс
+    // Watch the playback state for up to 500ms
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
-        // Если через 500мс readyState < 2, считаем неудачей
+        // Treat as a failure if readyState stays below 2
         if (el.readyState < 2) {
           resolve(false);
         } else {
@@ -320,8 +427,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---------- Global instances ----------
-let signalingSession = null;
-let mediaSession = null;
+
+ensureMicNudgeHandler();
 
 // ICE restart functionality moved to MediaSession
 
@@ -345,6 +452,13 @@ async function join(){
 
   // Phase 1: Establish signaling session
   signalingSession = new SignalingSession(log, api, rid, wsRetryLimit, wsRetryDelayMs);
+  signalingSession.onStatusChange = (newStatus) => {
+    if (!window.uiControls) return;
+    if (newStatus === 'failed') {
+      prejoinOverlayDismissed = false;
+      window.uiControls.showCallOverlay('reconnect-failed');
+    }
+  };
   const signalingOk = await signalingSession.join(token);
   if (!signalingOk) {
     alert('Failed to establish signaling session');
@@ -380,6 +494,10 @@ async function join(){
   };
 
   signalingSession.onMessage = (msg) => {
+    if (msg?.type === 'mic-nudge') {
+      handleMicNudge(msg.from);
+      return;
+    }
     if (mediaSession) {
       if (msg.type === 'offer') {
         mediaSession.handleOffer(msg.from, msg.payload);
@@ -402,35 +520,47 @@ async function join(){
     if (diagEl) {
       switch (newState) {
         case 'preparing':
-          diagEl.textContent = 'Подготовка медиа...';
-          // Ставим таймер на паузу при подготовке
+          diagEl.textContent = 'Preparing media...';
+          // Pause the timer while media is preparing
           if (window.uiControls) {
             window.uiControls.stopCallTimer(false);
           }
           break;
         case 'active':
-          diagEl.textContent = 'Медиа-поток установлен';
-          // Запускаем/возобновляем таймер при активном состоянии
+          diagEl.textContent = 'Call in progress';
+          // Start or resume the timer when the session becomes active
           if (window.uiControls) {
             window.uiControls.startCallTimer();
           }
           break;
         case 'idle':
-          diagEl.textContent = 'Ожидание медиа...';
-          // Ставим таймер на паузу при простое
+          diagEl.textContent = 'Awaiting media...';
+          // Stop the timer once the session becomes idle
           if (window.uiControls) {
             window.uiControls.stopCallTimer(false);
           }
           break;
       }
     }
+    if (window.uiControls) {
+      if (newState === 'active') {
+        window.uiControls.hideCallOverlay();
+        prejoinOverlayDismissed = true;
+      } else if (newState === 'preparing' && !prejoinOverlayDismissed) {
+        window.uiControls.showCallOverlay('prejoin');
+      }
+    }
   };
 
-  // Добавляем обработчики для видео-потоков
+  // Handle local media stream updates
   mediaSession.onLocalStream = (stream) => {
     if (stream && window.uiControls) {
-      // Вставляем локальное видео в плейсхолдер
+      // Promote the local placeholder into the display area
       const localVideoArea = document.getElementById('localVideoArea');
+      const localVideoDisplay = document.getElementById('localVideoDisplay');
+      if (localVideoDisplay) {
+        localVideoDisplay.classList.add('has-media');
+      }
       if (localVideoArea && vLocal) {
         vLocal.srcObject = stream;
         localVideoArea.appendChild(vLocal);
@@ -444,11 +574,11 @@ async function join(){
         vLocal.style.left = '0';
         vLocal.style.zIndex = '2';
         
-        // Скрываем плейсхолдер при появлении локального видео
+        // Hide the placeholder once the real local stream is attached
         localVideoArea.classList.add('hidden');
       }
       
-      // Синхронизируем состояние кнопок
+      // Sync control state with current track toggles
       const videoTracks = stream.getVideoTracks();
       const audioTracks = stream.getAudioTracks();
       if (videoTracks.length > 0) {
@@ -457,19 +587,60 @@ async function join(){
       if (audioTracks.length > 0) {
         window.uiControls.updateMicrophoneState(audioTracks[0].enabled);
       }
+      if (window.uiControls.refreshLocalMicIndicator) {
+        window.uiControls.refreshLocalMicIndicator();
+      }
+      if (window.uiControls.setLocalVideoActive) {
+        const hasActiveVideo = videoTracks.some(track =>
+          track &&
+          track.readyState === 'live' &&
+          track.enabled !== false
+        );
+        window.uiControls.setLocalVideoActive(hasActiveVideo);
+      }
+      videoTracks.forEach((track) => {
+        if (!track || track.__hermesVideoListener) return;
+        const listener = () => updateLocalVideoActiveState();
+        track.__hermesVideoListener = listener;
+        track.addEventListener('mute', listener);
+        track.addEventListener('unmute', listener);
+        track.addEventListener('ended', listener);
+      });
+      updateLocalVideoActiveState();
+      if (window.uiControls?.setOverlayPreviewStream) {
+        window.uiControls.setOverlayPreviewStream(stream, true);
+      }
     } else {
-      // Если поток исчез, показываем плейсхолдер обратно
+      // Restore placeholders if the local stream disappears
       const localVideoArea = document.getElementById('localVideoArea');
       if (localVideoArea) {
         localVideoArea.classList.remove('hidden');
+      }
+      const localVideoDisplay = document.getElementById('localVideoDisplay');
+      if (localVideoDisplay) {
+        localVideoDisplay.classList.remove('has-media');
+      }
+      if (window.uiControls?.refreshLocalMicIndicator) {
+        window.uiControls.refreshLocalMicIndicator();
+      }
+      if (window.uiControls?.setLocalVideoActive) {
+        window.uiControls.setLocalVideoActive(true);
+      }
+      updateLocalVideoActiveState();
+      if (window.uiControls?.setOverlayPreviewStream) {
+        window.uiControls.setOverlayPreviewStream(null, true);
       }
     }
   };
 
   mediaSession.onRemoteStream = (stream) => {
     if (stream && window.uiControls) {
-      // Вставляем удаленное видео в плейсхолдер
+      // Promote the remote placeholder into the display area
       const remoteVideoArea = document.getElementById('remoteVideoArea');
+      const remoteVideoDisplay = document.getElementById('remoteVideoDisplay');
+      if (remoteVideoDisplay) {
+        remoteVideoDisplay.classList.add('has-media');
+      }
       if (remoteVideoArea && vRemote) {
         vRemote.srcObject = stream;
         remoteVideoArea.appendChild(vRemote);
@@ -483,7 +654,7 @@ async function join(){
         vRemote.style.left = '0';
         vRemote.style.zIndex = '2';
         
-        // Добавляем слушатели событий
+        // Attach listeners to track remote playback state
         vRemote.addEventListener('playing', () => {
           remotePlaybackGranted = true;
           remoteVideoArea.classList.add('hidden');
@@ -496,19 +667,108 @@ async function join(){
           }
         });
         
-        // Проверяем количество треков и пытаемся запустить только если есть видео
+        // Kick playback when a remote video track arrives
         if (stream.getVideoTracks().length > 0) {
           resumePlay(vRemote);
         }
       }
+
+      const updateRemoteMicState = () => {
+        const audioTracks = stream.getAudioTracks();
+        const hasActiveAudio = audioTracks.some(track =>
+          track &&
+          track.readyState === 'live' &&
+          track.enabled !== false &&
+          track.muted !== true
+        );
+        if (window.uiControls?.setRemoteMicrophoneState) {
+          window.uiControls.setRemoteMicrophoneState(hasActiveAudio);
+        }
+      };
+
+      updateRemoteMicState();
+      if (window.uiControls?.setRemoteVideoActive) {
+        window.uiControls.setRemoteVideoActive(hasActiveVideoTrack(stream));
+      }
+      const videoTracksRemote = stream.getVideoTracks();
+      videoTracksRemote.forEach((track) => {
+        if (!track || track.__hermesVideoListener) return;
+        const listener = () => updateRemoteVideoActiveState(stream);
+        track.__hermesVideoListener = listener;
+        if (track.addEventListener) {
+          track.addEventListener('mute', listener);
+          track.addEventListener('unmute', listener);
+          track.addEventListener('ended', listener);
+        } else {
+          const originalMute = track.onmute;
+          const originalUnmute = track.onunmute;
+          const originalEnded = track.onended;
+          track.onmute = (...args) => {
+            listener();
+            if (typeof originalMute === 'function') originalMute.apply(track, args);
+          };
+          track.onunmute = (...args) => {
+            listener();
+            if (typeof originalUnmute === 'function') originalUnmute.apply(track, args);
+          };
+          track.onended = (...args) => {
+            listener();
+            if (typeof originalEnded === 'function') originalEnded.apply(track, args);
+          };
+        }
+      });
+      updateRemoteVideoActiveState(stream);
+      const audioTracks = stream.getAudioTracks();
+      audioTracks.forEach((track) => {
+        if (!track || track.__hermesMicListener) return;
+        const listener = () => updateRemoteMicState();
+        track.__hermesMicListener = listener;
+        if (track.addEventListener) {
+          track.addEventListener('mute', listener);
+          track.addEventListener('unmute', listener);
+          track.addEventListener('ended', listener);
+        } else {
+          const originalMute = track.onmute;
+          const originalUnmute = track.onunmute;
+          const originalEnded = track.onended;
+          track.onmute = (...args) => {
+            listener();
+            if (typeof originalMute === 'function') originalMute.apply(track, args);
+          };
+          track.onunmute = (...args) => {
+            listener();
+            if (typeof originalUnmute === 'function') originalUnmute.apply(track, args);
+          };
+          track.onended = (...args) => {
+            listener();
+            if (typeof originalEnded === 'function') originalEnded.apply(track, args);
+          };
+        }
+      });
+      if (window.uiControls?.refreshRemoteMicIndicator) {
+        window.uiControls.refreshRemoteMicIndicator();
+      }
     } else {
-      // Если поток исчез, показываем плейсхолдер обратно
+      // Restore placeholders if the local stream disappears
       const remoteVideoArea = document.getElementById('remoteVideoArea');
       if (remoteVideoArea) {
         remoteVideoArea.classList.remove('hidden');
-        // Сбрасываем флаг воспроизведения
+        // Reset playback flags
         remotePlaybackGranted = false;
       }
+      const remoteVideoDisplay = document.getElementById('remoteVideoDisplay');
+      if (remoteVideoDisplay) {
+        remoteVideoDisplay.classList.remove('has-media');
+      }
+      if (window.uiControls?.setRemoteMicrophoneState) {
+        window.uiControls.setRemoteMicrophoneState(true);
+      } else if (window.uiControls?.refreshRemoteMicIndicator) {
+        window.uiControls.refreshRemoteMicIndicator();
+      }
+      if (window.uiControls?.setRemoteVideoActive) {
+        window.uiControls.setRemoteVideoActive(true);
+      }
+      updateRemoteVideoActiveState();
     }
   };
 
@@ -525,9 +785,9 @@ async function join(){
   }
 }
 
-// btnJoin.onclick убран - в рабочем билде токен всегда в URL
+// btnJoin.onclick is unused - production flow passes the token via URL
 
-// Глобальные функции для нового UI
+// Global UI helpers
 window.toggleCameraMedia = async () => {
   try {
     if (!mediaSession || !mediaSession.localStream) {
@@ -540,12 +800,13 @@ window.toggleCameraMedia = async () => {
       t.enabled = !t.enabled;
       log('[media] video toggle', t.enabled ? 'on' : 'off');
       
-      // Синхронизируем UI
+      // Sync UI state
       if (window.uiControls) {
         window.uiControls.updateCameraState(t.enabled);
       }
+      updateLocalVideoActiveState();
       
-      // Показываем/скрываем плейсхолдер в зависимости от состояния видео
+      // Toggle the placeholder depending on camera availability
       const localVideoArea = document.getElementById('localVideoArea');
       if (localVideoArea) {
         if (t.enabled) {
@@ -579,7 +840,7 @@ window.toggleMicrophoneMedia = async () => {
       t.enabled = !t.enabled;
       log('[media] audio toggle', t.enabled ? 'on' : 'off');
       
-      // Синхронизируем UI
+      // Sync UI state
       if (window.uiControls) {
         window.uiControls.updateMicrophoneState(t.enabled);
       }
@@ -659,12 +920,12 @@ window.endCall = () => {
     }
 
     
-    // Останавливаем и сбрасываем таймер
+    // Stop and reset the timer
     if (window.uiControls) {
       window.uiControls.stopCallTimer(true);
     }
     
-    // Закрываем сессии
+    // Close active sessions
     if (mediaSession) {
       mediaSession.close();
     }
@@ -672,24 +933,34 @@ window.endCall = () => {
       signalingSession.close();
     }
     
-    // Очищаем UI
+    // Clear media elements
     if (vLocal) vLocal.srcObject = null;
     if (vRemote) vRemote.srcObject = null;
     
-    // Сбрасываем флаг воспроизведения
+    // Reset playback flags
     remotePlaybackGranted = false;
     
-    // Показываем плейсхолдеры обратно
+    // Restore placeholders
     const localVideoArea = document.getElementById('localVideoArea');
     const remoteVideoArea = document.getElementById('remoteVideoArea');
     if (localVideoArea) localVideoArea.classList.remove('hidden');
     if (remoteVideoArea) remoteVideoArea.classList.remove('hidden');
+    const localVideoDisplay = document.getElementById('localVideoDisplay');
+    if (localVideoDisplay) localVideoDisplay.classList.remove('has-media');
+    const remoteVideoDisplay = document.getElementById('remoteVideoDisplay');
+    if (remoteVideoDisplay) remoteVideoDisplay.classList.remove('has-media');
     
-    // Сбрасываем состояние кнопок
+    // Reset control states
     if (window.uiControls) {
       window.uiControls.updateCameraState(true);
       window.uiControls.updateMicrophoneState(true);
       window.uiControls.updateSpeakerState(true);
+      if (window.uiControls.setRemoteMicrophoneState) {
+        window.uiControls.setRemoteMicrophoneState(true);
+      }
+      if (window.uiControls.refreshRemoteMicIndicator) {
+        window.uiControls.refreshRemoteMicIndicator();
+      }
     }
     if (window.setScreenShareState) {
       window.setScreenShareState(false);
@@ -704,11 +975,11 @@ window.endCall = () => {
     cleanupFallbackMedia();
 
 
-    // Пытаемся закрыть вкладку (если возможно)
+    // Attempt to close the window (if allowed)
     try {
       window.close();
     } catch (e) {
-      // Если не можем закрыть, перенаправляем на главную
+      // Redirect to the landing page if window.close fails
       window.location.href = '/';
     }
   } catch (e) {
@@ -716,33 +987,33 @@ window.endCall = () => {
   }
 };
 
-// Глобальная функция для повторного запроса медиа
+// Helper to retry media permissions
 window.requestMediaRetry = () => {
   if (mediaSession && mediaSession.pendingMediaRetry) {
     mediaSession.pendingMediaRetry();
   }
 };
 
-// Глобальная функция для запуска удаленного видео
-// resumeRemotePlayback removed — pre-join overlay will handle user gesture
+// Legacy helper kept for backward compatibility
+// resumeRemotePlayback removed - pre-join overlay will handle user gesture
 
-// Старые обработчики убраны - теперь используется UIControls
+// Legacy join handlers removed - UIControls drives the flow now
 
-// Global click/touch handlers removed — pre-join overlay will drive playback
+// Global click/touch handlers removed - pre-join overlay will drive playback
 
 // Auto-join when token already in URL
 if (token) {
   join().catch(e => { log('ERR', e?.message || String(e)); });
 } else {
-  // В рабочем билде токен всегда должен быть в URL
-  // Если токена нет, показываем ошибку
+  // In production the token must be provided via the URL
+  // Show an error when the token is missing
   log('ERR: No token provided in URL');
   
-  // Скрываем кнопки, так как без токена они не работают
-  // Используем setTimeout чтобы дождаться инициализации UI
+  // Hide interactive controls because they require a valid token
+  // Delay to ensure the UI initialises before disabling controls
   const diagContainer = document.getElementById('diag');
   if (diagContainer) {
-    diagContainer.textContent = 'Добавьте ?token=... к URL, чтобы присоединиться к звонку.';
+    diagContainer.textContent = 'Add ?token=... to the URL to join the call.';
   }
   const controls = document.querySelector('.controls-container');
   if (controls) {
@@ -751,6 +1022,9 @@ if (token) {
 }
 
 // Media stats functionality moved to MediaSession class
+
+
+
 
 
 
