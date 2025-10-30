@@ -18,11 +18,53 @@ let speakerOutputEnabled = true;
 let screenShareActive = false;
 let micNudgeHandlerRegistered = false;
 let prejoinOverlayDismissed = false;
+let localPreviewMirrorPreference = true;
+
+function isScreenShareStream(stream) {
+  if (!stream || typeof stream.getVideoTracks !== 'function') return false;
+  if (screenShareActive) return true;
+  try {
+    return stream.getVideoTracks().some(track => {
+      if (!track || track.kind !== 'video') return false;
+      const settings = typeof track.getSettings === 'function' ? track.getSettings() : {};
+      const surface = (settings.displaySurface || settings.logicalSurface || '').toLowerCase();
+      if (surface && surface !== 'camera') return true;
+      const label = (track.label || '').toLowerCase();
+      return label.includes('screen') || label.includes('display') || label.includes('window') || label.includes('monitor') || label.includes('share');
+    });
+  } catch {
+    return false;
+  }
+}
+
+function applyLocalDisplayAttributes(stream) {
+  if (!vLocal) return;
+  if (!stream) {
+    if (vLocal.dataset?.mirror) {
+      delete vLocal.dataset.mirror;
+    }
+    if (window.uiControls?.setOverlayPreviewStream) {
+      window.uiControls.setOverlayPreviewStream(null, true);
+    }
+    return;
+  }
+  const screenShare = isScreenShareStream(stream);
+  const shouldMirror = !!(localPreviewMirrorPreference && !screenShare);
+  if (shouldMirror) {
+    vLocal.dataset.mirror = '1';
+  } else if (vLocal.dataset?.mirror) {
+    delete vLocal.dataset.mirror;
+  }
+  if (window.uiControls?.setOverlayPreviewStream) {
+    window.uiControls.setOverlayPreviewStream(screenShare ? null : stream, !screenShare);
+  }
+}
 
 window.handleOverlayEnter = () => {
   prejoinOverlayDismissed = true;
   if (window.uiControls) {
     window.uiControls.hideCallOverlay();
+    window.uiControls.startCallTimer();
   }
   resumePlay(vLocal);
   resumePlay(vRemote);
@@ -32,8 +74,11 @@ window.setScreenShareState = (isActive, updateUI = true) => {
   screenShareActive = !!isActive;
   if (updateUI && window.uiControls) {
     window.uiControls.updateScreenState(screenShareActive);
-  updateLocalVideoActiveState();
   }
+  if (vLocal) {
+    applyLocalDisplayAttributes(vLocal.srcObject || null);
+  }
+  updateLocalVideoActiveState();
   return screenShareActive;
 };
 
@@ -99,14 +144,10 @@ function setLocalDisplayStream(stream, mirror = false) {
   }
 
   if (stream) {
+    localPreviewMirrorPreference = mirror;
     display.classList.add('has-media');
     vLocal.style.display = 'block';
     vLocal.srcObject = stream;
-    if (mirror) {
-      vLocal.dataset.mirror = '1';
-    } else {
-      delete vLocal.dataset.mirror;
-    }
     resumePlay(vLocal);
   } else {
     display.classList.remove('has-media');
@@ -114,12 +155,8 @@ function setLocalDisplayStream(stream, mirror = false) {
       vLocal.srcObject = null;
     }
     vLocal.style.display = 'none';
-    delete vLocal.dataset.mirror;
   }
-  if (window.uiControls?.setOverlayPreviewStream) {
-    const isCameraStream = stream ? !!mirror : true;
-    window.uiControls.setOverlayPreviewStream(stream, isCameraStream);
-  }
+  applyLocalDisplayAttributes(stream || null);
   if (window.uiControls?.refreshLocalMicIndicator) {
     window.uiControls.refreshLocalMicIndicator();
   }
@@ -547,8 +584,8 @@ async function join(){
       switch (newState) {
         case 'preparing':
           diagEl.textContent = 'Preparing media...';
-          // Pause the timer while media is preparing
-          if (window.uiControls) {
+          // Pause the timer only if we were already in an active call
+          if (window.uiControls && oldState === 'active') {
             window.uiControls.stopCallTimer(false);
           }
           break;
@@ -569,9 +606,8 @@ async function join(){
       }
     }
     if (window.uiControls) {
-      if (newState === 'active') {
+      if (newState === 'active' && prejoinOverlayDismissed) {
         window.uiControls.hideCallOverlay();
-        prejoinOverlayDismissed = true;
       } else if (newState === 'preparing' && !prejoinOverlayDismissed) {
         window.uiControls.showCallOverlay('prejoin');
       }
