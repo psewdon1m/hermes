@@ -126,6 +126,32 @@ function setLocalDisplayStream(stream, mirror = false) {
   updateLocalVideoActiveState();
 }
 
+function setRemoteDisplayStream(stream) {
+  const display = document.getElementById('remoteVideoDisplay');
+  if (!display || !vRemote) return;
+  if (!display.contains(vRemote)) {
+    vRemote.setAttribute('playsinline', '');
+    display.appendChild(vRemote);
+  }
+
+  if (stream) {
+    display.classList.add('has-media');
+    vRemote.style.display = 'block';
+    vRemote.srcObject = stream;
+    resumePlay(vRemote);
+  } else {
+    display.classList.remove('has-media');
+    if (vRemote.srcObject) {
+      vRemote.srcObject = null;
+    }
+    vRemote.style.display = 'none';
+  }
+  if (window.uiControls?.refreshRemoteMicIndicator) {
+    window.uiControls.refreshRemoteMicIndicator();
+  }
+  updateRemoteVideoActiveState(stream);
+}
+
 async function ensureFallbackLocalStream() {
   if (fallbackMedia.localStream) return fallbackMedia.localStream;
   try {
@@ -554,41 +580,24 @@ async function join(){
 
   // Handle local media stream updates
   mediaSession.onLocalStream = (stream) => {
-    if (stream && window.uiControls) {
-      // Promote the local placeholder into the display area
-      const localVideoArea = document.getElementById('localVideoArea');
-      const localVideoDisplay = document.getElementById('localVideoDisplay');
-      if (localVideoDisplay) {
-        localVideoDisplay.classList.add('has-media');
+    setLocalDisplayStream(stream, true);
+
+    if (!stream) {
+      if (window.uiControls?.setLocalVideoActive) {
+        window.uiControls.setLocalVideoActive(true);
       }
-      if (localVideoArea && vLocal) {
-        vLocal.srcObject = stream;
-        localVideoArea.appendChild(vLocal);
-        vLocal.style.display = 'block';
-        vLocal.style.width = '100%';
-        vLocal.style.height = '100%';
-        vLocal.style.objectFit = 'cover';
-        vLocal.style.borderRadius = '20px';
-        vLocal.style.position = 'absolute';
-        vLocal.style.top = '0';
-        vLocal.style.left = '0';
-        vLocal.style.zIndex = '2';
-        
-        // Hide the placeholder once the real local stream is attached
-        localVideoArea.classList.add('hidden');
-      }
-      
-      // Sync control state with current track toggles
-      const videoTracks = stream.getVideoTracks();
-      const audioTracks = stream.getAudioTracks();
+      return;
+    }
+
+    const videoTracks = stream.getVideoTracks();
+    const audioTracks = stream.getAudioTracks();
+
+    if (window.uiControls) {
       if (videoTracks.length > 0) {
         window.uiControls.updateCameraState(videoTracks[0].enabled);
       }
       if (audioTracks.length > 0) {
         window.uiControls.updateMicrophoneState(audioTracks[0].enabled);
-      }
-      if (window.uiControls.refreshLocalMicIndicator) {
-        window.uiControls.refreshLocalMicIndicator();
       }
       if (window.uiControls.setLocalVideoActive) {
         const hasActiveVideo = videoTracks.some(track =>
@@ -598,168 +607,23 @@ async function join(){
         );
         window.uiControls.setLocalVideoActive(hasActiveVideo);
       }
-      videoTracks.forEach((track) => {
-        if (!track || track.__hermesVideoListener) return;
-        const listener = () => updateLocalVideoActiveState();
-        track.__hermesVideoListener = listener;
-        track.addEventListener('mute', listener);
-        track.addEventListener('unmute', listener);
-        track.addEventListener('ended', listener);
-      });
-      updateLocalVideoActiveState();
-      if (window.uiControls?.setOverlayPreviewStream) {
-        window.uiControls.setOverlayPreviewStream(stream, true);
-      }
-    } else {
-      // Restore placeholders if the local stream disappears
-      const localVideoArea = document.getElementById('localVideoArea');
-      if (localVideoArea) {
-        localVideoArea.classList.remove('hidden');
-      }
-      const localVideoDisplay = document.getElementById('localVideoDisplay');
-      if (localVideoDisplay) {
-        localVideoDisplay.classList.remove('has-media');
-      }
-      if (window.uiControls?.refreshLocalMicIndicator) {
-        window.uiControls.refreshLocalMicIndicator();
-      }
-      if (window.uiControls?.setLocalVideoActive) {
-        window.uiControls.setLocalVideoActive(true);
-      }
-      updateLocalVideoActiveState();
-      if (window.uiControls?.setOverlayPreviewStream) {
-        window.uiControls.setOverlayPreviewStream(null, true);
-      }
     }
+
+    videoTracks.forEach((track) => {
+      if (!track || track.__hermesVideoListener) return;
+      const listener = () => updateLocalVideoActiveState();
+      track.__hermesVideoListener = listener;
+      track.addEventListener('mute', listener);
+      track.addEventListener('unmute', listener);
+      track.addEventListener('ended', listener);
+    });
   };
 
   mediaSession.onRemoteStream = (stream) => {
-    if (stream && window.uiControls) {
-      // Promote the remote placeholder into the display area
-      const remoteVideoArea = document.getElementById('remoteVideoArea');
-      const remoteVideoDisplay = document.getElementById('remoteVideoDisplay');
-      if (remoteVideoDisplay) {
-        remoteVideoDisplay.classList.add('has-media');
-      }
-      if (remoteVideoArea && vRemote) {
-        vRemote.srcObject = stream;
-        remoteVideoArea.appendChild(vRemote);
-        vRemote.style.display = 'block';
-        vRemote.style.width = '100%';
-        vRemote.style.height = '100%';
-        vRemote.style.objectFit = 'cover';
-        vRemote.style.borderRadius = '20px';
-        vRemote.style.position = 'absolute';
-        vRemote.style.top = '0';
-        vRemote.style.left = '0';
-        vRemote.style.zIndex = '2';
-        
-        // Attach listeners to track remote playback state
-        vRemote.addEventListener('playing', () => {
-          remotePlaybackGranted = true;
-          remoteVideoArea.classList.add('hidden');
-        });
-        
-        vRemote.addEventListener('pause', () => {
-          if (vRemote.readyState < 2) {
-            remotePlaybackGranted = false;
-            remoteVideoArea.classList.remove('hidden');
-          }
-        });
-        
-        // Kick playback when a remote video track arrives
-        if (stream.getVideoTracks().length > 0) {
-          resumePlay(vRemote);
-        }
-      }
+    setRemoteDisplayStream(stream);
 
-      const updateRemoteMicState = () => {
-        const audioTracks = stream.getAudioTracks();
-        const hasActiveAudio = audioTracks.some(track =>
-          track &&
-          track.readyState === 'live' &&
-          track.enabled !== false &&
-          track.muted !== true
-        );
-        if (window.uiControls?.setRemoteMicrophoneState) {
-          window.uiControls.setRemoteMicrophoneState(hasActiveAudio);
-        }
-      };
-
-      updateRemoteMicState();
-      if (window.uiControls?.setRemoteVideoActive) {
-        window.uiControls.setRemoteVideoActive(hasActiveVideoTrack(stream));
-      }
-      const videoTracksRemote = stream.getVideoTracks();
-      videoTracksRemote.forEach((track) => {
-        if (!track || track.__hermesVideoListener) return;
-        const listener = () => updateRemoteVideoActiveState(stream);
-        track.__hermesVideoListener = listener;
-        if (track.addEventListener) {
-          track.addEventListener('mute', listener);
-          track.addEventListener('unmute', listener);
-          track.addEventListener('ended', listener);
-        } else {
-          const originalMute = track.onmute;
-          const originalUnmute = track.onunmute;
-          const originalEnded = track.onended;
-          track.onmute = (...args) => {
-            listener();
-            if (typeof originalMute === 'function') originalMute.apply(track, args);
-          };
-          track.onunmute = (...args) => {
-            listener();
-            if (typeof originalUnmute === 'function') originalUnmute.apply(track, args);
-          };
-          track.onended = (...args) => {
-            listener();
-            if (typeof originalEnded === 'function') originalEnded.apply(track, args);
-          };
-        }
-      });
-      updateRemoteVideoActiveState(stream);
-      const audioTracks = stream.getAudioTracks();
-      audioTracks.forEach((track) => {
-        if (!track || track.__hermesMicListener) return;
-        const listener = () => updateRemoteMicState();
-        track.__hermesMicListener = listener;
-        if (track.addEventListener) {
-          track.addEventListener('mute', listener);
-          track.addEventListener('unmute', listener);
-          track.addEventListener('ended', listener);
-        } else {
-          const originalMute = track.onmute;
-          const originalUnmute = track.onunmute;
-          const originalEnded = track.onended;
-          track.onmute = (...args) => {
-            listener();
-            if (typeof originalMute === 'function') originalMute.apply(track, args);
-          };
-          track.onunmute = (...args) => {
-            listener();
-            if (typeof originalUnmute === 'function') originalUnmute.apply(track, args);
-          };
-          track.onended = (...args) => {
-            listener();
-            if (typeof originalEnded === 'function') originalEnded.apply(track, args);
-          };
-        }
-      });
-      if (window.uiControls?.refreshRemoteMicIndicator) {
-        window.uiControls.refreshRemoteMicIndicator();
-      }
-    } else {
-      // Restore placeholders if the local stream disappears
-      const remoteVideoArea = document.getElementById('remoteVideoArea');
-      if (remoteVideoArea) {
-        remoteVideoArea.classList.remove('hidden');
-        // Reset playback flags
-        remotePlaybackGranted = false;
-      }
-      const remoteVideoDisplay = document.getElementById('remoteVideoDisplay');
-      if (remoteVideoDisplay) {
-        remoteVideoDisplay.classList.remove('has-media');
-      }
+    if (!stream) {
+      remotePlaybackGranted = false;
       if (window.uiControls?.setRemoteMicrophoneState) {
         window.uiControls.setRemoteMicrophoneState(true);
       } else if (window.uiControls?.refreshRemoteMicIndicator) {
@@ -768,7 +632,95 @@ async function join(){
       if (window.uiControls?.setRemoteVideoActive) {
         window.uiControls.setRemoteVideoActive(true);
       }
-      updateRemoteVideoActiveState();
+      return;
+    }
+
+    if (vRemote && !vRemote.__hermesPlaybackListener) {
+      vRemote.__hermesPlaybackListener = true;
+      vRemote.addEventListener('playing', () => {
+        remotePlaybackGranted = true;
+      });
+      vRemote.addEventListener('pause', () => {
+        if (vRemote.readyState < 2) {
+          remotePlaybackGranted = false;
+        }
+      });
+    }
+
+    const updateRemoteMicState = () => {
+      const audioTracks = stream.getAudioTracks();
+      const hasActiveAudio = audioTracks.some(track =>
+        track &&
+        track.readyState === 'live' &&
+        track.enabled !== false &&
+        track.muted !== true
+      );
+      if (window.uiControls?.setRemoteMicrophoneState) {
+        window.uiControls.setRemoteMicrophoneState(hasActiveAudio);
+      }
+    };
+
+    updateRemoteMicState();
+    if (window.uiControls?.setRemoteVideoActive) {
+      window.uiControls.setRemoteVideoActive(hasActiveVideoTrack(stream));
+    }
+    const videoTracksRemote = stream.getVideoTracks();
+    videoTracksRemote.forEach((track) => {
+      if (!track || track.__hermesVideoListener) return;
+      const listener = () => updateRemoteVideoActiveState(stream);
+      track.__hermesVideoListener = listener;
+      if (track.addEventListener) {
+        track.addEventListener('mute', listener);
+        track.addEventListener('unmute', listener);
+        track.addEventListener('ended', listener);
+      } else {
+        const originalMute = track.onmute;
+        const originalUnmute = track.onunmute;
+        const originalEnded = track.onended;
+        track.onmute = (...args) => {
+          listener();
+          if (typeof originalMute === 'function') originalMute.apply(track, args);
+        };
+        track.onunmute = (...args) => {
+          listener();
+          if (typeof originalUnmute === 'function') originalUnmute.apply(track, args);
+        };
+        track.onended = (...args) => {
+          listener();
+          if (typeof originalEnded === 'function') originalEnded.apply(track, args);
+        };
+      }
+    });
+    updateRemoteVideoActiveState(stream);
+    const audioTracks = stream.getAudioTracks();
+    audioTracks.forEach((track) => {
+      if (!track || track.__hermesMicListener) return;
+      const listener = () => updateRemoteMicState();
+      track.__hermesMicListener = listener;
+      if (track.addEventListener) {
+        track.addEventListener('mute', listener);
+        track.addEventListener('unmute', listener);
+        track.addEventListener('ended', listener);
+      } else {
+        const originalMute = track.onmute;
+        const originalUnmute = track.onunmute;
+        const originalEnded = track.onended;
+        track.onmute = (...args) => {
+          listener();
+          if (typeof originalMute === 'function') originalMute.apply(track, args);
+        };
+        track.onunmute = (...args) => {
+          listener();
+          if (typeof originalUnmute === 'function') originalUnmute.apply(track, args);
+        };
+        track.onended = (...args) => {
+          listener();
+          if (typeof originalEnded === 'function') originalEnded.apply(track, args);
+        };
+      }
+    });
+    if (window.uiControls?.refreshRemoteMicIndicator) {
+      window.uiControls.refreshRemoteMicIndicator();
     }
   };
 
@@ -805,16 +757,6 @@ window.toggleCameraMedia = async () => {
         window.uiControls.updateCameraState(t.enabled);
       }
       updateLocalVideoActiveState();
-      
-      // Toggle the placeholder depending on camera availability
-      const localVideoArea = document.getElementById('localVideoArea');
-      if (localVideoArea) {
-        if (t.enabled) {
-          localVideoArea.classList.add('hidden');
-        } else {
-          localVideoArea.classList.remove('hidden');
-        }
-      }
       
       return t.enabled;
     } else {
@@ -941,14 +883,8 @@ window.endCall = () => {
     remotePlaybackGranted = false;
     
     // Restore placeholders
-    const localVideoArea = document.getElementById('localVideoArea');
-    const remoteVideoArea = document.getElementById('remoteVideoArea');
-    if (localVideoArea) localVideoArea.classList.remove('hidden');
-    if (remoteVideoArea) remoteVideoArea.classList.remove('hidden');
-    const localVideoDisplay = document.getElementById('localVideoDisplay');
-    if (localVideoDisplay) localVideoDisplay.classList.remove('has-media');
-    const remoteVideoDisplay = document.getElementById('remoteVideoDisplay');
-    if (remoteVideoDisplay) remoteVideoDisplay.classList.remove('has-media');
+    setLocalDisplayStream(null);
+    setRemoteDisplayStream(null);
     
     // Reset control states
     if (window.uiControls) {
