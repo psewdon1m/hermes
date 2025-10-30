@@ -20,6 +20,11 @@ let micNudgeHandlerRegistered = false;
 let prejoinOverlayDismissed = false;
 let localPreviewMirrorPreference = true;
 let pendingLocalStream = null;
+let remoteCameraReportedActive = true;
+let desiredCameraBroadcastState = null;
+let lastCameraBroadcastState = null;
+let lastKnownOtherPeer = null;
+let joinPromise = null;
 
 function isScreenShareStream(stream) {
   if (!stream || typeof stream.getVideoTracks !== 'function') return false;
@@ -63,6 +68,7 @@ function applyLocalDisplayAttributes(stream) {
 
 window.handleOverlayEnter = () => {
   prejoinOverlayDismissed = true;
+  lastCameraBroadcastState = null;
   if (window.uiControls) {
     window.uiControls.hideCallOverlay();
     window.uiControls.startCallTimer();
@@ -70,6 +76,8 @@ window.handleOverlayEnter = () => {
   resumePlay(vLocal);
   resumePlay(vRemote);
   updateLocalDisplayAttachment();
+  updateLocalVideoActiveState();
+  startJoinIfNeeded();
 };
 
 window.setScreenShareState = (isActive, updateUI = true) => {
@@ -128,12 +136,16 @@ function updateLocalVideoActiveState() {
   if (window.uiControls?.setLocalVideoActive) {
     window.uiControls.setLocalVideoActive(active);
   }
+  const broadcastable = prejoinOverlayDismissed && active;
+  broadcastCameraState(broadcastable);
 }
 
 function updateRemoteVideoActiveState(stream = vRemote?.srcObject) {
-  if (window.uiControls?.setRemoteVideoActive) {
-    window.uiControls.setRemoteVideoActive(hasActiveVideoTrack(stream));
-  }
+  if (!window.uiControls?.setRemoteVideoActive) return;
+  const isMediaStream = stream instanceof MediaStream;
+  const trackActive = isMediaStream ? hasActiveVideoTrack(stream) : false;
+  const effectiveActive = remoteCameraReportedActive && (trackActive || !isMediaStream);
+  window.uiControls.setRemoteVideoActive(effectiveActive);
 }
 
 function updateLocalDisplayAttachment() {
@@ -184,12 +196,22 @@ function setRemoteDisplayStream(stream) {
     vRemote.style.display = 'block';
     vRemote.srcObject = stream;
     resumePlay(vRemote);
+    if (window.uiControls?.setRemoteParticipantPresent) {
+      window.uiControls.setRemoteParticipantPresent(true);
+    }
   } else {
     display.classList.remove('has-media');
     if (vRemote.srcObject) {
       vRemote.srcObject = null;
     }
     vRemote.style.display = 'none';
+    remoteCameraReportedActive = true;
+    if (window.uiControls?.setRemoteParticipantPresent) {
+      window.uiControls.setRemoteParticipantPresent(false);
+    }
+    if (window.uiControls?.setRemoteVideoActive) {
+      window.uiControls.setRemoteVideoActive(true);
+    }
   }
   if (window.uiControls?.refreshRemoteMicIndicator) {
     window.uiControls.refreshRemoteMicIndicator();
@@ -216,6 +238,72 @@ async function ensureFallbackLocalStream() {
     log('[fallback] getUserMedia ERR', err?.name || err?.message || String(err));
     return null;
   }
+}
+
+function startJoinIfNeeded() {
+  if (joinPromise) return joinPromise;
+  if (!token) {
+    return Promise.resolve(null);
+  }
+  joinPromise = join().catch(err => {
+    log('[ui] join ERR', err?.message || err);
+    joinPromise = null;
+    if (window.uiControls) {
+      window.uiControls.showCallOverlay('reconnect-failed');
+    }
+    throw err;
+  });
+  return joinPromise;
+}
+
+async function preparePrejoinPreview() {
+  const stream = await ensureFallbackLocalStream();
+  if (stream && window.uiControls?.setLocalVideoActive) {
+    window.uiControls.setLocalVideoActive(hasActiveVideoTrack(stream));
+  }
+  return stream;
+}
+
+function broadcastCameraState(isActive) {
+  const normalized = !!isActive;
+  desiredCameraBroadcastState = normalized;
+  if (!signalingSession || !signalingSession.otherPeer) return;
+  if (lastCameraBroadcastState === normalized) return;
+  try {
+    signalingSession.send({
+      type: 'camera-state',
+      target: signalingSession.otherPeer,
+      payload: { active: normalized }
+    });
+    lastCameraBroadcastState = normalized;
+  } catch (err) {
+    log('[signal] camera-state send ERR', err?.message || err);
+  }
+}
+
+function setRemoteCameraReportedActive(isActive) {
+  const normalized = isActive !== false;
+  if (remoteCameraReportedActive === normalized) return;
+  remoteCameraReportedActive = normalized;
+  updateRemoteVideoActiveState();
+}
+
+function rerunCameraBroadcastIfNeeded() {
+  if (!signalingSession) return;
+  const currentPeer = signalingSession.otherPeer || null;
+  if (!currentPeer) {
+    lastCameraBroadcastState = null;
+    lastKnownOtherPeer = null;
+    return;
+  }
+  if (currentPeer !== lastKnownOtherPeer) {
+    lastCameraBroadcastState = null;
+  }
+  lastKnownOtherPeer = currentPeer;
+  const desired = (desiredCameraBroadcastState !== null)
+    ? desiredCameraBroadcastState
+    : (prejoinOverlayDismissed && (window.uiControls?.localVideoActive !== false));
+  broadcastCameraState(desired);
 }
 
 function showPlaceholderIfNoVideo() {
@@ -529,6 +617,7 @@ async function join(){
       prejoinOverlayDismissed = false;
       window.uiControls.showCallOverlay('reconnect-failed');
     }
+
   };
   const signalingOk = await signalingSession.join(token);
   if (!signalingOk) {
@@ -558,15 +647,35 @@ async function join(){
       }
     } else if (eventType === 'peer-left') {
       // Rebuild media session when peer leaves
+      remoteCameraReportedActive = true;
+      setRemoteDisplayStream(null);
+      if (window.uiControls) {
+        if (window.uiControls.setRemoteParticipantPresent) {
+          window.uiControls.setRemoteParticipantPresent(false);
+        }
+        if (window.uiControls.setRemoteMicrophoneState) {
+          window.uiControls.setRemoteMicrophoneState(true);
+        }
+      }
       if (mediaSession) {
         mediaSession.rebuildPCAndRenegotiate();
       }
     }
+
+    rerunCameraBroadcastIfNeeded();
   };
 
   signalingSession.onMessage = (msg) => {
     if (msg?.type === 'mic-nudge') {
       handleMicNudge(msg.from);
+      return;
+    }
+    if (msg?.type === 'camera-state') {
+      const isActive = msg?.payload?.active !== false;
+      setRemoteCameraReportedActive(isActive);
+      if (!isActive && window.uiControls?.setRemoteParticipantPresent) {
+        window.uiControls.setRemoteParticipantPresent(true);
+      }
       return;
     }
     if (mediaSession) {
@@ -578,6 +687,7 @@ async function join(){
         mediaSession.handleCandidate(msg.payload);
       }
     }
+
   };
 
   // Attach WebSocket
@@ -620,6 +730,7 @@ async function join(){
         window.uiControls.showCallOverlay('prejoin');
       }
     }
+
   };
 
   // Handle local media stream updates
@@ -766,6 +877,7 @@ async function join(){
     if (window.uiControls?.refreshRemoteMicIndicator) {
       window.uiControls.refreshRemoteMicIndicator();
     }
+
   };
 
   // First line of defense: Create PC immediately before media preparation
@@ -925,6 +1037,10 @@ window.endCall = () => {
     
     // Reset playback flags
     remotePlaybackGranted = false;
+    remoteCameraReportedActive = true;
+    desiredCameraBroadcastState = null;
+    lastCameraBroadcastState = null;
+    lastKnownOtherPeer = null;
     
     // Restore placeholders
     setLocalDisplayStream(null);
@@ -940,6 +1056,9 @@ window.endCall = () => {
       }
       if (window.uiControls.refreshRemoteMicIndicator) {
         window.uiControls.refreshRemoteMicIndicator();
+      }
+      if (window.uiControls.setRemoteParticipantPresent) {
+        window.uiControls.setRemoteParticipantPresent(false);
       }
     }
     if (window.setScreenShareState) {
@@ -981,9 +1100,11 @@ window.requestMediaRetry = () => {
 
 // Global click/touch handlers removed - pre-join overlay will drive playback
 
-// Auto-join when token already in URL
+// Prepare pre-join preview or show missing-token message
 if (token) {
-  join().catch(e => { log('ERR', e?.message || String(e)); });
+  preparePrejoinPreview().catch(err => {
+    log('[preview] ERR', err?.message || String(err));
+  });
 } else {
   // In production the token must be provided via the URL
   // Show an error when the token is missing

@@ -338,6 +338,20 @@ export class MediaSession {
     this.attachRemoteStreamDebug(remoteStream);
     this.resumePlay(this.vRemote);
 
+    const notifyRemoteStreamUpdate = () => {
+      if (!this.onRemoteStream) return;
+      const totalTracks = remoteStream.getTracks().length;
+      try {
+        if (totalTracks > 0) {
+          this.onRemoteStream(remoteStream);
+        } else {
+          this.onRemoteStream(null);
+        }
+      } catch (err) {
+        this.log('[media] onRemoteStream notify ERR', err?.message || err);
+      }
+    };
+
     this.pc.ontrack = (ev) => {
       this.log('[media] ontrack kind=', ev.track?.kind, 'state=', ev.track?.readyState, 'enabled=', ev.track?.enabled);
       
@@ -364,9 +378,17 @@ export class MediaSession {
       this.attachRemoteStreamDebug(remoteStream);
       this.resumePlay(this.vRemote);
       
-      // Вызываем колбэк для удаленного потока
-      if (this.onRemoteStream && remoteStream && remoteStream.getTracks().length > 0) {
-        this.onRemoteStream(remoteStream);
+      notifyRemoteStreamUpdate();
+
+      if (ev.track && !ev.track.__hermesOnTrackListeners) {
+        ev.track.__hermesOnTrackListeners = true;
+        const teardown = () => {
+          try { remoteStream.removeTrack(ev.track); } catch {}
+          notifyRemoteStreamUpdate();
+        };
+        ev.track.addEventListener('ended', teardown);
+        ev.track.addEventListener('mute', notifyRemoteStreamUpdate);
+        ev.track.addEventListener('unmute', notifyRemoteStreamUpdate);
       }
     };
 

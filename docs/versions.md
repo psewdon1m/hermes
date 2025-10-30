@@ -1,5 +1,6 @@
 # Release Log
 
+- 1.90 (2025-10-30 18:52): added camera-state signalling, remote presence UI feedback, and safer pre-join handling.
 - 1.89 (2025-10-30 16:28): gated local preview rendering until overlay dismissal.
 - 1.88 (2025-10-30 15:52): refined overlay timer gating and local preview mirroring based on screen-share detection.
 - 1.87 (2025-10-30 15:22): streamlined video fallback wiring, refreshed API usage docs, added command snippets.

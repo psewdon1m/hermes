@@ -17,6 +17,7 @@ export class UIControls {
     this.remoteVideoFallback = null;
     this.localVideoActive = true;
     this.remoteVideoActive = true;
+    this.remoteParticipantPresent = false;
     this.overlayVisible = false;
     this.overlayMode = 'prejoin';
     this.overlay = document.querySelector('[data-role="call-overlay"]');
@@ -114,17 +115,12 @@ export class UIControls {
         event.stopPropagation();
         if (this.remoteMicIndicator.disabled) return;
         this.triggerRemoteMicIndicatorFeedback();
-        this.remoteMicIndicator.disabled = true;
         try {
           if (typeof this.remoteMicNudgeHandler === 'function') {
             this.remoteMicNudgeHandler();
           }
-        } finally {
-          setTimeout(() => {
-            if (this.remoteMicIndicator) {
-              this.remoteMicIndicator.disabled = !this.remoteMicIndicator.classList.contains('visible');
-            }
-          }, 900);
+        } catch (err) {
+          console.error('[ui] remote mic nudge handler failed', err);
         }
       });
     }
@@ -437,6 +433,15 @@ export class UIControls {
     this.applyMicIndicator(container, !this.remoteMicrophoneEnabled);
   }
 
+  setRemoteParticipantPresent(isPresent) {
+    this.remoteParticipantPresent = !!isPresent;
+    const container = document.getElementById('remoteVideoDisplay');
+    if (container) {
+      container.classList.toggle('participant-present', this.remoteParticipantPresent);
+    }
+    this.refreshRemoteVideoFallback();
+  }
+
   setRemoteMicrophoneState(isEnabled) {
     this.remoteMicrophoneEnabled = !!isEnabled;
     this.refreshRemoteMicIndicator();
@@ -490,7 +495,8 @@ export class UIControls {
     const container = document.getElementById('remoteVideoDisplay');
     if (!container || !this.remoteVideoFallback) return;
     const hasMedia = container.classList.contains('has-media');
-    const shouldShow = hasMedia && !this.remoteVideoActive;
+    const effectivePresence = hasMedia || this.remoteParticipantPresent;
+    const shouldShow = effectivePresence && !this.remoteVideoActive;
     this.remoteVideoFallback.classList.toggle('visible', !!shouldShow);
   }
 
