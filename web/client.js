@@ -19,6 +19,7 @@ let screenShareActive = false;
 let micNudgeHandlerRegistered = false;
 let prejoinOverlayDismissed = false;
 let localPreviewMirrorPreference = true;
+let pendingLocalStream = null;
 
 function isScreenShareStream(stream) {
   if (!stream || typeof stream.getVideoTracks !== 'function') return false;
@@ -68,6 +69,7 @@ window.handleOverlayEnter = () => {
   }
   resumePlay(vLocal);
   resumePlay(vRemote);
+  updateLocalDisplayAttachment();
 };
 
 window.setScreenShareState = (isActive, updateUI = true) => {
@@ -134,7 +136,7 @@ function updateRemoteVideoActiveState(stream = vRemote?.srcObject) {
   }
 }
 
-function setLocalDisplayStream(stream, mirror = false) {
+function updateLocalDisplayAttachment() {
   const display = document.getElementById('localVideoDisplay');
   if (!display || !vLocal) return;
   if (!display.contains(vLocal)) {
@@ -143,20 +145,26 @@ function setLocalDisplayStream(stream, mirror = false) {
     display.appendChild(vLocal);
   }
 
-  if (stream) {
-    localPreviewMirrorPreference = mirror;
-    display.classList.add('has-media');
-    vLocal.style.display = 'block';
+  const stream = pendingLocalStream;
+  const shouldShow = !!stream && prejoinOverlayDismissed;
+  if (stream && vLocal.srcObject !== stream) {
     vLocal.srcObject = stream;
-    resumePlay(vLocal);
-  } else {
-    display.classList.remove('has-media');
-    if (vLocal.srcObject) {
-      vLocal.srcObject = null;
-    }
-    vLocal.style.display = 'none';
   }
+  if (!stream && vLocal.srcObject) {
+    vLocal.srcObject = null;
+  }
+  if (stream) {
+    resumePlay(vLocal);
+  }
+  display.classList.toggle('has-media', shouldShow);
+  vLocal.style.display = shouldShow ? 'block' : 'none';
+}
+
+function setLocalDisplayStream(stream, mirror = false) {
+  pendingLocalStream = stream || null;
+  localPreviewMirrorPreference = mirror;
   applyLocalDisplayAttributes(stream || null);
+  updateLocalDisplayAttachment();
   if (window.uiControls?.refreshLocalMicIndicator) {
     window.uiControls.refreshLocalMicIndicator();
   }
