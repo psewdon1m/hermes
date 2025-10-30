@@ -488,7 +488,9 @@ export class UIControls {
     if (!container || !this.localVideoFallback) return;
     const hasMedia = container.classList.contains('has-media');
     const shouldShow = hasMedia && !this.localVideoActive;
+    container.classList.toggle('video-inactive', !!shouldShow);
     this.localVideoFallback.classList.toggle('visible', !!shouldShow);
+    this.localVideoFallback.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
   }
 
   refreshRemoteVideoFallback() {
@@ -497,7 +499,9 @@ export class UIControls {
     const hasMedia = container.classList.contains('has-media');
     const effectivePresence = hasMedia || this.remoteParticipantPresent;
     const shouldShow = effectivePresence && !this.remoteVideoActive;
+    container.classList.toggle('video-inactive', !!shouldShow);
     this.remoteVideoFallback.classList.toggle('visible', !!shouldShow);
+    this.remoteVideoFallback.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
   }
 
   setOverlayPreviewStream(stream, isCameraStream = true) {

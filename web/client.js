@@ -816,9 +816,6 @@ async function join(){
     };
 
     updateRemoteMicState();
-    if (window.uiControls?.setRemoteVideoActive) {
-      window.uiControls.setRemoteVideoActive(hasActiveVideoTrack(stream));
-    }
     const videoTracksRemote = stream.getVideoTracks();
     videoTracksRemote.forEach((track) => {
       if (!track || track.__hermesVideoListener) return;
