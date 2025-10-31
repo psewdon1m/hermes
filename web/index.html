@@ -1098,7 +1098,7 @@
         top: 25px;
         left: 40px;
         width: clamp(100px, 10vw, 150px);
-        height: clamp(30px, 5vh, 45px);
+        height: clamp(30px, 10vh, 90px);
         padding: 0 10px;
       }
 
@@ -1147,7 +1147,7 @@
       }
 
       .call-overlay__enter {
-        width: clamp(180px, 95%, 280px);
+        width: clamp(180px, 100%, 280px);
         height: 80px;
         font-size: 16px;
       }
@@ -1161,11 +1161,13 @@
 
       .video-placeholder {
         height: clamp(200px, 60vh, 600px);
+        aspect-ratio: 1 / 1;
         padding: 10px;
       }
       #remoteVideoDisplay,
       #localVideoDisplay {
         height: clamp(200px, 60vh, 600px);
+        aspect-ratio: 1 / 1;
       }
 
 

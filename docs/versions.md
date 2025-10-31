@@ -1,4 +1,4 @@
-- 1.97 (2025-10-31 20:17): refined mobile layout for header, timer, and video heights.
+- 1.98 (2025-10-31 20:30): swapped control icons when muted and tuned mobile header/video sizing.
 - 1.96 (2025-10-31 19:49): adjusted mobile overlay layout spacing and control sizing.
 - 1.95 (2025-10-31 19:30): centralized device detection, hiding screen-share on mobile UI.
 - 1.94 (2025-10-31 17:59): retitled overlay logo and adjusted typography to new brand sizing.

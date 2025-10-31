@@ -1,5 +1,24 @@
 import { applyClientProfileToDOM } from './device-info.js';
 
+const CONTROL_ICONS = {
+  camera: {
+    active: 'src/camera.svg',
+    inactive: 'src/no_camera.svg',
+  },
+  microphone: {
+    active: 'src/microphone.svg',
+    inactive: 'src/no_microphone.svg',
+  },
+  speaker: {
+    active: 'src/speaker.svg',
+    inactive: 'src/no_speaker.svg',
+  },
+  screen: {
+    active: 'src/screen-cast.svg',
+    inactive: 'src/no_screen-cast.svg',
+  },
+};
+
 // Lightweight UI controller for call controls and overlays.
 export class UIControls {
   constructor() {
@@ -241,6 +260,17 @@ export class UIControls {
     button.addEventListener('click', handler);
   }
 
+  updateControlButtonIcon(button, control, isActive) {
+    if (!button) return;
+    const icon = button.querySelector('.button-icon');
+    const iconSet = CONTROL_ICONS[control];
+    if (!icon || !iconSet) return;
+    const nextSrc = isActive ? iconSet.active : iconSet.inactive;
+    if (icon.getAttribute('src') !== nextSrc) {
+      icon.setAttribute('src', nextSrc);
+    }
+  }
+
   applyDeviceAdjustments() {
     if (!this.isMobileDevice) return;
     const screenBtn = document.getElementById('screenBtn');
@@ -390,10 +420,12 @@ export class UIControls {
     if (mainButton) {
       mainButton.classList.remove('disabled', 'active', 'inactive');
       mainButton.classList.add(this.cameraEnabled ? 'active' : 'inactive');
+      this.updateControlButtonIcon(mainButton, 'camera', this.cameraEnabled);
     }
     if (this.overlayCamButton) {
       this.overlayCamButton.classList.remove('disabled', 'active', 'inactive');
       this.overlayCamButton.classList.add(this.cameraEnabled ? 'active' : 'inactive');
+      this.updateControlButtonIcon(this.overlayCamButton, 'camera', this.cameraEnabled);
     }
     this.refreshLocalMicIndicator();
     this.refreshOverlayPreview();
@@ -405,10 +437,12 @@ export class UIControls {
     if (mainButton) {
       mainButton.classList.remove('disabled', 'active', 'inactive');
       mainButton.classList.add(this.microphoneEnabled ? 'active' : 'inactive');
+      this.updateControlButtonIcon(mainButton, 'microphone', this.microphoneEnabled);
     }
     if (this.overlayMicButton) {
       this.overlayMicButton.classList.remove('disabled', 'active', 'inactive');
       this.overlayMicButton.classList.add(this.microphoneEnabled ? 'active' : 'inactive');
+      this.updateControlButtonIcon(this.overlayMicButton, 'microphone', this.microphoneEnabled);
     }
     this.refreshLocalMicIndicator();
   }
@@ -419,6 +453,7 @@ export class UIControls {
     if (!button) return;
     button.classList.remove('disabled', 'active', 'inactive');
     button.classList.add(this.speakerEnabled ? 'active' : 'inactive');
+    this.updateControlButtonIcon(button, 'speaker', this.speakerEnabled);
   }
 
   updateScreenState(isSharing) {
@@ -427,6 +462,7 @@ export class UIControls {
     if (button) {
       button.classList.remove('disabled', 'active', 'inactive');
       button.classList.add(this.screenSharing ? 'active' : 'inactive');
+      this.updateControlButtonIcon(button, 'screen', this.screenSharing);
     }
     const localDisplay = document.getElementById('localVideoDisplay');
     if (localDisplay) {
