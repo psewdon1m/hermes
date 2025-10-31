@@ -1,3 +1,4 @@
+- 2.01 (2025-10-31 22:10): fine-tuned mobile header offsets and video aspect ratio tweaks.
 - 2.00 (2025-10-31 21:55): tweaked mobile header offsets, video sizing, and documented docker cache cleanup.
 - 1.99 (2025-10-31 21:40): polished mobile header, overlays, and video sizing for better fit.
 - 1.98 (2025-10-31 20:30): swapped control icons when muted and tuned mobile header/video sizing.
