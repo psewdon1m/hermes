@@ -1,3 +1,4 @@
+- 2.00 (2025-10-31 21:55): tweaked mobile header offsets, video sizing, and documented docker cache cleanup.
 - 1.99 (2025-10-31 21:40): polished mobile header, overlays, and video sizing for better fit.
 - 1.98 (2025-10-31 20:30): swapped control icons when muted and tuned mobile header/video sizing.
 - 1.96 (2025-10-31 19:49): adjusted mobile overlay layout spacing and control sizing.
