@@ -557,9 +557,12 @@ export class UIControls {
     const indicator = container.querySelector('.mic-indicator');
     if (!indicator) return;
     const hasMedia = container.classList.contains('has-media');
-    const isVisible = !!shouldShowMuted && hasMedia;
-    indicator.classList.toggle('visible', isVisible);
     const role = indicator.dataset.role || '';
+    const remotePresence =
+      role === 'remote-mic-indicator' &&
+      (hasMedia || container.classList.contains('participant-present') || container.classList.contains('video-inactive'));
+    const isVisible = !!shouldShowMuted && (role === 'remote-mic-indicator' ? remotePresence : hasMedia);
+    indicator.classList.toggle('visible', isVisible);
     if (role === 'local-mic-indicator') {
       indicator.disabled = true;
       indicator.setAttribute('aria-label', isVisible ? 'Microphone muted' : 'Microphone active');

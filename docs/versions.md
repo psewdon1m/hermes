@@ -1,5 +1,4 @@
-# Release Log
-
+- 1.92 (2025-10-31 17:14): show remote mic indicator when participant present during fallback view.
 - 1.91 (2025-10-30 19:27): hide inactive video elements and sync fallbacks with updated indicator logic.
 - 1.90 (2025-10-30 18:52): added camera-state signalling, remote presence UI feedback, and safer pre-join handling.
 - 1.89 (2025-10-30 16:28): gated local preview rendering until overlay dismissal.
@@ -13,5 +12,6 @@
 - 1.81 (2025-10-02): join overlay redesign, playback retries, device selectors, hh:mm:ss timer, renegotiation tweaks.
 - 1.80 (2025-10-02): telegram bot hooked to call create API, compose updates.
 - 1.79 (2025-10-02): telegram bot scaffold, Docker service, basic /start handler.
+
 
 
