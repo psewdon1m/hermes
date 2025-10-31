@@ -1095,10 +1095,10 @@
 
     @media (max-width: 480px) {
       .top-visual {
-        top: 25px;
+        top: 15px;
         left: 40px;
         width: clamp(100px, 10vw, 150px);
-        height: clamp(30px, 10vh, 90px);
+        height: clamp(30px, 6vh, 50px);
         padding: 0 10px;
       }
 
@@ -1108,13 +1108,13 @@
       }
 
       .logo-text {
-        font-size: clamp(15px, 2.7vw, 24px);
+        font-size: clamp(16px, 3vw, 32px);
       }
 
       .timer {
-        top: 25px;
+        top: 20px;
         right: 40px;
-        font-size: clamp(12px, 2vw, 24px);
+        font-size: clamp(16px, 4vw, 32px);
       }
 
       .header-visual {
@@ -1147,7 +1147,7 @@
       }
 
       .call-overlay__enter {
-        width: clamp(180px, 100%, 280px);
+        width: clamp(180px, 100%, 320px);
         height: 80px;
         font-size: 16px;
       }
@@ -1160,13 +1160,17 @@
       }
 
       .video-placeholder {
-        height: clamp(200px, 60vh, 600px);
+        width: min(90vw, 600px);
+        height: clamp(400px, 60vh, 600px);
+        min-height: 400px;
         aspect-ratio: 1 / 1;
         padding: 10px;
       }
       #remoteVideoDisplay,
       #localVideoDisplay {
-        height: clamp(200px, 60vh, 600px);
+        width: min(90vw, 600px);
+        height: clamp(400px, 60vh, 600px);
+        min-height: 400px;
         aspect-ratio: 1 / 1;
       }
 
@@ -1207,8 +1211,8 @@
 
       .call-overlay__actions .control-button,
       .call-overlay__actions .control-button.primary {
-        width: 140px;
-        height: 140px;
+        width: 150px;
+        height: 150px;
       }
 
       .call-overlay__actions .control-button.primary .button-icon {
@@ -1245,7 +1249,7 @@
 
       .control-button.exit {
         width: 90px;
-        height: 30px;
+        height: 35px;
         background-color: #90a8ed;
         color: #000000;
         border: 1px solid #000000;
