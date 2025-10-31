@@ -1,3 +1,4 @@
+- 1.95 (2025-10-31 19:30): centralized device detection, hiding screen-share on mobile UI.
 - 1.94 (2025-10-31 17:59): retitled overlay logo and adjusted typography to new brand sizing.
 - 1.93 (2025-10-31 17:50): updated overlay palette and button colors to new blue theme.
 - 1.92 (2025-10-31 17:14): show remote mic indicator when participant present during fallback view.

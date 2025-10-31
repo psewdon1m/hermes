@@ -1,3 +1,5 @@
+import { applyClientProfileToDOM } from './device-info.js';
+
 // Lightweight UI controller for call controls and overlays.
 export class UIControls {
   constructor() {
@@ -30,8 +32,14 @@ export class UIControls {
     this.overlayPreviewStream = null;
     this.overlayEnterButton = this.overlay?.querySelector('[data-role="overlay-enter"]') || null;
     this.overlayPanel = this.overlay?.querySelector('.call-overlay__panel') || null;
+    this.deviceProfile = applyClientProfileToDOM();
+    this.isMobileDevice = !!this.deviceProfile?.isMobile;
+    if (this.isMobileDevice && document.body) {
+      document.body.classList.add('mobile-ui');
+    }
 
     this.initializeEventListeners();
+    this.applyDeviceAdjustments();
     this.updateCameraState(this.cameraEnabled);
     this.updateMicrophoneState(this.microphoneEnabled);
     this.updateSpeakerState(this.speakerEnabled);
@@ -231,6 +239,16 @@ export class UIControls {
     const button = document.getElementById(id);
     if (!button) return;
     button.addEventListener('click', handler);
+  }
+
+  applyDeviceAdjustments() {
+    if (!this.isMobileDevice) return;
+    const screenBtn = document.getElementById('screenBtn');
+    if (screenBtn) {
+      screenBtn.disabled = true;
+      screenBtn.setAttribute('aria-hidden', 'true');
+      screenBtn.setAttribute('tabindex', '-1');
+    }
   }
 
   async handleLinkClick(button) {

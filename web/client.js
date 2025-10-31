@@ -2,6 +2,7 @@
 
 import { SignalingSession } from './signaling-session.js';
 import { MediaSession } from './media-session.js';
+import { getClientProfile } from './device-info.js';
 
 // ---------- DOM ----------
 const logEl   = document.getElementById('log');
@@ -543,22 +544,8 @@ async function resumePlay(el, onFailure){
   }
 }
 
-function detectClient(){
-  const ua = navigator.userAgent || "";
-  const platform = navigator.platform || "";
-  const vendor = navigator.vendor || "";
-  let device = "desktop";
-  if (/Android/i.test(ua)) device = "android";
-  else if (/iPhone|iPad|iPod/i.test(ua)) device = "ios";
-  else if (/Macintosh|MacIntel/i.test(ua)) device = "mac";
-  else if (/Windows/i.test(ua)) device = "windows";
-  const browserMatch = ua.match(/(Firefox|Chrome|Edg|Safari|OPR)\/(\d+\.?[\d]*)/i);
-  const browser = browserMatch ? `${browserMatch[1]} ${browserMatch[2]}` : "unknown";
-  return { ua, platform, vendor, device, browser };
-}
-
 function logClientInfo(){
-  const info = detectClient();
+  const info = getClientProfile();
   log('client info', JSON.stringify(info));
 }
 
