@@ -485,7 +485,15 @@ async function fallbackStopScreenShare() {
 
 async function fallbackSwitchCameraFacing(targetFacing) {
   if (!navigator?.mediaDevices?.getUserMedia) return false;
+  const existingVideoTracks = fallbackMedia.localStream?.getVideoTracks?.() || [];
   const wasEnabled = fallbackMedia.cameraOn;
+  const releaseExistingTracks = () => {
+    existingVideoTracks.forEach(track => {
+      try { fallbackMedia.localStream?.removeTrack(track); } catch {}
+      try { track.stop(); } catch {}
+    });
+  };
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: targetFacing } }, audio: false });
     const videoTrack = stream.getVideoTracks()[0];
@@ -517,7 +525,47 @@ async function fallbackSwitchCameraFacing(targetFacing) {
     updateLocalVideoActiveState();
     return true;
   } catch (err) {
+    if (err?.name === 'OverconstrainedError' || err?.name === 'NotReadableError') {
+      try {
+        releaseExistingTracks();
+      } catch {}
+      try {
+        const retryStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: targetFacing } }, audio: false });
+        const retryTrack = retryStream.getVideoTracks()[0];
+        if (!retryTrack) {
+          retryStream.getTracks().forEach(t => {
+            try { t.stop(); } catch {}
+          });
+          log('[fallback] camera facing retry ERR', 'no video track');
+          return false;
+        }
+        if (!fallbackMedia.localStream) {
+          fallbackMedia.localStream = new MediaStream();
+        }
+        fallbackMedia.localStream.addTrack(retryTrack);
+        retryTrack.enabled = wasEnabled;
+        fallbackMedia.cameraOn = wasEnabled;
+        fallbackMedia.currentFacing = targetFacing;
+        const mirror = shouldMirrorForFacing(targetFacing);
+        setLocalDisplayStream(fallbackMedia.localStream, mirror);
+        if (window.uiControls) {
+          window.uiControls.updateCameraState(wasEnabled);
+        }
+        updateLocalVideoActiveState();
+        retryStream.getTracks().forEach(t => {
+          if (t !== retryTrack) {
+            try { t.stop(); } catch {}
+          }
+        });
+        return true;
+      } catch (retryErr) {
+        log('[fallback] camera facing retry ERR', retryErr?.name || retryErr?.message || String(retryErr));
+        await ensureFallbackLocalStream();
+        return false;
+      }
+    }
     log('[fallback] camera facing ERR', err?.name || err?.message || String(err));
+    await ensureFallbackLocalStream();
     return false;
   }
 }
@@ -954,7 +1002,8 @@ async function join(){
   mediaSession.newPC();
   
   // Prepare local media
-  const gumOk = await mediaSession.prepareLocalMedia();
+  const initialLocalStream = fallbackMedia.localStream || null;
+  const gumOk = await mediaSession.prepareLocalMedia(false, { initialStream: initialLocalStream });
   
   // Start negotiation if we have a peer
   if (signalingSession.otherPeer && !signalingSession.polite) {
@@ -1215,6 +1264,8 @@ if (token) {
 }
 
 // Media stats functionality moved to MediaSession class
+
+
 
 
 

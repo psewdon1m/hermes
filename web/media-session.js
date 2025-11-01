@@ -34,12 +34,22 @@ export class MediaSession {
     this.currentCameraFacing = 'user'; // Track preferred camera facing
   }
 
-  async prepareLocalMedia(retry = false) {
+  async prepareLocalMedia(retry = false, options = {}) {
+    const candidateStream = options ? options.initialStream : null;
+    const reuseInitialStream =
+      !!(candidateStream && typeof candidateStream.getTracks === 'function');
+    const initialStream = reuseInitialStream ? candidateStream : null;
     this.setState('preparing');
-    this.setStatus('media-request', 'requesting local devices');
-    this.log('[media] preparing local media');
+    this.setStatus(
+      reuseInitialStream ? 'media-adopt' : 'media-request',
+      reuseInitialStream ? 'reusing initial preview media' : 'requesting local devices'
+    );
+    this.log(
+      '[media] preparing local media',
+      reuseInitialStream ? '(reuse initial stream)' : ''
+    );
     
-    // Очищаем предыдущие попытки
+    // ? ?? ? ?? ?
     this.pendingMediaRetry = null;
     if (window.uiControls) {
       window.uiControls.hidePermissionPrompt?.();
@@ -51,14 +61,57 @@ export class MediaSession {
     
     try {
       await this.logPermissionsInfo();
-      
-      // Шаг 1: Запрашиваем аудио
+    } catch {}
+    
+    if (reuseInitialStream) {
+      let adoptInitialStream = false;
+      let videoTracks = [];
+      let audioTracks = [];
+      try {
+        videoTracks = initialStream.getVideoTracks ? initialStream.getVideoTracks() : [];
+        audioTracks = initialStream.getAudioTracks ? initialStream.getAudioTracks() : [];
+        videoOk = videoTracks.length > 0;
+        audioOk = audioTracks.length > 0;
+        adoptInitialStream = videoOk || audioOk;
+        if (videoTracks.length) {
+          const primaryTrack = videoTracks[0];
+          if (primaryTrack?.getSettings) {
+            const facing = primaryTrack.getSettings().facingMode;
+            if (facing) {
+              this.currentCameraFacing = facing;
+            }
+          }
+        }
+      } catch {}
+
+      if (adoptInitialStream) {
+        this.localStream = initialStream;
+        this.setupTrackHandlers();
+        this.vLocal.srcObject = this.localStream;
+        await this.resumePlay(this.vLocal);
+
+        if (this.onLocalStream && this.localStream) {
+          this.onLocalStream(this.localStream);
+        }
+
+        this.attachLocalTracksToPC();
+        this.localTracksReady = true;
+        this.setStatus('media-ready', 'local tracks adopted');
+        this.requestNegotiation('local tracks adopted');
+        return audioOk || videoOk;
+      }
+
+      this.log('[media] initial preview stream had no tracks, requesting devices again');
+    }
+    
+    try {
+      // ? 1: -????
       this.log('[media] requesting audio permission...');
       this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       audioOk = true;
       this.log('[media] audio permission granted');
       
-      // Шаг 2: Запрашиваем видео и добавляем к существующему потоку
+      // ? 2: -????
       this.log('[media] requesting video permission...');
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
@@ -77,13 +130,13 @@ export class MediaSession {
         this.log('[media] video permission granted');
       } catch (videoError) {
         this.log('[media] video permission denied', videoError?.name || videoError?.message || String(videoError));
-        // Продолжаем без видео
+        // ?
       }
       
     } catch (audioError) {
       this.log('[media] audio permission denied', audioError?.name || audioError?.message || String(audioError));
       
-      // Если аудио не удалось, пробуем только видео
+      // ?
       try {
         this.localStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
         videoOk = true;
@@ -93,16 +146,15 @@ export class MediaSession {
       }
     }
 
-    // Если ничего не получилось, создаем пустой поток
     if (!audioOk && !videoOk) {
       this.log('[media] entering recvonly mode');
       this.localStream = new MediaStream();
       
-      // Сохраняем функцию для повторной попытки
+      // ���?�:�?���?�?��? �"�?�?��Ő�? �?�>�? ���?�?�'�?�?�?�?�� ���?���<�'���
       this.pendingMediaRetry = () => this.prepareLocalMedia(true);
       this.setStatus('media-permission', 'awaiting user approval');
       
-      // Показываем промпт для разрешений
+      // �?�?������<�?����? ���?�?�?���' �?�>�? �?�����?��?��?���
       if (window.uiControls) {
         window.uiControls.showPermissionPrompt?.();
       }
@@ -112,7 +164,7 @@ export class MediaSession {
     this.setupTrackHandlers();
     this.resumePlay(this.vLocal);
     
-    // Вызываем колбэк для локального потока
+    // �'�<���<�?����? ��?�>�+�?�� �?�>�? �>�?����>�?�?�?�?�? ���?�'�?���
     if (this.onLocalStream && this.localStream) {
       this.onLocalStream(this.localStream);
     }
@@ -120,7 +172,7 @@ export class MediaSession {
     // Attach tracks to existing PC if it exists
     this.attachLocalTracksToPC();
     
-    // Вычисляем общий статус успеха
+    // �'�<�ؐ�?�>�?��? �?�+�%��� �?�'���'�?�? �?�?����:��
     const gumOk = audioOk || videoOk;
     
     // Set media-ready status
@@ -131,7 +183,6 @@ export class MediaSession {
     
     return gumOk;
   }
-
   setupTrackHandlers() {
     if (!this.localStream) return;
     
@@ -642,23 +693,82 @@ export class MediaSession {
 
   async switchCameraFacing(targetFacing = 'user') {
     if (!navigator?.mediaDevices?.getUserMedia) return false;
+    const activeTrack = this.localStream?.getVideoTracks?.()[0] || null;
+    if (activeTrack?.applyConstraints) {
+      try {
+        await activeTrack.applyConstraints({ facingMode: targetFacing });
+        this.currentCameraFacing = targetFacing;
+        this.localTracksReady = true;
+        if (this.onLocalStream && this.localStream) {
+          this.onLocalStream(this.localStream);
+        }
+        this.requestNegotiation(`camera facing -> ${targetFacing} (constraints)`);
+        return true;
+      } catch (err) {
+        this.log('[media] switchCameraFacing applyConstraints ERR', err?.name || err?.message || String(err));
+      }
+    }
+
+    const previousEnabled = activeTrack ? activeTrack.enabled !== false : true;
     const constraints = { video: { facingMode: { ideal: targetFacing } }, audio: false };
+
+    const releaseActiveTrack = () => {
+      if (activeTrack) {
+        try { if (this.localStream) this.localStream.removeTrack(activeTrack); } catch {}
+        try { activeTrack.stop(); } catch {}
+      }
+    };
+
     let stream = null;
+    let track = null;
+    let releaseAttempted = false;
+    const restoreAfterFailure = async () => {
+      if (!releaseAttempted) return;
+      try {
+        await this.prepareLocalMedia(true);
+      } catch (restoreErr) {
+        this.log('[media] switchCameraFacing restore ERR', restoreErr?.name || restoreErr?.message || String(restoreErr));
+      }
+    };
     try {
       stream = await navigator.mediaDevices.getUserMedia(constraints);
     } catch (err) {
-      this.log('[media] switchCameraFacing ERR', err?.name || err?.message || String(err));
-      return false;
+      if (err?.name === 'OverconstrainedError' || err?.name === 'NotReadableError' || err?.name === 'NotAllowedError') {
+        // Retry with stricter constraint first, then after releasing the active track if needed.
+        const retryConstraints = { video: { facingMode: { exact: targetFacing } }, audio: false };
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(retryConstraints);
+        } catch (retryErr) {
+          if (retryErr?.name === 'NotReadableError' && activeTrack && !releaseAttempted) {
+            releaseAttempted = true;
+            releaseActiveTrack();
+            try {
+              stream = await navigator.mediaDevices.getUserMedia(retryConstraints);
+            } catch (finalErr) {
+              this.log('[media] switchCameraFacing retry ERR', finalErr?.name || finalErr?.message || String(finalErr));
+              await restoreAfterFailure();
+              return false;
+            }
+          } else {
+            this.log('[media] switchCameraFacing retry ERR', retryErr?.name || retryErr?.message || String(retryErr));
+            await restoreAfterFailure();
+            return false;
+          }
+        }
+      } else {
+        this.log('[media] switchCameraFacing ERR', err?.name || err?.message || String(err));
+        return false;
+      }
     }
 
-    const track = stream?.getVideoTracks?.()[0] || null;
+    track = stream?.getVideoTracks?.()[0] || null;
     if (!track) {
       try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
       this.log('[media] switchCameraFacing ERR', 'no video track');
+      await restoreAfterFailure();
       return false;
     }
 
-    const previousEnabled = this.localStream?.getVideoTracks?.()[0]?.enabled !== false;
     track.enabled = previousEnabled;
 
     const success = await this.switchVideoSource(track, `camera facing -> ${targetFacing}`);
@@ -977,4 +1087,5 @@ export class MediaSession {
     this.setStatus('idle', 'media session closed');
   }
 }
+
 
