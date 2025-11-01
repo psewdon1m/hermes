@@ -140,8 +140,117 @@
       transition: filter 0.2s ease, opacity 0.2s ease;
     }
 
-    body.mobile-ui .control-button.screen {
+    body.mobile-ui {
+      overflow: hidden;
+    }
+
+    body.mobile-ui .controls-container {
       display: none;
+    }
+
+    body.mobile-ui #screenBtn,
+    body.mobile-ui #spkBtn {
+      display: none !important;
+    }
+
+    body.mobile-ui .main-content {
+      padding-bottom: 140px;
+    }
+
+    .mobile-controls {
+      display: none;
+    }
+
+    body.mobile-ui .mobile-controls {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      gap: 18px;
+      padding: 0 24px;
+      z-index: 60;
+      pointer-events: auto;
+    }
+
+    .mobile-control-button {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 1px solid #000000;
+      background-color: #141414;
+      color: #d9d9d9;
+      box-shadow: 4px 4px 0 0 #000000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      padding: 0;
+    }
+
+    .mobile-control-button .button-icon {
+      width: 24px;
+      height: 24px;
+      filter: invert(92%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .mobile-control-button.inactive {
+      background-color: #f890ea;
+      color: #000000;
+    }
+
+    .mobile-control-button.inactive .button-icon {
+      filter: none;
+      opacity: 1;
+    }
+
+    .mobile-control-button.exit {
+      background-color: #90a8ed;
+      color: #000000;
+    }
+
+    .mobile-control-button.exit .button-icon {
+      filter: none;
+      opacity: 1;
+    }
+
+    body.mobile-ui.mobile-expanded {
+      overflow: hidden;
+    }
+
+    body.mobile-ui.mobile-expanded .main-content {
+      position: fixed;
+      inset: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+
+    body.mobile-ui.mobile-expanded .video-placeholder {
+      display: none;
+    }
+
+    body.mobile-ui.mobile-expanded[data-mobile-view="local"] #localVideoDisplay,
+    body.mobile-ui.mobile-expanded[data-mobile-view="remote"] #remoteVideoDisplay {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      border-radius: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.mobile-ui.mobile-expanded[data-mobile-view="local"] #localVideoDisplay .video-fallback,
+    body.mobile-ui.mobile-expanded[data-mobile-view="remote"] #remoteVideoDisplay .video-fallback {
+      border-radius: 0;
     }
 
     .call-overlay__actions .control-button.primary.active {
@@ -1385,6 +1494,21 @@
       </button>
     </div>
     <button class="control-button exit" id="exitBtn">exit</button>
+  </div>
+
+  <div class="mobile-controls" data-role="mobile-controls" aria-hidden="true">
+    <button class="mobile-control-button cam active" type="button" data-role="mobile-cam" aria-label="Toggle camera">
+      <img src="src/camera.svg" alt="" class="button-icon">
+    </button>
+    <button class="mobile-control-button turn" type="button" data-role="mobile-turn" aria-label="Swap front and rear camera">
+      <img src="src/turn.svg" alt="" class="button-icon">
+    </button>
+    <button class="mobile-control-button mic active" type="button" data-role="mobile-mic" aria-label="Toggle microphone">
+      <img src="src/microphone.svg" alt="" class="button-icon">
+    </button>
+    <button class="mobile-control-button exit" type="button" data-role="mobile-exit" aria-label="Leave call">
+      <img src="src/exit.svg" alt="" class="button-icon">
+    </button>
   </div>
 
 

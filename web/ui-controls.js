@@ -51,6 +51,16 @@ export class UIControls {
     this.overlayPreviewStream = null;
     this.overlayEnterButton = this.overlay?.querySelector('[data-role="overlay-enter"]') || null;
     this.overlayPanel = this.overlay?.querySelector('.call-overlay__panel') || null;
+    this.mobileControlsContainer = null;
+    this.mobileCamControl = null;
+    this.mobileTurnControl = null;
+    this.mobileMicControl = null;
+    this.mobileExitControl = null;
+    this.mobileExpandedView = null;
+    this.orientationForcedView = false;
+    this.mobileExpandedManual = false;
+    this.orientationChangeHandler = null;
+    this.resizeOrientationHandler = null;
     this.deviceProfile = applyClientProfileToDOM();
     this.isMobileDevice = !!this.deviceProfile?.isMobile;
     if (this.isMobileDevice && document.body) {
@@ -110,6 +120,12 @@ export class UIControls {
       }
       if (!button.dataset.exitLabel) {
         button.dataset.exitLabel = 'exit';
+      }
+      if (!button.dataset.mobileFullLabel) {
+        button.dataset.mobileFullLabel = button.dataset.fullLabel || 'full';
+      }
+      if (!button.dataset.mobileExitLabel) {
+        button.dataset.mobileExitLabel = 'back';
       }
       button.addEventListener('click', async (event) => {
         event.preventDefault();
@@ -213,6 +229,10 @@ export class UIControls {
   }
 
   async toggleFullscreen(container) {
+    if (this.isMobileDevice) {
+      this.toggleMobileFullscreen(container);
+      return;
+    }
     try {
       if (!document.fullscreenElement) {
         if (container.requestFullscreen) {
@@ -242,16 +262,137 @@ export class UIControls {
   }
 
   syncFullscreenButtons() {
-    const activeEl = document.fullscreenElement;
     const placeholders = document.querySelectorAll('.video-placeholder');
+    const activeEl = document.fullscreenElement;
     placeholders.forEach((container) => {
       const button = container.querySelector('.fullscreen-button');
       if (!button) return;
-      const isActive = activeEl === container;
-      container.classList.toggle('fullscreen-active', isActive);
-      button.textContent = isActive ? (button.dataset.exitLabel || 'exit') : (button.dataset.fullLabel || 'full');
-      button.setAttribute('aria-label', isActive ? 'exit fullscreen' : 'enter fullscreen');
+
+      if (this.isMobileDevice) {
+        const targetId = container.id === 'remoteVideoDisplay' ? 'remote' : 'local';
+        const isActive = this.mobileExpandedView === targetId;
+        container.classList.toggle('fullscreen-active', isActive);
+        button.textContent = isActive
+          ? (button.dataset.mobileExitLabel || 'back')
+          : (button.dataset.mobileFullLabel || 'full');
+        button.setAttribute('aria-label', isActive ? 'collapse view' : 'expand view');
+        button.classList.toggle('is-active', isActive);
+        return;
+      }
+
+      const isActiveDesktop = activeEl === container;
+      container.classList.toggle('fullscreen-active', isActiveDesktop);
+      button.textContent = isActiveDesktop ? (button.dataset.exitLabel || 'exit') : (button.dataset.fullLabel || 'full');
+      button.setAttribute('aria-label', isActiveDesktop ? 'exit fullscreen' : 'enter fullscreen');
     });
+  }
+
+  toggleMobileFullscreen(container) {
+    if (!container) return;
+    const targetId = container.id === 'remoteVideoDisplay' ? 'remote' : 'local';
+    if (!targetId) return;
+
+    if (this.mobileExpandedView === targetId && !this.orientationForcedView) {
+      this.collapseMobileView();
+      return;
+    }
+
+    this.expandMobileView(targetId, { forced: false });
+  }
+
+  expandMobileView(target, options = {}) {
+    if (!target || !document?.body) return;
+    const forced = !!options.forced;
+    this.mobileExpandedView = target;
+    this.orientationForcedView = forced;
+    this.mobileExpandedManual = !forced;
+
+    document.body.classList.add('mobile-expanded');
+    document.body.dataset.mobileView = target;
+
+    const local = document.getElementById('localVideoDisplay');
+    const remote = document.getElementById('remoteVideoDisplay');
+    if (local) local.classList.remove('mobile-expanded-active');
+    if (remote) remote.classList.remove('mobile-expanded-active');
+    const activeContainer = target === 'remote' ? remote : local;
+    if (activeContainer) {
+      activeContainer.classList.add('mobile-expanded-active');
+    }
+
+    if (!forced) {
+      this.lockOrientation('landscape');
+    }
+
+    this.syncFullscreenButtons();
+  }
+
+  collapseMobileView() {
+    if (!document?.body) return;
+    document.body.classList.remove('mobile-expanded');
+    delete document.body.dataset.mobileView;
+
+    ['localVideoDisplay', 'remoteVideoDisplay'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('mobile-expanded-active');
+    });
+
+    this.mobileExpandedView = null;
+    this.orientationForcedView = false;
+    this.mobileExpandedManual = false;
+    this.unlockOrientation();
+    this.syncFullscreenButtons();
+  }
+
+  async lockOrientation(mode) {
+    try {
+      if (window.screen?.orientation?.lock) {
+        await window.screen.orientation.lock(mode);
+        return true;
+      }
+    } catch (_) {
+      // Orientation lock is best-effort; ignore failures.
+    }
+    return false;
+  }
+
+  unlockOrientation() {
+    try {
+      if (window.screen?.orientation?.unlock) {
+        window.screen.orientation.unlock();
+      }
+    } catch (_) {
+      // Ignore unlock failures.
+    }
+  }
+
+  setupOrientationListeners() {
+    if (!this.isMobileDevice || typeof window === 'undefined') return;
+    this.orientationChangeHandler = () => this.handleOrientationChange();
+    this.resizeOrientationHandler = () => this.handleOrientationChange();
+    window.addEventListener('orientationchange', this.orientationChangeHandler, { passive: true });
+    window.addEventListener('resize', this.resizeOrientationHandler, { passive: true });
+    this.handleOrientationChange();
+  }
+
+  handleOrientationChange() {
+    if (!this.isMobileDevice) return;
+    const isLandscape = this.isLandscapeOrientation();
+    if (isLandscape) {
+      this.expandMobileView('remote', { forced: true });
+    } else if (this.orientationForcedView) {
+      this.collapseMobileView();
+    }
+    this.syncFullscreenButtons();
+  }
+
+  isLandscapeOrientation() {
+    if (window.matchMedia) {
+      const mediaQuery = window.matchMedia('(orientation: landscape)');
+      if (typeof mediaQuery.matches === 'boolean') {
+        return mediaQuery.matches;
+      }
+    }
+    return window.innerWidth > window.innerHeight;
   }
 
   attachControlButton(id, handler) {
@@ -278,6 +419,44 @@ export class UIControls {
       screenBtn.disabled = true;
       screenBtn.setAttribute('aria-hidden', 'true');
       screenBtn.setAttribute('tabindex', '-1');
+    }
+    const speakerBtn = document.getElementById('spkBtn');
+    if (speakerBtn) {
+      speakerBtn.disabled = true;
+      speakerBtn.setAttribute('aria-hidden', 'true');
+      speakerBtn.setAttribute('tabindex', '-1');
+    }
+    this.setupMobileControls();
+    this.setupOrientationListeners();
+    this.syncFullscreenButtons();
+  }
+
+  setupMobileControls() {
+    this.mobileControlsContainer = document.querySelector('[data-role="mobile-controls"]');
+    if (!this.mobileControlsContainer) return;
+    this.mobileControlsContainer.removeAttribute('aria-hidden');
+
+    this.mobileCamControl = this.mobileControlsContainer.querySelector('[data-role="mobile-cam"]');
+    this.mobileTurnControl = this.mobileControlsContainer.querySelector('[data-role="mobile-turn"]');
+    this.mobileMicControl = this.mobileControlsContainer.querySelector('[data-role="mobile-mic"]');
+    this.mobileExitControl = this.mobileControlsContainer.querySelector('[data-role="mobile-exit"]');
+
+    if (this.mobileCamControl) {
+      this.mobileCamControl.addEventListener('click', () => this.handleCamClick());
+    }
+    if (this.mobileMicControl) {
+      this.mobileMicControl.addEventListener('click', () => this.handleMicClick());
+    }
+    if (this.mobileExitControl) {
+      this.mobileExitControl.addEventListener('click', () => this.handleExitClick());
+    }
+    if (this.mobileTurnControl) {
+      this.mobileTurnControl.addEventListener('click', () => this.handleTurnClick());
+    }
+
+    if (!navigator?.mediaDevices?.getUserMedia && this.mobileTurnControl) {
+      this.mobileTurnControl.disabled = true;
+      this.mobileTurnControl.classList.add('disabled');
     }
   }
 
@@ -408,6 +587,23 @@ export class UIControls {
     this.updateScreenState(nextState);
   }
 
+  async handleTurnClick() {
+    if (typeof window.toggleCameraFacingMode !== 'function') return;
+    if (this.mobileTurnControl) {
+      if (this.mobileTurnControl.dataset.busy === '1') return;
+      this.mobileTurnControl.dataset.busy = '1';
+    }
+    try {
+      await window.toggleCameraFacingMode();
+    } catch (err) {
+      console.error('[ui] camera facing toggle failed', err);
+    } finally {
+      if (this.mobileTurnControl) {
+        delete this.mobileTurnControl.dataset.busy;
+      }
+    }
+  }
+
   handleExitClick() {
     if (window.endCall) {
       window.endCall();
@@ -427,6 +623,11 @@ export class UIControls {
       this.overlayCamButton.classList.add(this.cameraEnabled ? 'active' : 'inactive');
       this.updateControlButtonIcon(this.overlayCamButton, 'camera', this.cameraEnabled);
     }
+    if (this.mobileCamControl) {
+      this.mobileCamControl.classList.remove('disabled', 'active', 'inactive');
+      this.mobileCamControl.classList.add(this.cameraEnabled ? 'active' : 'inactive');
+      this.updateControlButtonIcon(this.mobileCamControl, 'camera', this.cameraEnabled);
+    }
     this.refreshLocalMicIndicator();
     this.refreshOverlayPreview();
   }
@@ -443,6 +644,11 @@ export class UIControls {
       this.overlayMicButton.classList.remove('disabled', 'active', 'inactive');
       this.overlayMicButton.classList.add(this.microphoneEnabled ? 'active' : 'inactive');
       this.updateControlButtonIcon(this.overlayMicButton, 'microphone', this.microphoneEnabled);
+    }
+    if (this.mobileMicControl) {
+      this.mobileMicControl.classList.remove('disabled', 'active', 'inactive');
+      this.mobileMicControl.classList.add(this.microphoneEnabled ? 'active' : 'inactive');
+      this.updateControlButtonIcon(this.mobileMicControl, 'microphone', this.microphoneEnabled);
     }
     this.refreshLocalMicIndicator();
   }
@@ -558,7 +764,7 @@ export class UIControls {
     this.remoteVideoFallback.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
   }
 
-  setOverlayPreviewStream(stream, isCameraStream = true) {
+  setOverlayPreviewStream(stream, isCameraStream = true, shouldMirror = true) {
     if (!this.overlayPreview) return;
     if (!isCameraStream && stream) {
       return;
@@ -575,7 +781,7 @@ export class UIControls {
         } catch {}
       }
     }
-    if (isCameraStream && targetStream) {
+    if (isCameraStream && targetStream && shouldMirror) {
       this.overlayPreview.dataset.mirror = '1';
     } else if (this.overlayPreview.dataset?.mirror) {
       delete this.overlayPreview.dataset.mirror;
@@ -737,3 +943,6 @@ export class UIControls {
     }
   }
 }
+
+
+

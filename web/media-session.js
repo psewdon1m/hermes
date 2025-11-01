@@ -31,6 +31,7 @@ export class MediaSession {
     this.pendingMediaRetry = null; // Function for retrying media requests
     this.cameraTrackBackup = null; // Stored camera track when screen sharing
     this.screenShareStream = null; // Active screen share stream
+    this.currentCameraFacing = 'user'; // Track preferred camera facing
   }
 
   async prepareLocalMedia(retry = false) {
@@ -61,9 +62,17 @@ export class MediaSession {
       this.log('[media] requesting video permission...');
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-        videoStream.getVideoTracks().forEach(track => {
+        const videoTracks = videoStream.getVideoTracks();
+        videoTracks.forEach(track => {
           this.localStream.addTrack(track);
         });
+        const primaryTrack = videoTracks[0];
+        if (primaryTrack?.getSettings) {
+          const facing = primaryTrack.getSettings().facingMode;
+          if (facing) {
+            this.currentCameraFacing = facing;
+          }
+        }
         videoOk = true;
         this.log('[media] video permission granted');
       } catch (videoError) {
@@ -585,10 +594,13 @@ export class MediaSession {
       this.localStream = new MediaStream();
     }
 
+    const removedTracks = [];
     try {
-      this.localStream.getVideoTracks()
+      const existingTracks = this.localStream.getVideoTracks ? this.localStream.getVideoTracks() : [];
+      existingTracks
         .filter(existing => existing !== track)
         .forEach(existing => {
+          removedTracks.push(existing);
           try { this.localStream.removeTrack(existing); } catch {}
         });
       if (!this.localStream.getVideoTracks().includes(track)) {
@@ -614,6 +626,62 @@ export class MediaSession {
 
     this.localTracksReady = true;
     this.requestNegotiation(reason);
+
+    removedTracks.forEach((oldTrack) => {
+      if (oldTrack && oldTrack !== track) {
+        try { oldTrack.stop(); } catch {}
+      }
+    });
+
+    if (this.onLocalStream && this.localStream) {
+      this.onLocalStream(this.localStream);
+    }
+
+    return true;
+  }
+
+  async switchCameraFacing(targetFacing = 'user') {
+    if (!navigator?.mediaDevices?.getUserMedia) return false;
+    const constraints = { video: { facingMode: { ideal: targetFacing } }, audio: false };
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (err) {
+      this.log('[media] switchCameraFacing ERR', err?.name || err?.message || String(err));
+      return false;
+    }
+
+    const track = stream?.getVideoTracks?.()[0] || null;
+    if (!track) {
+      try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
+      this.log('[media] switchCameraFacing ERR', 'no video track');
+      return false;
+    }
+
+    const previousEnabled = this.localStream?.getVideoTracks?.()[0]?.enabled !== false;
+    track.enabled = previousEnabled;
+
+    const success = await this.switchVideoSource(track, `camera facing -> ${targetFacing}`);
+    if (!success) {
+      try { track.stop(); } catch {}
+      return false;
+    }
+
+    try {
+      stream?.getTracks?.().forEach((t) => {
+        if (t !== track) {
+          try { t.stop(); } catch {}
+        }
+      });
+    } catch {}
+
+    const settings = track.getSettings ? track.getSettings() : {};
+    if (settings.facingMode) {
+      this.currentCameraFacing = settings.facingMode;
+    } else {
+      this.currentCameraFacing = targetFacing;
+    }
+
     return true;
   }
 
@@ -909,3 +977,4 @@ export class MediaSession {
     this.setStatus('idle', 'media session closed');
   }
 }
+

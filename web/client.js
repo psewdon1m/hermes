@@ -26,6 +26,7 @@ let desiredCameraBroadcastState = null;
 let lastCameraBroadcastState = null;
 let lastKnownOtherPeer = null;
 let joinPromise = null;
+let currentCameraFacing = 'user';
 
 function isScreenShareStream(stream) {
   if (!stream || typeof stream.getVideoTracks !== 'function') return false;
@@ -44,6 +45,10 @@ function isScreenShareStream(stream) {
   }
 }
 
+function shouldMirrorForFacing(facing) {
+  return (facing || 'user') !== 'environment';
+}
+
 function applyLocalDisplayAttributes(stream) {
   if (!vLocal) return;
   if (!stream) {
@@ -51,7 +56,7 @@ function applyLocalDisplayAttributes(stream) {
       delete vLocal.dataset.mirror;
     }
     if (window.uiControls?.setOverlayPreviewStream) {
-      window.uiControls.setOverlayPreviewStream(null, true);
+      window.uiControls.setOverlayPreviewStream(null, true, true);
     }
     return;
   }
@@ -63,7 +68,7 @@ function applyLocalDisplayAttributes(stream) {
     delete vLocal.dataset.mirror;
   }
   if (window.uiControls?.setOverlayPreviewStream) {
-    window.uiControls.setOverlayPreviewStream(screenShare ? null : stream, !screenShare);
+    window.uiControls.setOverlayPreviewStream(screenShare ? null : stream, !screenShare, shouldMirror);
   }
 }
 
@@ -98,7 +103,8 @@ const fallbackMedia = {
   cameraOn: false,
   micOn: false,
   screenStream: null,
-  prevCameraOn: false
+  prevCameraOn: false,
+  currentFacing: 'user'
 };
 
 let signalingSession = null;
@@ -227,9 +233,21 @@ async function ensureFallbackLocalStream() {
     fallbackMedia.localStream = stream;
     const videoTracks = stream.getVideoTracks();
     const audioTracks = stream.getAudioTracks();
+    let facing = null;
+    if (videoTracks.length) {
+      facing = videoTracks[0]?.getSettings?.().facingMode || null;
+      if (facing) {
+        fallbackMedia.currentFacing = facing;
+        currentCameraFacing = facing;
+        localPreviewMirrorPreference = facing !== 'environment';
+      } else if (!fallbackMedia.currentFacing) {
+        fallbackMedia.currentFacing = 'user';
+      }
+    }
     fallbackMedia.cameraOn = videoTracks.length ? videoTracks[0].enabled !== false : false;
     fallbackMedia.micOn = audioTracks.length ? audioTracks[0].enabled !== false : false;
-    setLocalDisplayStream(stream, true);
+    const shouldMirror = shouldMirrorForFacing(facing);
+    setLocalDisplayStream(stream, shouldMirror);
     if (window.uiControls) {
       if (videoTracks.length) window.uiControls.updateCameraState(videoTracks[0].enabled);
       if (audioTracks.length) window.uiControls.updateMicrophoneState(audioTracks[0].enabled);
@@ -315,7 +333,7 @@ function showPlaceholderIfNoVideo() {
     if (fallbackMedia.screenStream) {
       setLocalDisplayStream(fallbackMedia.screenStream, false);
     } else if (fallbackMedia.localStream) {
-      setLocalDisplayStream(fallbackMedia.localStream, true);
+      setLocalDisplayStream(fallbackMedia.localStream, shouldMirrorForFacing(fallbackMedia.currentFacing));
     } else {
       setLocalDisplayStream(null);
     }
@@ -339,6 +357,9 @@ function cleanupFallbackMedia() {
   fallbackMedia.cameraOn = false;
   fallbackMedia.micOn = false;
   fallbackMedia.prevCameraOn = false;
+  fallbackMedia.currentFacing = 'user';
+  currentCameraFacing = 'user';
+  localPreviewMirrorPreference = true;
   setLocalDisplayStream(null);
   updateLocalVideoActiveState();
 }
@@ -376,7 +397,7 @@ async function fallbackToggleCamera() {
   track.enabled = !track.enabled;
   fallbackMedia.cameraOn = track.enabled;
   if (track.enabled) {
-    setLocalDisplayStream(stream, true);
+    setLocalDisplayStream(stream, shouldMirrorForFacing(fallbackMedia.currentFacing));
   } else if (!fallbackMedia.screenStream) {
     showPlaceholderIfNoVideo();
   }
@@ -436,14 +457,14 @@ async function fallbackStopScreenShare() {
     if (fallbackMedia.prevCameraOn && localVideoTracks.length) {
       localVideoTracks[0].enabled = true;
       fallbackMedia.cameraOn = true;
-      setLocalDisplayStream(fallbackMedia.localStream, true);
+      setLocalDisplayStream(fallbackMedia.localStream, shouldMirrorForFacing(fallbackMedia.currentFacing));
       if (window.uiControls) {
         window.uiControls.updateCameraState(true);
       }
     } else {
       fallbackMedia.cameraOn = localVideoTracks.length ? localVideoTracks[0].enabled : false;
       if (fallbackMedia.cameraOn) {
-        setLocalDisplayStream(fallbackMedia.localStream, true);
+        setLocalDisplayStream(fallbackMedia.localStream, shouldMirrorForFacing(fallbackMedia.currentFacing));
       } else {
         showPlaceholderIfNoVideo();
         if (window.uiControls) {
@@ -460,6 +481,60 @@ async function fallbackStopScreenShare() {
   }
   fallbackMedia.prevCameraOn = false;
   return true;
+}
+
+async function fallbackSwitchCameraFacing(targetFacing) {
+  if (!navigator?.mediaDevices?.getUserMedia) return false;
+  const wasEnabled = fallbackMedia.cameraOn;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: targetFacing } }, audio: false });
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) {
+      stream.getTracks().forEach(t => {
+        try { t.stop(); } catch {}
+      });
+      return false;
+    }
+
+    if (!fallbackMedia.localStream) {
+      fallbackMedia.localStream = new MediaStream();
+    }
+    const existingVideoTracks = fallbackMedia.localStream.getVideoTracks();
+    existingVideoTracks.forEach(track => {
+      try { fallbackMedia.localStream.removeTrack(track); } catch {}
+      try { track.stop(); } catch {}
+    });
+    fallbackMedia.localStream.addTrack(videoTrack);
+    videoTrack.enabled = wasEnabled;
+    fallbackMedia.cameraOn = wasEnabled;
+    fallbackMedia.currentFacing = targetFacing;
+
+    const mirror = shouldMirrorForFacing(targetFacing);
+    setLocalDisplayStream(fallbackMedia.localStream, mirror);
+    if (window.uiControls) {
+      window.uiControls.updateCameraState(wasEnabled);
+    }
+    updateLocalVideoActiveState();
+    return true;
+  } catch (err) {
+    log('[fallback] camera facing ERR', err?.name || err?.message || String(err));
+    return false;
+  }
+}
+
+async function switchCameraFacing(targetFacing) {
+  let switched = false;
+  if (mediaSession && typeof mediaSession.switchCameraFacing === 'function') {
+    try {
+      switched = await mediaSession.switchCameraFacing(targetFacing);
+    } catch (err) {
+      log('[media] switch facing ERR', err?.message || err);
+    }
+  }
+  if (switched) {
+    return true;
+  }
+  return fallbackSwitchCameraFacing(targetFacing);
 }
 
 
@@ -722,9 +797,8 @@ async function join(){
 
   // Handle local media stream updates
   mediaSession.onLocalStream = (stream) => {
-    setLocalDisplayStream(stream, true);
-
     if (!stream) {
+      setLocalDisplayStream(null);
       if (window.uiControls?.setLocalVideoActive) {
         window.uiControls.setLocalVideoActive(true);
       }
@@ -733,6 +807,18 @@ async function join(){
 
     const videoTracks = stream.getVideoTracks();
     const audioTracks = stream.getAudioTracks();
+    let facing = null;
+    if (videoTracks.length > 0 && typeof videoTracks[0]?.getSettings === 'function') {
+      facing = videoTracks[0].getSettings().facingMode || null;
+    }
+    if (facing) {
+      currentCameraFacing = facing;
+      if (mediaSession) {
+        mediaSession.currentCameraFacing = facing;
+      }
+    }
+    const mirror = shouldMirrorForFacing(facing || currentCameraFacing);
+    setLocalDisplayStream(stream, mirror);
 
     if (window.uiControls) {
       if (videoTracks.length > 0) {
@@ -880,6 +966,28 @@ async function join(){
 // btnJoin.onclick is unused - production flow passes the token via URL
 
 // Global UI helpers
+window.toggleCameraFacingMode = async () => {
+  const nextFacing = currentCameraFacing === 'environment' ? 'user' : 'environment';
+  const success = await switchCameraFacing(nextFacing);
+  if (success) {
+    currentCameraFacing = nextFacing;
+    fallbackMedia.currentFacing = nextFacing;
+    const mirror = shouldMirrorForFacing(nextFacing);
+    localPreviewMirrorPreference = mirror;
+    const activeStream = mediaSession?.localStream || fallbackMedia.localStream || null;
+    if (activeStream) {
+      setLocalDisplayStream(activeStream, mirror);
+    } else {
+      applyLocalDisplayAttributes(null);
+    }
+    updateLocalVideoActiveState();
+    log('[media] camera facing', nextFacing);
+    return true;
+  }
+  log('[media] camera facing toggle failed');
+  return false;
+};
+
 window.toggleCameraMedia = async () => {
   try {
     if (!mediaSession || !mediaSession.localStream) {
@@ -1107,6 +1215,11 @@ if (token) {
 }
 
 // Media stats functionality moved to MediaSession class
+
+
+
+
+
 
 
 
