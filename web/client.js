@@ -253,6 +253,9 @@ async function ensureFallbackLocalStream() {
         fallbackMedia.currentFacing = facing;
         currentCameraFacing = facing;
         localPreviewMirrorPreference = shouldMirrorForFacing(facing);
+        if (window.uiControls?.updateMobileTurnButton) {
+          window.uiControls.updateMobileTurnButton(facing);
+        }
       } else if (!fallbackMedia.currentFacing) {
         fallbackMedia.currentFacing = 'user';
       }
@@ -372,6 +375,9 @@ function cleanupFallbackMedia() {
   fallbackMedia.prevCameraOn = false;
   fallbackMedia.currentFacing = 'user';
   currentCameraFacing = 'user';
+  if (window.uiControls?.updateMobileTurnButton) {
+    window.uiControls.updateMobileTurnButton(currentCameraFacing);
+  }
   localPreviewMirrorPreference = true;
   setLocalDisplayStream(null);
   updateLocalVideoActiveState();
@@ -532,6 +538,9 @@ async function fallbackSwitchCameraFacing(targetFacing) {
     const trackFacing = normalizeFacingMode(videoTrack.getSettings?.().facingMode) || targetNormalized;
     fallbackMedia.currentFacing = trackFacing;
     currentCameraFacing = trackFacing;
+    if (window.uiControls?.updateMobileTurnButton) {
+      window.uiControls.updateMobileTurnButton(trackFacing);
+    }
     const mirror = shouldMirrorForFacing(trackFacing);
     setLocalDisplayStream(fallbackMedia.localStream, mirror);
     if (window.uiControls) {
@@ -563,6 +572,9 @@ async function fallbackSwitchCameraFacing(targetFacing) {
         const retryFacing = normalizeFacingMode(retryTrack.getSettings?.().facingMode) || targetNormalized;
         fallbackMedia.currentFacing = retryFacing;
         currentCameraFacing = retryFacing;
+        if (window.uiControls?.updateMobileTurnButton) {
+          window.uiControls.updateMobileTurnButton(retryFacing);
+        }
         const mirror = shouldMirrorForFacing(retryFacing);
         setLocalDisplayStream(fallbackMedia.localStream, mirror);
         if (window.uiControls) {

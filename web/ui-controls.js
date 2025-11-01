@@ -230,7 +230,6 @@ export class UIControls {
 
   async toggleFullscreen(container) {
     if (this.isMobileDevice) {
-      this.toggleMobileFullscreen(container);
       return;
     }
     try {
@@ -262,24 +261,12 @@ export class UIControls {
   }
 
   syncFullscreenButtons() {
+    if (this.isMobileDevice) return;
     const placeholders = document.querySelectorAll('.video-placeholder');
     const activeEl = document.fullscreenElement;
     placeholders.forEach((container) => {
       const button = container.querySelector('.fullscreen-button');
       if (!button) return;
-
-      if (this.isMobileDevice) {
-        const targetId = container.id === 'remoteVideoDisplay' ? 'remote' : 'local';
-        const isActive = this.mobileExpandedView === targetId;
-        container.classList.toggle('fullscreen-active', isActive);
-        button.textContent = isActive
-          ? (button.dataset.mobileExitLabel || 'back')
-          : (button.dataset.mobileFullLabel || 'full');
-        button.setAttribute('aria-label', isActive ? 'collapse view' : 'expand view');
-        button.classList.toggle('is-active', isActive);
-        return;
-      }
-
       const isActiveDesktop = activeEl === container;
       container.classList.toggle('fullscreen-active', isActiveDesktop);
       button.textContent = isActiveDesktop ? (button.dataset.exitLabel || 'exit') : (button.dataset.fullLabel || 'full');
@@ -288,81 +275,37 @@ export class UIControls {
   }
 
   toggleMobileFullscreen(container) {
-    if (!container) return;
-    const targetId = container.id === 'remoteVideoDisplay' ? 'remote' : 'local';
-    if (!targetId) return;
-
-    if (this.mobileExpandedView === targetId && !this.orientationForcedView) {
-      this.collapseMobileView();
-      return;
-    }
-
-    this.expandMobileView(targetId, { forced: false });
+    return;
   }
 
   expandMobileView(target, options = {}) {
-    if (!target || !document?.body) return;
-    const forced = !!options.forced;
-    this.mobileExpandedView = target;
-    this.orientationForcedView = forced;
-    this.mobileExpandedManual = !forced;
-
-    document.body.classList.add('mobile-expanded');
-    document.body.dataset.mobileView = target;
-
-    const local = document.getElementById('localVideoDisplay');
-    const remote = document.getElementById('remoteVideoDisplay');
-    if (local) local.classList.remove('mobile-expanded-active');
-    if (remote) remote.classList.remove('mobile-expanded-active');
-    const activeContainer = target === 'remote' ? remote : local;
-    if (activeContainer) {
-      activeContainer.classList.add('mobile-expanded-active');
+    if (!document?.body) return;
+    if (target) {
+      this.mobileExpandedView = target;
     }
-
-    if (!forced) {
-      this.lockOrientation('landscape');
-    }
-
+    this.orientationForcedView = !!options.forced;
+    this.mobileExpandedManual = !options.forced;
+    document.body.classList.add('mobile-landscape');
     this.syncFullscreenButtons();
   }
 
   collapseMobileView() {
     if (!document?.body) return;
-    document.body.classList.remove('mobile-expanded');
-    delete document.body.dataset.mobileView;
-
-    ['localVideoDisplay', 'remoteVideoDisplay'].forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('mobile-expanded-active');
-    });
-
+    document.body.classList.remove('mobile-landscape');
     this.mobileExpandedView = null;
     this.orientationForcedView = false;
     this.mobileExpandedManual = false;
-    this.unlockOrientation();
     this.syncFullscreenButtons();
   }
 
-  async lockOrientation(mode) {
-    try {
-      if (window.screen?.orientation?.lock) {
-        await window.screen.orientation.lock(mode);
-        return true;
-      }
-    } catch (_) {
-      // Orientation lock is best-effort; ignore failures.
-    }
-    return false;
-  }
 
-  unlockOrientation() {
-    try {
-      if (window.screen?.orientation?.unlock) {
-        window.screen.orientation.unlock();
-      }
-    } catch (_) {
-      // Ignore unlock failures.
-    }
+  updateMobileTurnButton(facing) {
+    if (!this.mobileTurnControl) return;
+    const normalized = (facing || '').toLowerCase();
+    const isFront = normalized !== 'environment';
+    this.mobileTurnControl.dataset.facing = normalized || '';
+    this.mobileTurnControl.classList.remove('front-camera', 'rear-camera');
+    this.mobileTurnControl.classList.add(isFront ? 'front-camera' : 'rear-camera');
   }
 
   setupOrientationListeners() {
@@ -379,7 +322,7 @@ export class UIControls {
     const isLandscape = this.isLandscapeOrientation();
     if (isLandscape) {
       this.expandMobileView('remote', { forced: true });
-    } else if (this.orientationForcedView) {
+    } else {
       this.collapseMobileView();
     }
     this.syncFullscreenButtons();
@@ -458,6 +401,7 @@ export class UIControls {
       this.mobileTurnControl.disabled = true;
       this.mobileTurnControl.classList.add('disabled');
     }
+    this.updateMobileTurnButton('user');
   }
 
   async handleLinkClick(button) {
@@ -594,7 +538,10 @@ export class UIControls {
       this.mobileTurnControl.dataset.busy = '1';
     }
     try {
-      await window.toggleCameraFacingMode();
+      const facing = await window.toggleCameraFacingMode();
+      if (facing) {
+        this.updateMobileTurnButton(facing);
+      }
     } catch (err) {
       console.error('[ui] camera facing toggle failed', err);
     } finally {
@@ -943,6 +890,7 @@ export class UIControls {
     }
   }
 }
+
 
 
 

@@ -828,6 +828,9 @@ export class MediaSession {
 
     const resultingFacing = getTrackFacingMode(track) || normalizedTarget;
     this.currentCameraFacing = resultingFacing;
+    if (typeof window !== 'undefined' && window.uiControls?.updateMobileTurnButton) {
+      window.uiControls.updateMobileTurnButton(resultingFacing);
+    }
     return resultingFacing;
   }
 

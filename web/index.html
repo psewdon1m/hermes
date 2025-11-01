@@ -165,12 +165,12 @@
       display: none;
     }
 
-    body.mobile-ui.mobile-expanded .mobile-controls,
-    body.mobile-ui.mobile-expanded .controls-container,
-    body.mobile-ui.mobile-expanded .timer,
-    body.mobile-ui.mobile-expanded .header-visual,
-    body.mobile-ui.mobile-expanded .footer-visual,
-    body.mobile-ui.mobile-expanded .top-visual {
+    body.mobile-ui.mobile-landscape .mobile-controls,
+    body.mobile-ui.mobile-landscape .controls-container,
+    body.mobile-ui.mobile-landscape .timer,
+    body.mobile-ui.mobile-landscape .header-visual,
+    body.mobile-ui.mobile-landscape .footer-visual,
+    body.mobile-ui.mobile-landscape .top-visual {
       display: none !important;
     }
 
@@ -184,12 +184,28 @@
       left: 0;
       right: 0;
       display: flex;
-      align-items: center;
-      justify-content: space-evenly;
-      gap: 18px;
-      padding: 0 24px;
+      justify-content: center;
       z-index: 60;
+      pointer-events: none;
+    }
+
+    body.mobile-ui .mobile-controls__inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 10px;
       pointer-events: auto;
+    }
+
+    body.mobile-ui .mobile-controls__inner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-color: #90a8ed;
+      border-radius: 35px;
+      z-index: -1;
     }
 
     .mobile-control-button {
@@ -215,6 +231,27 @@
       pointer-events: none;
     }
 
+    body.mobile-ui .mobile-control-button.turn {
+      background-color: #90a8ed;
+      color: #000000;
+    }
+
+    body.mobile-ui .mobile-control-button.turn.front-camera {
+      background-color: #90a8ed;
+      color: #000000;
+    }
+
+    body.mobile-ui .mobile-control-button.turn.rear-camera {
+      background-color: #f190ec;
+      color: #000000;
+    }
+
+    body.mobile-ui .mobile-control-button.turn.front-camera .button-icon,
+    body.mobile-ui .mobile-control-button.turn.rear-camera .button-icon {
+      filter: none;
+      opacity: 1;
+    }
+
     .mobile-control-button.active {
       background-color: #90a8ed;
       color: #000000;
@@ -238,41 +275,6 @@
     .mobile-control-button.exit .button-icon {
       filter: none;
       opacity: 1;
-    }
-
-    body.mobile-ui.mobile-expanded {
-      overflow: hidden;
-    }
-
-    body.mobile-ui.mobile-expanded .main-content {
-      position: fixed;
-      inset: 0;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 40;
-    }
-
-    body.mobile-ui.mobile-expanded .video-placeholder {
-      display: none;
-    }
-
-    body.mobile-ui.mobile-expanded[data-mobile-view="local"] #localVideoDisplay,
-    body.mobile-ui.mobile-expanded[data-mobile-view="remote"] #remoteVideoDisplay {
-      display: flex;
-      width: 100vw;
-      height: 100vh;
-      max-width: none;
-      max-height: none;
-      border-radius: 0;
-      position: relative;
-      overflow: hidden;
-    }
-
-    body.mobile-ui.mobile-expanded[data-mobile-view="local"] #localVideoDisplay .video-fallback,
-    body.mobile-ui.mobile-expanded[data-mobile-view="remote"] #remoteVideoDisplay .video-fallback {
-      border-radius: 0;
     }
 
     .call-overlay__actions .control-button.primary.active {
@@ -1521,18 +1523,20 @@
   </div>
 
   <div class="mobile-controls" data-role="mobile-controls" aria-hidden="true">
-    <button class="mobile-control-button cam active" type="button" data-role="mobile-cam" aria-label="Toggle camera">
-      <img src="src/camera.svg" alt="" class="button-icon">
-    </button>
-    <button class="mobile-control-button turn" type="button" data-role="mobile-turn" aria-label="Swap front and rear camera">
-      <img src="src/turn.svg" alt="" class="button-icon">
-    </button>
-    <button class="mobile-control-button mic active" type="button" data-role="mobile-mic" aria-label="Toggle microphone">
-      <img src="src/microphone.svg" alt="" class="button-icon">
-    </button>
-    <button class="mobile-control-button exit" type="button" data-role="mobile-exit" aria-label="Leave call">
-      <img src="src/exit.svg" alt="" class="button-icon">
-    </button>
+    <div class="mobile-controls__inner">
+      <button class="mobile-control-button cam active" type="button" data-role="mobile-cam" aria-label="Toggle camera">
+        <img src="src/camera.svg" alt="" class="button-icon">
+      </button>
+      <button class="mobile-control-button turn front-camera" type="button" data-role="mobile-turn" aria-label="Swap front and rear camera">
+        <img src="src/turn.svg" alt="" class="button-icon">
+      </button>
+      <button class="mobile-control-button mic active" type="button" data-role="mobile-mic" aria-label="Toggle microphone">
+        <img src="src/microphone.svg" alt="" class="button-icon">
+      </button>
+      <button class="mobile-control-button exit" type="button" data-role="mobile-exit" aria-label="Leave call">
+        <img src="src/exit.svg" alt="" class="button-icon">
+      </button>
+    </div>
   </div>
 
 
