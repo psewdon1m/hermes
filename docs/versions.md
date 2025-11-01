@@ -1,3 +1,4 @@
+- 2.04 (2025-11-01 17:10): normalized facing modes, migrated log script, and refined mobile layout.
 - 2.03 (2025-11-01 16:32): improved camera facing retries and mobile control styling tweaks.
 - 2.02 (2025-11-01 15:51): added mobile control bar, camera flip support, and expanded stream handling.
 - 2.01 (2025-10-31 22:10): fine-tuned mobile header offsets and video aspect ratio tweaks.

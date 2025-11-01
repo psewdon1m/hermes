@@ -160,6 +160,19 @@
     body.mobile-ui .footer-visual {
       display: none;
     }
+    
+    body.mobile-ui .video-placeholder .fullscreen-button {
+      display: none;
+    }
+
+    body.mobile-ui.mobile-expanded .mobile-controls,
+    body.mobile-ui.mobile-expanded .controls-container,
+    body.mobile-ui.mobile-expanded .timer,
+    body.mobile-ui.mobile-expanded .header-visual,
+    body.mobile-ui.mobile-expanded .footer-visual,
+    body.mobile-ui.mobile-expanded .top-visual {
+      display: none !important;
+    }
 
     .mobile-controls {
       display: none;
@@ -186,7 +199,7 @@
       border: 1px solid #000000;
       background-color: #141414;
       color: #d9d9d9;
-      box-shadow: 4px 4px 0 0 #ffffff;
+      box-shadow: 2px 2px 0 0 #ffffff;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1281,16 +1294,16 @@
       .video-placeholder {
         width: min(85vw, 600px);
         height: clamp(300px, 50vh, 600px);
-        min-height: 400px;
+        min-height: 350px;
         padding: 10px;
-        aspect-ratio: 1 / 1;
+        aspect-ratio: 5 / 4;
       }
       #remoteVideoDisplay,
       #localVideoDisplay {
         width: min(85vw, 600px);
         height: clamp(300px, 50vh, 600px);
-        aspect-ratio: 1 / 1;
-        min-height: 400px;
+        aspect-ratio: 5 / 4;
+        min-height: 350px;
       }
 
 

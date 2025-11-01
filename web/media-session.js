@@ -1,3 +1,20 @@
+function normalizeFacingModeValue(facing) {
+  if (!facing) return null;
+  const value = String(facing).toLowerCase();
+  if (value.includes('env') || value.includes('back') || value.includes('rear') || value.includes('world')) {
+    return 'environment';
+  }
+  if (value.includes('user') || value.includes('front') || value.includes('face')) {
+    return 'user';
+  }
+  return value;
+}
+
+function getTrackFacingMode(track) {
+  if (!track || typeof track.getSettings !== 'function') return null;
+  return normalizeFacingModeValue(track.getSettings().facingMode);
+}
+
 // ---------- MediaSession Class ----------
 export class MediaSession {
   constructor(signalingSession, logger, logPermissionsInfo, resumePlay, debugSDP, vLocal, vRemote, diagEl) {
@@ -74,12 +91,9 @@ export class MediaSession {
         audioOk = audioTracks.length > 0;
         adoptInitialStream = videoOk || audioOk;
         if (videoTracks.length) {
-          const primaryTrack = videoTracks[0];
-          if (primaryTrack?.getSettings) {
-            const facing = primaryTrack.getSettings().facingMode;
-            if (facing) {
-              this.currentCameraFacing = facing;
-            }
+          const primaryFacing = getTrackFacingMode(videoTracks[0]);
+          if (primaryFacing) {
+            this.currentCameraFacing = primaryFacing;
           }
         }
       } catch {}
@@ -92,6 +106,13 @@ export class MediaSession {
 
         if (this.onLocalStream && this.localStream) {
           this.onLocalStream(this.localStream);
+        }
+
+        if (videoTracks.length) {
+          const adoptedFacing = getTrackFacingMode(videoTracks[0]);
+          if (adoptedFacing) {
+            this.currentCameraFacing = adoptedFacing;
+          }
         }
 
         this.attachLocalTracksToPC();
@@ -120,11 +141,9 @@ export class MediaSession {
           this.localStream.addTrack(track);
         });
         const primaryTrack = videoTracks[0];
-        if (primaryTrack?.getSettings) {
-          const facing = primaryTrack.getSettings().facingMode;
-          if (facing) {
-            this.currentCameraFacing = facing;
-          }
+        const facing = getTrackFacingMode(primaryTrack);
+        if (facing) {
+          this.currentCameraFacing = facing;
         }
         videoOk = true;
         this.log('[media] video permission granted');
@@ -692,89 +711,111 @@ export class MediaSession {
   }
 
   async switchCameraFacing(targetFacing = 'user') {
-    if (!navigator?.mediaDevices?.getUserMedia) return false;
+    if (!navigator?.mediaDevices?.getUserMedia) return null;
+    const normalizedTarget = normalizeFacingModeValue(targetFacing) || 'user';
     const activeTrack = this.localStream?.getVideoTracks?.()[0] || null;
-    if (activeTrack?.applyConstraints) {
-      try {
-        await activeTrack.applyConstraints({ facingMode: targetFacing });
-        this.currentCameraFacing = targetFacing;
-        this.localTracksReady = true;
-        if (this.onLocalStream && this.localStream) {
-          this.onLocalStream(this.localStream);
-        }
-        this.requestNegotiation(`camera facing -> ${targetFacing} (constraints)`);
-        return true;
-      } catch (err) {
-        this.log('[media] switchCameraFacing applyConstraints ERR', err?.name || err?.message || String(err));
-      }
-    }
-
-    const previousEnabled = activeTrack ? activeTrack.enabled !== false : true;
-    const constraints = { video: { facingMode: { ideal: targetFacing } }, audio: false };
-
-    const releaseActiveTrack = () => {
-      if (activeTrack) {
-        try { if (this.localStream) this.localStream.removeTrack(activeTrack); } catch {}
-        try { activeTrack.stop(); } catch {}
-      }
-    };
-
-    let stream = null;
-    let track = null;
-    let releaseAttempted = false;
+    const previousFacing = getTrackFacingMode(activeTrack) || this.currentCameraFacing || 'user';
+    let releasedTrack = false;
     const restoreAfterFailure = async () => {
-      if (!releaseAttempted) return;
+      if (!releasedTrack) return;
       try {
         await this.prepareLocalMedia(true);
       } catch (restoreErr) {
         this.log('[media] switchCameraFacing restore ERR', restoreErr?.name || restoreErr?.message || String(restoreErr));
       }
     };
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (err) {
-      if (err?.name === 'OverconstrainedError' || err?.name === 'NotReadableError' || err?.name === 'NotAllowedError') {
-        // Retry with stricter constraint first, then after releasing the active track if needed.
-        const retryConstraints = { video: { facingMode: { exact: targetFacing } }, audio: false };
+
+    if (activeTrack?.applyConstraints) {
+      let constraintsApplied = false;
+      try {
+        await activeTrack.applyConstraints({ facingMode: { exact: normalizedTarget } });
+        constraintsApplied = true;
+      } catch (exactErr) {
         try {
-          stream = await navigator.mediaDevices.getUserMedia(retryConstraints);
-        } catch (retryErr) {
-          if (retryErr?.name === 'NotReadableError' && activeTrack && !releaseAttempted) {
-            releaseAttempted = true;
-            releaseActiveTrack();
-            try {
-              stream = await navigator.mediaDevices.getUserMedia(retryConstraints);
-            } catch (finalErr) {
-              this.log('[media] switchCameraFacing retry ERR', finalErr?.name || finalErr?.message || String(finalErr));
-              await restoreAfterFailure();
-              return false;
-            }
-          } else {
-            this.log('[media] switchCameraFacing retry ERR', retryErr?.name || retryErr?.message || String(retryErr));
-            await restoreAfterFailure();
-            return false;
-          }
+          await activeTrack.applyConstraints({ facingMode: { ideal: normalizedTarget } });
+          constraintsApplied = true;
+        } catch (idealErr) {
+          this.log('[media] switchCameraFacing applyConstraints ERR', idealErr?.name || idealErr?.message || String(idealErr));
         }
-      } else {
-        this.log('[media] switchCameraFacing ERR', err?.name || err?.message || String(err));
-        return false;
+      }
+
+      if (constraintsApplied) {
+        const appliedFacing = getTrackFacingMode(activeTrack) || previousFacing;
+        if (appliedFacing === normalizedTarget) {
+          this.currentCameraFacing = appliedFacing;
+          this.localTracksReady = true;
+          if (this.onLocalStream && this.localStream) {
+            this.onLocalStream(this.localStream);
+          }
+          this.requestNegotiation(`camera facing -> ${appliedFacing} (constraints)`);
+          return appliedFacing;
+        }
+        this.log('[media] switchCameraFacing applyConstraints no-op', appliedFacing, 'expected', normalizedTarget);
       }
     }
 
-    track = stream?.getVideoTracks?.()[0] || null;
+    const previousEnabled = activeTrack ? activeTrack.enabled !== false : true;
+
+    const requestStream = async (constraints, label) => {
+      try {
+        return await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        this.log('[media] switchCameraFacing', label, 'ERR', err?.name || err?.message || String(err));
+        throw err;
+      }
+    };
+
+    const releaseActiveTrack = () => {
+      if (activeTrack) {
+        try { if (this.localStream) this.localStream.removeTrack(activeTrack); } catch {}
+        try { activeTrack.stop(); } catch {}
+        releasedTrack = true;
+      }
+    };
+
+    let stream = null;
+    try {
+      stream = await requestStream({ video: { facingMode: { exact: normalizedTarget } }, audio: false }, 'exact');
+    } catch (exactErr) {
+      if (exactErr?.name === 'NotReadableError' && activeTrack) {
+        releaseActiveTrack();
+        try {
+          stream = await requestStream({ video: { facingMode: { exact: normalizedTarget } }, audio: false }, 'exact-after-release');
+        } catch (secondErr) {
+          try {
+            stream = await requestStream({ video: { facingMode: { ideal: normalizedTarget } }, audio: false }, 'ideal');
+          } catch (idealErr) {
+            await restoreAfterFailure();
+            this.log('[media] switchCameraFacing fallback ERR', idealErr?.name || idealErr?.message || String(idealErr));
+            return null;
+          }
+        }
+      } else {
+        try {
+          stream = await requestStream({ video: { facingMode: { ideal: normalizedTarget } }, audio: false }, 'ideal');
+        } catch (idealErr) {
+          await restoreAfterFailure();
+          this.log('[media] switchCameraFacing final ERR', idealErr?.name || idealErr?.message || String(idealErr));
+          return null;
+        }
+      }
+    }
+
+    const track = stream?.getVideoTracks?.()[0] || null;
     if (!track) {
       try { stream?.getTracks?.().forEach(t => t.stop()); } catch {}
-      this.log('[media] switchCameraFacing ERR', 'no video track');
       await restoreAfterFailure();
-      return false;
+      this.log('[media] switchCameraFacing ERR', 'no video track');
+      return null;
     }
 
     track.enabled = previousEnabled;
 
-    const success = await this.switchVideoSource(track, `camera facing -> ${targetFacing}`);
-    if (!success) {
+    const switched = await this.switchVideoSource(track, `camera facing -> ${normalizedTarget}`);
+    if (!switched) {
       try { track.stop(); } catch {}
-      return false;
+      await restoreAfterFailure();
+      return null;
     }
 
     try {
@@ -785,14 +826,9 @@ export class MediaSession {
       });
     } catch {}
 
-    const settings = track.getSettings ? track.getSettings() : {};
-    if (settings.facingMode) {
-      this.currentCameraFacing = settings.facingMode;
-    } else {
-      this.currentCameraFacing = targetFacing;
-    }
-
-    return true;
+    const resultingFacing = getTrackFacingMode(track) || normalizedTarget;
+    this.currentCameraFacing = resultingFacing;
+    return resultingFacing;
   }
 
   async startScreenShare() {
