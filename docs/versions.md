@@ -1,3 +1,4 @@
+- 2.08 (2025-11-02 18:51): tightened mobile control bar spacing and added tap-feedback animations.
 - 2.07 (2025-11-01 18:40): streamlined camera flip retries and stabilized mobile control overlay.
 - 2.06 (2025-11-01 18:08): refined mobile landscape layout, control layer, and facing detection fixes.
 - 2.05 (2025-11-01 17:15): removed legacy follow-logs helper now replaced by logs.sh.

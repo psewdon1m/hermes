@@ -193,9 +193,11 @@
       position: relative;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 18px;
+      justify-content: space-between;
+      gap: 0;
       padding: 10px;
+      width: calc(100% - 60px);
+      margin: 0 30px;
       pointer-events: auto;
     }
 
@@ -209,21 +211,6 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     }
 
-    @keyframes mobile-control-breathe {
-      0%, 100% {
-        transform: translateY(0);
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28), 0 0 0 rgba(144, 168, 237, 0);
-      }
-      45% {
-        transform: translateY(-2px);
-        box-shadow: 0 11px 26px rgba(0, 0, 0, 0.32), 0 0 12px rgba(144, 168, 237, 0.35);
-      }
-      55% {
-        transform: translateY(-2px);
-        box-shadow: 0 11px 26px rgba(0, 0, 0, 0.32), 0 0 12px rgba(144, 168, 237, 0.35);
-      }
-    }
-
     body.mobile-ui .mobile-controls__inner .mobile-control-button {
       width: 60px;
       height: 60px;
@@ -234,37 +221,16 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+      transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
       padding: 0;
-      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28), 0 0 0 rgba(144, 168, 237, 0);
-      animation: mobile-control-breathe 7s ease-in-out infinite;
-    }
-
-    body.mobile-ui .mobile-controls__inner .mobile-control-button:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    body.mobile-ui .mobile-controls__inner .mobile-control-button:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-
-    body.mobile-ui .mobile-controls__inner .mobile-control-button:nth-child(4) {
-      animation-delay: 0.6s;
     }
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button:active {
-      animation-play-state: paused;
-      transform: scale(0.92);
+      transform: scale(0.9);
     }
 
-    body.mobile-ui.mobile-landscape .mobile-controls__inner .mobile-control-button {
-      animation-play-state: paused;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      body.mobile-ui .mobile-controls__inner .mobile-control-button {
-        animation: none;
-      }
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.is-pressed {
+      transform: scale(0.9);
     }
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button .button-icon {
@@ -277,16 +243,19 @@
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button.turn {
       background-color: #90a8ed;
+      box-shadow: 2px 2px 0 0 #000000;
       color: #000000;
     }
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button.turn.front-camera {
       background-color: #90a8ed;
+      box-shadow: 2px 2px 0 0 #000000;
       color: #000000;
     }
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button.turn.rear-camera {
       background-color: #f190ec;
+      box-shadow: 2px 2px 0 0 #ffffff;
       color: #000000;
     }
 
@@ -298,11 +267,13 @@
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button.active {
       background-color: #90a8ed;
+      box-shadow: 2px 2px 0 0 #000000;
       color: #000000;
     }
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button.inactive {
       background-color: #f890ea;
+      box-shadow: 2px 2px 0 0 #ffffff;
       color: #000000;
     }
 
@@ -313,6 +284,7 @@
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button.exit {
       background-color: #90a8ed;
+      box-shadow: 2px 2px 0 0 #000000;
       color: #000000;
     }
 
@@ -1339,17 +1311,17 @@
 
       .video-placeholder {
         width: min(85vw, 600px);
-        height: clamp(300px, 50vh, 600px);
-        min-height: 350px;
+        height: clamp(250px, 35vh, 400px);
+        min-height: 250px;
         padding: 10px;
-        aspect-ratio: 5 / 4;
+        aspect-ratio: 3 / 2;
       }
       #remoteVideoDisplay,
       #localVideoDisplay {
         width: min(85vw, 600px);
-        height: clamp(300px, 50vh, 600px);
-        aspect-ratio: 5 / 4;
-        min-height: 350px;
+        height: clamp(250px, 35vh, 400px);
+        aspect-ratio: 3 / 2;
+        min-height: 250px;
       }
 
 

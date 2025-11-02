@@ -397,11 +397,65 @@ export class UIControls {
       this.mobileTurnControl.addEventListener('click', () => this.handleTurnClick());
     }
 
+    [
+      this.mobileCamControl,
+      this.mobileTurnControl,
+      this.mobileMicControl,
+      this.mobileExitControl
+    ].forEach((button) => this.attachMobileTapFeedback(button));
+
     if (!navigator?.mediaDevices?.getUserMedia && this.mobileTurnControl) {
       this.mobileTurnControl.disabled = true;
       this.mobileTurnControl.classList.add('disabled');
     }
     this.updateMobileTurnButton('user');
+  }
+
+  attachMobileTapFeedback(button) {
+    if (!button || button.dataset.tapFeedbackAttached === '1') return;
+    button.dataset.tapFeedbackAttached = '1';
+    let releaseTimer = null;
+
+    const cancelScheduledRelease = () => {
+      if (releaseTimer) {
+        clearTimeout(releaseTimer);
+        releaseTimer = null;
+      }
+    };
+
+    const press = () => {
+      cancelScheduledRelease();
+      button.classList.add('is-pressed');
+    };
+
+    const scheduleRelease = () => {
+      cancelScheduledRelease();
+      if (!button.classList.contains('is-pressed')) return;
+      releaseTimer = setTimeout(() => {
+        button.classList.remove('is-pressed');
+        releaseTimer = null;
+      }, 120);
+    };
+
+    button.addEventListener('pointerdown', (event) => {
+      if (typeof event.button === 'number' && event.button !== 0) return;
+      press();
+    });
+    button.addEventListener('pointerup', scheduleRelease);
+    button.addEventListener('pointercancel', scheduleRelease);
+    button.addEventListener('pointerleave', scheduleRelease);
+    button.addEventListener('blur', scheduleRelease);
+    button.addEventListener('click', scheduleRelease);
+    button.addEventListener('keydown', (event) => {
+      if (event.code === 'Space' || event.code === 'Enter') {
+        press();
+      }
+    });
+    button.addEventListener('keyup', (event) => {
+      if (event.code === 'Space' || event.code === 'Enter') {
+        scheduleRelease();
+      }
+    });
   }
 
   async handleLinkClick(button) {
