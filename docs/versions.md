@@ -1,3 +1,4 @@
+- 2.10 (2025-11-02 19:15): tuned landscape layout sizing and safe-area padding for mobile video tiles.
 - 2.09 (2025-11-02 19:04): adjusted mobile video tile aspect ratio to 5:4 for better viewport fit.
 - 2.08 (2025-11-02 18:51): tightened mobile control bar spacing and added tap-feedback animations.
 - 2.07 (2025-11-01 18:40): streamlined camera flip retries and stabilized mobile control overlay.
