@@ -206,24 +206,68 @@
       background-color: #90a8ed;
       border-radius: 35px;
       z-index: -1;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     }
 
-    .mobile-control-button {
-      width: 65px;
-      height: 65px;
+    @keyframes mobile-control-breathe {
+      0%, 100% {
+        transform: translateY(0);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28), 0 0 0 rgba(144, 168, 237, 0);
+      }
+      45% {
+        transform: translateY(-2px);
+        box-shadow: 0 11px 26px rgba(0, 0, 0, 0.32), 0 0 12px rgba(144, 168, 237, 0.35);
+      }
+      55% {
+        transform: translateY(-2px);
+        box-shadow: 0 11px 26px rgba(0, 0, 0, 0.32), 0 0 12px rgba(144, 168, 237, 0.35);
+      }
+    }
+
+    body.mobile-ui .mobile-controls__inner .mobile-control-button {
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       border: 1px solid #000000;
       background-color: #141414;
       color: #d9d9d9;
-      box-shadow: 2px 2px 0 0 #ffffff;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
       padding: 0;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28), 0 0 0 rgba(144, 168, 237, 0);
+      animation: mobile-control-breathe 7s ease-in-out infinite;
     }
 
-    .mobile-control-button .button-icon {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    body.mobile-ui .mobile-controls__inner .mobile-control-button:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    body.mobile-ui .mobile-controls__inner .mobile-control-button:nth-child(4) {
+      animation-delay: 0.6s;
+    }
+
+    body.mobile-ui .mobile-controls__inner .mobile-control-button:active {
+      animation-play-state: paused;
+      transform: scale(0.92);
+    }
+
+    body.mobile-ui.mobile-landscape .mobile-controls__inner .mobile-control-button {
+      animation-play-state: paused;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body.mobile-ui .mobile-controls__inner .mobile-control-button {
+        animation: none;
+      }
+    }
+
+    body.mobile-ui .mobile-controls__inner .mobile-control-button .button-icon {
       width: 24px;
       height: 24px;
       filter: invert(92%);
@@ -231,48 +275,48 @@
       pointer-events: none;
     }
 
-    body.mobile-ui .mobile-control-button.turn {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.turn {
       background-color: #90a8ed;
       color: #000000;
     }
 
-    body.mobile-ui .mobile-control-button.turn.front-camera {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.turn.front-camera {
       background-color: #90a8ed;
       color: #000000;
     }
 
-    body.mobile-ui .mobile-control-button.turn.rear-camera {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.turn.rear-camera {
       background-color: #f190ec;
       color: #000000;
     }
 
-    body.mobile-ui .mobile-control-button.turn.front-camera .button-icon,
-    body.mobile-ui .mobile-control-button.turn.rear-camera .button-icon {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.turn.front-camera .button-icon,
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.turn.rear-camera .button-icon {
       filter: none;
       opacity: 1;
     }
 
-    .mobile-control-button.active {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.active {
       background-color: #90a8ed;
       color: #000000;
     }
 
-    .mobile-control-button.inactive {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.inactive {
       background-color: #f890ea;
-      color: #ffffff;
+      color: #000000;
     }
 
-    .mobile-control-button.inactive .button-icon {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.inactive .button-icon {
       filter: none;
       opacity: 1;
     }
 
-    .mobile-control-button.exit {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.exit {
       background-color: #90a8ed;
       color: #000000;
     }
 
-    .mobile-control-button.exit .button-icon {
+    body.mobile-ui .mobile-controls__inner .mobile-control-button.exit .button-icon {
       filter: none;
       opacity: 1;
     }

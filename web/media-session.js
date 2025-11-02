@@ -773,32 +773,21 @@ export class MediaSession {
       }
     };
 
+    if (activeTrack) {
+      releaseActiveTrack();
+    }
+
+    const videoConstraints = { facingMode: { ideal: normalizedTarget } };
+    if (normalizedTarget) {
+      videoConstraints.advanced = [{ facingMode: normalizedTarget }];
+    }
     let stream = null;
     try {
-      stream = await requestStream({ video: { facingMode: { exact: normalizedTarget } }, audio: false }, 'exact');
-    } catch (exactErr) {
-      if (exactErr?.name === 'NotReadableError' && activeTrack) {
-        releaseActiveTrack();
-        try {
-          stream = await requestStream({ video: { facingMode: { exact: normalizedTarget } }, audio: false }, 'exact-after-release');
-        } catch (secondErr) {
-          try {
-            stream = await requestStream({ video: { facingMode: { ideal: normalizedTarget } }, audio: false }, 'ideal');
-          } catch (idealErr) {
-            await restoreAfterFailure();
-            this.log('[media] switchCameraFacing fallback ERR', idealErr?.name || idealErr?.message || String(idealErr));
-            return null;
-          }
-        }
-      } else {
-        try {
-          stream = await requestStream({ video: { facingMode: { ideal: normalizedTarget } }, audio: false }, 'ideal');
-        } catch (idealErr) {
-          await restoreAfterFailure();
-          this.log('[media] switchCameraFacing final ERR', idealErr?.name || idealErr?.message || String(idealErr));
-          return null;
-        }
-      }
+      stream = await requestStream({ video: videoConstraints, audio: false }, 'preferred');
+    } catch (err) {
+      await restoreAfterFailure();
+      this.log('[media] switchCameraFacing final ERR', err?.name || err?.message || String(err));
+      return null;
     }
 
     const track = stream?.getVideoTracks?.()[0] || null;

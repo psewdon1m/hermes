@@ -504,21 +504,65 @@ async function fallbackStopScreenShare() {
 
 async function fallbackSwitchCameraFacing(targetFacing) {
   if (!navigator?.mediaDevices?.getUserMedia) return null;
-  const existingVideoTracks = fallbackMedia.localStream?.getVideoTracks?.() || [];
-  const wasEnabled = fallbackMedia.cameraOn;
   const targetNormalized = normalizeFacingMode(targetFacing) || 'user';
+  const streamRef = fallbackMedia.localStream || null;
+  const existingVideoTracks = streamRef?.getVideoTracks?.() || [];
+  const activeTrack = existingVideoTracks[0] || null;
+  const wasEnabled = fallbackMedia.cameraOn;
+
+  const tryReuseExistingTrack = async () => {
+    if (!activeTrack || typeof activeTrack.applyConstraints !== 'function') return null;
+    try {
+      await activeTrack.applyConstraints({ facingMode: { exact: targetNormalized } });
+    } catch {
+      try {
+        await activeTrack.applyConstraints({ facingMode: { ideal: targetNormalized } });
+      } catch {
+        return null;
+      }
+    }
+    const resulting = normalizeFacingMode(activeTrack.getSettings?.().facingMode) || targetNormalized;
+    fallbackMedia.currentFacing = resulting;
+    currentCameraFacing = resulting;
+    fallbackMedia.cameraOn = wasEnabled;
+    activeTrack.enabled = wasEnabled;
+    if (window.uiControls?.updateMobileTurnButton) {
+      window.uiControls.updateMobileTurnButton(resulting);
+    }
+    const mirror = shouldMirrorForFacing(resulting);
+    if (streamRef) {
+      setLocalDisplayStream(streamRef, mirror);
+    }
+    if (window.uiControls) {
+      window.uiControls.updateCameraState(wasEnabled);
+    }
+    updateLocalVideoActiveState();
+    return resulting;
+  };
+
+  const reusedFacing = await tryReuseExistingTrack();
+  if (reusedFacing) {
+    return reusedFacing;
+  }
+
   const releaseExistingTracks = () => {
     existingVideoTracks.forEach(track => {
-      try { fallbackMedia.localStream?.removeTrack(track); } catch {}
+      try { streamRef?.removeTrack(track); } catch {}
       try { track.stop(); } catch {}
     });
   };
 
+  releaseExistingTracks();
+
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: targetNormalized } }, audio: false });
-    const videoTrack = stream.getVideoTracks()[0];
+    const videoConstraints = { facingMode: { ideal: targetNormalized } };
+    if (targetNormalized) {
+      videoConstraints.advanced = [{ facingMode: targetNormalized }];
+    }
+    const freshStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false });
+    const videoTrack = freshStream.getVideoTracks()[0];
     if (!videoTrack) {
-      stream.getTracks().forEach(t => {
+      freshStream.getTracks().forEach(t => {
         try { t.stop(); } catch {}
       });
       return null;
@@ -547,52 +591,15 @@ async function fallbackSwitchCameraFacing(targetFacing) {
       window.uiControls.updateCameraState(wasEnabled);
     }
     updateLocalVideoActiveState();
+    try {
+      freshStream.getTracks().forEach(t => {
+        if (t !== videoTrack) {
+          try { t.stop(); } catch {}
+        }
+      });
+    } catch {}
     return trackFacing;
   } catch (err) {
-    if (err?.name === 'OverconstrainedError' || err?.name === 'NotReadableError') {
-      try {
-        releaseExistingTracks();
-      } catch {}
-      try {
-        const retryStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: targetNormalized } }, audio: false });
-        const retryTrack = retryStream.getVideoTracks()[0];
-        if (!retryTrack) {
-          retryStream.getTracks().forEach(t => {
-            try { t.stop(); } catch {}
-          });
-          log('[fallback] camera facing retry ERR', 'no video track');
-          return null;
-        }
-        if (!fallbackMedia.localStream) {
-          fallbackMedia.localStream = new MediaStream();
-        }
-        fallbackMedia.localStream.addTrack(retryTrack);
-        retryTrack.enabled = wasEnabled;
-        fallbackMedia.cameraOn = wasEnabled;
-        const retryFacing = normalizeFacingMode(retryTrack.getSettings?.().facingMode) || targetNormalized;
-        fallbackMedia.currentFacing = retryFacing;
-        currentCameraFacing = retryFacing;
-        if (window.uiControls?.updateMobileTurnButton) {
-          window.uiControls.updateMobileTurnButton(retryFacing);
-        }
-        const mirror = shouldMirrorForFacing(retryFacing);
-        setLocalDisplayStream(fallbackMedia.localStream, mirror);
-        if (window.uiControls) {
-          window.uiControls.updateCameraState(wasEnabled);
-        }
-        updateLocalVideoActiveState();
-        retryStream.getTracks().forEach(t => {
-          if (t !== retryTrack) {
-            try { t.stop(); } catch {}
-          }
-        });
-        return retryFacing;
-      } catch (retryErr) {
-        log('[fallback] camera facing retry ERR', retryErr?.name || retryErr?.message || String(retryErr));
-        await ensureFallbackLocalStream();
-        return null;
-      }
-    }
     log('[fallback] camera facing ERR', err?.name || err?.message || String(err));
     await ensureFallbackLocalStream();
     return null;
