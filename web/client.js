@@ -111,6 +111,14 @@ function clearOverlayStorage() {
   autoJoinFromStorage = false;
 }
 
+window.showRecoveryOverlay = (mode = 'reconnect-failed') => {
+  prejoinOverlayDismissed = false;
+  clearOverlayStorage();
+  if (window.uiControls) {
+    window.uiControls.showCallOverlay(mode);
+  }
+};
+
 window.setScreenShareState = (isActive, updateUI = true) => {
   screenShareActive = !!isActive;
   if (updateUI && window.uiControls) {
@@ -297,9 +305,7 @@ function startJoinIfNeeded() {
     joinPromise = null;
     prejoinOverlayDismissed = false;
     clearOverlayStorage();
-    if (window.uiControls) {
-      window.uiControls.showCallOverlay('reconnect-failed');
-    }
+    window.showRecoveryOverlay?.();
     throw err;
   });
   return joinPromise;
@@ -794,9 +800,7 @@ async function join(){
     if (newStatus === 'failed') {
       prejoinOverlayDismissed = false;
       clearOverlayStorage();
-      if (window.uiControls) {
-        window.uiControls.showCallOverlay('reconnect-failed');
-      }
+      window.showRecoveryOverlay?.();
     }
 
   };

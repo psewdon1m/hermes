@@ -67,6 +67,19 @@ export class UIControls {
       document.body.classList.add('mobile-ui');
     }
 
+    this.skipInitialOverlay = false;
+    try {
+      const currentUrl = new URL(location.href);
+      const token = currentUrl.searchParams.get('token') || '';
+      if (token) {
+        this.skipInitialOverlay = sessionStorage.getItem(`overlayDismissed:${token}`) === '1';
+      }
+    } catch {}
+    if (this.skipInitialOverlay && this.overlay) {
+      this.overlay.classList.remove('call-overlay--visible');
+      this.overlayVisible = false;
+    }
+
     this.initializeEventListeners();
     this.applyDeviceAdjustments();
     this.updateCameraState(this.cameraEnabled);
@@ -80,7 +93,9 @@ export class UIControls {
     this.refreshOverlayPreview();
     this.updateOverlayScale();
     this.attachOverlayScaleListeners();
-    this.showCallOverlay('prejoin');
+    if (!this.skipInitialOverlay) {
+      this.showCallOverlay('prejoin');
+    }
   }
 
   initializeEventListeners() {

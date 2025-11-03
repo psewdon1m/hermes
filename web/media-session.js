@@ -45,6 +45,7 @@ export class MediaSession {
     this.stallRetryCount = 0; // Counter for outbound stall retries
     this.politeStallTimer = null; // Timer for polite-side stall recovery
     this.politeStallRetry = 0; // Counter for polite stall retries
+    this.stallFailureNotified = false; // Guard for repeated failure overlay
     this.connectionStartTime = 0; // Track when connection was established
     this.lastRebuildTime = 0; // Track last rebuild to prevent too frequent rebuilds
     this.pendingMediaRetry = null; // Function for retrying media requests
@@ -343,6 +344,7 @@ export class MediaSession {
     }
     if (resetCounter) {
       this.politeStallRetry = 0;
+      this.stallFailureNotified = false;
     }
   }
 
@@ -351,6 +353,7 @@ export class MediaSession {
     if (this.politeStallTimer) return;
     if (this.politeStallRetry >= 3) {
       this.log('[media] outbound stalled (polite): retry limit reached');
+      this.notifyStallFailure();
       return;
     }
     const delay = Math.min(3000, 1000 + Math.round(Math.random() * 1500)); // 1-2.5s
@@ -363,6 +366,14 @@ export class MediaSession {
       this.log('[media] outbound stalled (polite): attempting renegotiation');
       this.requestNegotiation('polite stall recovery');
     }, delay);
+  }
+
+  notifyStallFailure(reason = 'reconnect-failed') {
+    if (this.stallFailureNotified) return;
+    this.stallFailureNotified = true;
+    try {
+      window.showRecoveryOverlay?.(reason);
+    } catch {}
   }
 
   async handleTrackEnded(t) {
@@ -498,6 +509,7 @@ export class MediaSession {
     this.pendingCandidates = [];
     this.localTracksReady = false; // Reset flag for new PC
     this.stallRetryCount = 0; // Reset stall retry counter
+    this.stallFailureNotified = false;
     
     try {
       const total = (this.localStream && this.localStream.getTracks) ? this.localStream.getTracks().length : 0;
@@ -1177,7 +1189,10 @@ export class MediaSession {
   startStatsMonitor() {
     if (this.statsTimer || !this.pc) return;
     
-    // Start monitoring after a delay to allow connection to stabilize
+    const initialDelayMs = 1000;
+    const sampleIntervalMs = 2000;
+    const stallThresholdMs = 4000;
+    // Start monitoring after a short delay to allow connection to stabilize
     setTimeout(() => {
       if (!this.pc) return; // Check if PC still exists
       this.statsTimer = setInterval(async () => {
@@ -1187,7 +1202,7 @@ export class MediaSession {
       
       // Check for outbound traffic issues (only after connection is stable)
       const connectionAge = Date.now() - this.connectionStartTime;
-      if (this.localTracksReady && stats.outboundAudio === 0 && stats.outboundVideo === 0 && connectionAge > 10000) {
+      if (this.localTracksReady && stats.outboundAudio === 0 && stats.outboundVideo === 0 && connectionAge > stallThresholdMs) {
         // Check if tracks are intentionally disabled
         const senders = this.pc.getSenders();
         const hasEnabledTracks = senders.some(sender => 
@@ -1210,16 +1225,17 @@ export class MediaSession {
           this.log('[media] outbound zero: all tracks disabled by user');
         } else {
           this.log('[media] outbound stalled: max retries reached');
+          this.notifyStallFailure();
         }
       } else if (stats.outboundAudio > 0 || stats.outboundVideo > 0) {
         // Reset counter when traffic is flowing
         this.stallRetryCount = 0;
         this.clearPoliteStallTimer(true);
-      } else if (connectionAge <= 10000) {
+      } else if (connectionAge <= stallThresholdMs) {
         this.log('[media] outbound zero: connection still establishing (age=', Math.round(connectionAge/1000), 's)');
       }
-      }, 5000);
-    }, 3000); // 3 second delay before starting stats monitoring
+      }, sampleIntervalMs);
+    }, initialDelayMs); // quicker delay before starting stats monitoring
   }
 
   stopStatsMonitor() {

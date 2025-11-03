@@ -113,9 +113,13 @@ wss.on('connection', async (ws, req) => {
       return;
     }
 
+    let announceJoin = false;
     if (!observer) {
       const peersBefore = await listPeers(callId);
-      if (peersBefore.length >= Number(MAX_PEERS_PER_CALL)) {
+      const uniqueBefore = new Set(peersBefore);
+      const rejoining = uniqueBefore.has(peerId);
+      uniqueBefore.delete(peerId);
+      if (!rejoining && uniqueBefore.size >= Number(MAX_PEERS_PER_CALL)) {
         const entry = { ts: Date.now(), callId, peerId, role, message: 'room-full reject' };
         try { await publishLog(callId, entry); } catch {}
         send(ws, { type: 'room-full' });
@@ -123,6 +127,7 @@ wss.on('connection', async (ws, req) => {
         return;
       }
       await addPeer(callId, peerId);
+      announceJoin = !rejoining;
     }
 
     sockets.set(ws, { callId, peerId, role, observer });
@@ -130,7 +135,7 @@ wss.on('connection', async (ws, req) => {
     const peersNow = await listPeers(callId);
     send(ws, { type: 'peers', peers: peersNow.filter((p) => p !== peerId) });
 
-    if (!observer) {
+    if (!observer && announceJoin) {
       for (const [otherWs, meta] of sockets) {
         if (otherWs !== ws && meta.callId === callId && !meta.observer) {
           send(otherWs, { type: 'peer-joined', peerId });
@@ -189,10 +194,15 @@ wss.on('connection', async (ws, req) => {
       if (!meta) return;
       sockets.delete(ws);
       if (!meta.observer) {
-        const remaining = await removePeer(meta.callId, meta.peerId);
-        for (const [otherWs, otherMeta] of sockets) {
-          if (otherMeta.callId === meta.callId && !otherMeta.observer) {
-            send(otherWs, { type: 'peer-left', peerId: meta.peerId, left: remaining });
+        const stillConnected = Array.from(sockets.values()).some((otherMeta) =>
+          otherMeta.callId === meta.callId && otherMeta.peerId === meta.peerId && !otherMeta.observer
+        );
+        if (!stillConnected) {
+          const remaining = await removePeer(meta.callId, meta.peerId);
+          for (const [otherWs, otherMeta] of sockets) {
+            if (otherMeta.callId === meta.callId && !otherMeta.observer) {
+              send(otherWs, { type: 'peer-left', peerId: meta.peerId, left: remaining });
+            }
           }
         }
       }
