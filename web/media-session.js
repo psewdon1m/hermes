@@ -43,6 +43,8 @@ export class MediaSession {
     this.status = 'idle'; // Detailed status tracking
     this.transceivers = new Map(); // Store transceivers by kind for easy access
     this.stallRetryCount = 0; // Counter for outbound stall retries
+    this.politeStallTimer = null; // Timer for polite-side stall recovery
+    this.politeStallRetry = 0; // Counter for polite stall retries
     this.connectionStartTime = 0; // Track when connection was established
     this.lastRebuildTime = 0; // Track last rebuild to prevent too frequent rebuilds
     this.pendingMediaRetry = null; // Function for retrying media requests
@@ -266,11 +268,27 @@ export class MediaSession {
       return false;
     }
     
+    let needsNegotiation = false;
+
     const attachmentTasks = liveTracks.map(track => {
       // Use stored transceiver reference
       const transceiver = this.transceivers.get(track.kind);
       
       if (transceiver && transceiver.sender) {
+        try {
+          if (typeof transceiver.direction === 'string' && transceiver.direction !== 'sendrecv') {
+            transceiver.direction = 'sendrecv';
+            needsNegotiation = true;
+            this.log('[media] transceiver direction normalized', track.kind, '-> sendrecv');
+          } else if (typeof transceiver.setDirection === 'function' && transceiver.currentDirection && transceiver.currentDirection !== 'sendrecv') {
+            transceiver.setDirection('sendrecv');
+            needsNegotiation = true;
+            this.log('[media] transceiver.setDirection applied', track.kind, 'sendrecv');
+          }
+        } catch (err) {
+          this.log('[media] transceiver direction adjust ERR', track.kind, err?.message || err);
+        }
+
         // Replace track in existing sender
         if (typeof transceiver.sender.replaceTrack === 'function') {
           return transceiver.sender.replaceTrack(track)
@@ -287,6 +305,7 @@ export class MediaSession {
         try {
           this.pc.addTrack(track, this.localStream);
           this.log('[media] addTrack fallback', track.kind);
+          needsNegotiation = true;
         } catch (err) {
           this.log('[media] addTrack fallback ERR', track.kind, err?.message || err);
         }
@@ -310,7 +329,40 @@ export class MediaSession {
     this.checkPendingNegotiation();
     this.checkPendingRemoteOffer();
 
+    if (needsNegotiation) {
+      this.requestNegotiation('local track direction sync');
+    }
+
     return true;
+  }
+
+  clearPoliteStallTimer(resetCounter = false) {
+    if (this.politeStallTimer) {
+      try { clearTimeout(this.politeStallTimer); } catch {}
+      this.politeStallTimer = null;
+    }
+    if (resetCounter) {
+      this.politeStallRetry = 0;
+    }
+  }
+
+  schedulePoliteStallRecovery() {
+    if (!this.signaling?.polite) return;
+    if (this.politeStallTimer) return;
+    if (this.politeStallRetry >= 3) {
+      this.log('[media] outbound stalled (polite): retry limit reached');
+      return;
+    }
+    const delay = Math.min(3000, 1000 + Math.round(Math.random() * 1500)); // 1-2.5s
+    this.politeStallRetry += 1;
+    this.log('[media] outbound stalled (polite): scheduling recovery in', delay, 'ms');
+    this.politeStallTimer = setTimeout(() => {
+      this.politeStallTimer = null;
+      if (!this.signaling?.polite) return;
+      if (!this.localTracksReady || !this.pc) return;
+      this.log('[media] outbound stalled (polite): attempting renegotiation');
+      this.requestNegotiation('polite stall recovery');
+    }, delay);
   }
 
   async handleTrackEnded(t) {
@@ -1152,6 +1204,7 @@ export class MediaSession {
             this.requestNegotiation('outbound stalled');
           } else {
             this.log('[media] outbound stalled detected (polite peer waiting for remote recovery)');
+            this.schedulePoliteStallRecovery();
           }
         } else if (!hasEnabledTracks) {
           this.log('[media] outbound zero: all tracks disabled by user');
@@ -1161,6 +1214,7 @@ export class MediaSession {
       } else if (stats.outboundAudio > 0 || stats.outboundVideo > 0) {
         // Reset counter when traffic is flowing
         this.stallRetryCount = 0;
+        this.clearPoliteStallTimer(true);
       } else if (connectionAge <= 10000) {
         this.log('[media] outbound zero: connection still establishing (age=', Math.round(connectionAge/1000), 's)');
       }
@@ -1174,10 +1228,12 @@ export class MediaSession {
       this.statsTimer = null;
     }
     this.statsPrev.clear();
+    this.clearPoliteStallTimer(true);
   }
 
   close() {
     this.safeClosePC();
+    this.clearPoliteStallTimer(true);
     this.setState('idle');
     this.setStatus('idle', 'media session closed');
   }

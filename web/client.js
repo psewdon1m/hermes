@@ -27,6 +27,7 @@ let lastCameraBroadcastState = null;
 let lastKnownOtherPeer = null;
 let joinPromise = null;
 let currentCameraFacing = 'user';
+let autoJoinFromStorage = false;
 
 function isScreenShareStream(stream) {
   if (!stream || typeof stream.getVideoTracks !== 'function') return false;
@@ -87,6 +88,10 @@ function applyLocalDisplayAttributes(stream) {
 
 window.handleOverlayEnter = () => {
   prejoinOverlayDismissed = true;
+  if (overlayStorageKey) {
+    try { sessionStorage.setItem(overlayStorageKey, '1'); } catch {}
+  }
+  autoJoinFromStorage = false;
   lastCameraBroadcastState = null;
   if (window.uiControls) {
     window.uiControls.hideCallOverlay();
@@ -98,6 +103,13 @@ window.handleOverlayEnter = () => {
   updateLocalVideoActiveState();
   startJoinIfNeeded();
 };
+
+function clearOverlayStorage() {
+  if (overlayStorageKey) {
+    try { sessionStorage.removeItem(overlayStorageKey); } catch {}
+  }
+  autoJoinFromStorage = false;
+}
 
 window.setScreenShareState = (isActive, updateUI = true) => {
   screenShareActive = !!isActive;
@@ -283,6 +295,8 @@ function startJoinIfNeeded() {
   joinPromise = join().catch(err => {
     log('[ui] join ERR', err?.message || err);
     joinPromise = null;
+    prejoinOverlayDismissed = false;
+    clearOverlayStorage();
     if (window.uiControls) {
       window.uiControls.showCallOverlay('reconnect-failed');
     }
@@ -640,6 +654,13 @@ const token = url.searchParams.get('token') || '';
 const debugSDP = url.searchParams.get('debug') === '1';
 const wsRetryLimit = Number(url.searchParams.get('wsRetryLimit') ?? 5);
 const wsRetryDelayMs = Number(url.searchParams.get('wsRetryDelayMs') ?? 1500);
+const overlayStorageKey = token ? `overlayDismissed:${token}` : null;
+try {
+  if (overlayStorageKey && sessionStorage.getItem(overlayStorageKey) === '1') {
+    prejoinOverlayDismissed = true;
+    autoJoinFromStorage = true;
+  }
+} catch {}
 
 function formatLogPart(part){
   if (typeof part === 'string') return part;
@@ -770,10 +791,12 @@ async function join(){
   // Phase 1: Establish signaling session
   signalingSession = new SignalingSession(log, api, rid, wsRetryLimit, wsRetryDelayMs);
   signalingSession.onStatusChange = (newStatus) => {
-    if (!window.uiControls) return;
     if (newStatus === 'failed') {
       prejoinOverlayDismissed = false;
-      window.uiControls.showCallOverlay('reconnect-failed');
+      clearOverlayStorage();
+      if (window.uiControls) {
+        window.uiControls.showCallOverlay('reconnect-failed');
+      }
     }
 
   };
@@ -1297,9 +1320,13 @@ window.requestMediaRetry = () => {
 
 // Prepare pre-join preview or show missing-token message
 if (token) {
-  preparePrejoinPreview().catch(err => {
-    log('[preview] ERR', err?.message || String(err));
-  });
+  if (autoJoinFromStorage) {
+    window.handleOverlayEnter();
+  } else {
+    preparePrejoinPreview().catch(err => {
+      log('[preview] ERR', err?.message || String(err));
+    });
+  }
 } else {
   // In production the token must be provided via the URL
   // Show an error when the token is missing

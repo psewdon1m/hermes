@@ -1,3 +1,4 @@
+- 2.14 (2025-11-03 19:45): adjusted overlay persistence and polite stall recovery timers.
 - 2.13 (2025-11-03 19:30): filter ended tracks before reusing preview streams and track attachment.
 - 2.12 (2025-11-02 19:30): refined async track attachment and stall recovery logic.
 - 2.11 (2025-11-02 19:22): loosened default mobile tile height clamp for better keyboard fit.
