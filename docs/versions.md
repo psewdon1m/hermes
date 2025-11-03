@@ -1,3 +1,4 @@
+- 2.12 (2025-11-02 19:30): refined async track attachment and stall recovery logic.
 - 2.11 (2025-11-02 19:22): loosened default mobile tile height clamp for better keyboard fit.
 - 2.10 (2025-11-02 19:15): tuned landscape layout sizing and safe-area padding for mobile video tiles.
 - 2.09 (2025-11-02 19:04): adjusted mobile video tile aspect ratio to 5:4 for better viewport fit.

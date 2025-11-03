@@ -115,8 +115,7 @@ export class MediaSession {
           }
         }
 
-        this.attachLocalTracksToPC();
-        this.localTracksReady = true;
+        await this.attachLocalTracksToPC();
         this.setStatus('media-ready', 'local tracks adopted');
         this.requestNegotiation('local tracks adopted');
         return audioOk || videoOk;
@@ -189,7 +188,7 @@ export class MediaSession {
     }
     
     // Attach tracks to existing PC if it exists
-    this.attachLocalTracksToPC();
+    await this.attachLocalTracksToPC();
     
     // �'�<�ؐ�?�>�?��? �?�+�%��� �?�'���'�?�? �?�?����:��
     const gumOk = audioOk || videoOk;
@@ -214,37 +213,63 @@ export class MediaSession {
   }
 
   // Add local tracks to existing PC
-  attachLocalTracksToPC() {
-    if (!this.pc || !this.localStream) return;
+  async attachLocalTracksToPC() {
+    if (!this.pc || !this.localStream) return false;
     
     const tracks = this.localStream.getTracks();
     if (tracks.length === 0) {
       this.log('[media] attachLocalTracksToPC: no tracks to attach (recvonly mode)');
       this.localTracksReady = true; // Ready for recvonly negotiation
-      return;
+      this.checkPendingNegotiation();
+      this.checkPendingRemoteOffer();
+      return false;
     }
     
-    tracks.forEach(track => {
+    const attachmentTasks = tracks.map(track => {
       // Use stored transceiver reference
       const transceiver = this.transceivers.get(track.kind);
       
       if (transceiver && transceiver.sender) {
         // Replace track in existing sender
-        transceiver.sender.replaceTrack(track);
-        this.log('[media] replaceTrack', track.kind, 'currentDirection=', transceiver.currentDirection);
+        if (typeof transceiver.sender.replaceTrack === 'function') {
+          return transceiver.sender.replaceTrack(track)
+            .then(() => {
+              this.log('[media] replaceTrack', track.kind, 'currentDirection=', transceiver.currentDirection);
+            })
+            .catch(err => {
+              this.log('[media] replaceTrack ERR', track.kind, err?.message || err);
+            });
+        }
+        return Promise.resolve();
       } else {
         // Fallback to addTrack if no stored transceiver
-        this.pc.addTrack(track, this.localStream);
-        this.log('[media] addTrack fallback', track.kind);
+        try {
+          this.pc.addTrack(track, this.localStream);
+          this.log('[media] addTrack fallback', track.kind);
+        } catch (err) {
+          this.log('[media] addTrack fallback ERR', track.kind, err?.message || err);
+        }
+        return Promise.resolve();
       }
     });
     
+    try {
+      await Promise.all(attachmentTasks);
+    } catch (err) {
+      this.log('[media] attachLocalTracksToPC await ERR', err?.message || err);
+    }
+
     this.localTracksReady = true;
     
     try {
       const senders = (this.pc.getSenders && this.pc.getSenders()) || [];
       this.log('[media] attachLocalTracksToPC senders', senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })));
     } catch {}
+
+    this.checkPendingNegotiation();
+    this.checkPendingRemoteOffer();
+
+    return true;
   }
 
   async handleTrackEnded(t) {
@@ -398,14 +423,9 @@ export class MediaSession {
 
     // Attach local tracks (if available)
     if (this.localStream && this.localStream.getTracks().length > 0) {
-      this.localStream.getTracks().forEach(t => {
-        this.pc.addTrack(t, this.localStream);
+      this.attachLocalTracksToPC().catch(err => {
+        this.log('[media] attachLocalTracksToPC ERR', err?.message || err);
       });
-      this.localTracksReady = true; // Set flag after successful track attachment
-      try {
-        const senders = (this.pc.getSenders && this.pc.getSenders()) || [];
-        this.log('[media] newPC after addTrack senders', senders.map(s => ({ kind: s.track?.kind || null, state: s.track?.readyState || null })));
-      } catch {}
     } else {
       this.log('[media] newPC: no local tracks to attach yet');
       // Keep localTracksReady = false until tracks are actually ready
@@ -1081,11 +1101,17 @@ export class MediaSession {
           sender.track && sender.track.readyState === 'live' && sender.track.enabled
         );
         
+        const canInitiateStallRecovery = !this.signaling?.polite;
+        
         if (hasEnabledTracks && this.stallRetryCount < 3) {
-          this.log('[media] WARNING: outbound stalled with enabled tracks');
-          this.setStatus('media-stalled', 'outbound traffic stopped');
-          this.stallRetryCount += 1;
-          this.requestNegotiation('outbound stalled');
+          if (canInitiateStallRecovery) {
+            this.log('[media] WARNING: outbound stalled with enabled tracks');
+            this.setStatus('media-stalled', 'outbound traffic stopped');
+            this.stallRetryCount += 1;
+            this.requestNegotiation('outbound stalled');
+          } else {
+            this.log('[media] outbound stalled detected (polite peer waiting for remote recovery)');
+          }
         } else if (!hasEnabledTracks) {
           this.log('[media] outbound zero: all tracks disabled by user');
         } else {
