@@ -1,3 +1,5 @@
+- 2.16 (2025-11-04 03:02): extended logging helper options and added overlay persistence notes.
+- 2.15 (2025-11-03 23:18): handled peer rejoin logic, persisted overlay dismissal, and improved polite stall recovery.
 - 2.14 (2025-11-03 19:45): adjusted overlay persistence and polite stall recovery timers.
 - 2.13 (2025-11-03 19:30): filter ended tracks before reusing preview streams and track attachment.
 - 2.12 (2025-11-02 19:30): refined async track attachment and stall recovery logic.

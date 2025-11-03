@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env bash
 set -euo pipefail
 
-FILE_PATH="${1:-../log-output/observer.log}"
+FILE_PATH="${1:-../temp/observer.log}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${SCRIPT_DIR}/${FILE_PATH}"
 
