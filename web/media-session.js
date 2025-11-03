@@ -87,9 +87,33 @@ export class MediaSession {
       try {
         videoTracks = initialStream.getVideoTracks ? initialStream.getVideoTracks() : [];
         audioTracks = initialStream.getAudioTracks ? initialStream.getAudioTracks() : [];
-        videoOk = videoTracks.length > 0;
-        audioOk = audioTracks.length > 0;
+        const liveVideoTracks = videoTracks.filter(track => track && track.readyState === 'live');
+        const liveAudioTracks = audioTracks.filter(track => track && track.readyState === 'live');
+        videoOk = liveVideoTracks.length > 0;
+        audioOk = liveAudioTracks.length > 0;
         adoptInitialStream = videoOk || audioOk;
+        if (videoTracks.length !== liveVideoTracks.length || audioTracks.length !== liveAudioTracks.length) {
+          this.log('[media] initial stream pruning ended tracks', {
+            videoTotal: videoTracks.length,
+            videoLive: liveVideoTracks.length,
+            audioTotal: audioTracks.length,
+            audioLive: liveAudioTracks.length
+          });
+        }
+        // Strip ended tracks from the initial stream
+        videoTracks
+          .filter(track => track && track.readyState !== 'live')
+          .forEach(track => {
+            try { initialStream.removeTrack(track); } catch {}
+          });
+        audioTracks
+          .filter(track => track && track.readyState !== 'live')
+          .forEach(track => {
+            try { initialStream.removeTrack(track); } catch {}
+          });
+        // Rebuild arrays with live tracks only for downstream logic
+        videoTracks = liveVideoTracks;
+        audioTracks = liveAudioTracks;
         if (videoTracks.length) {
           const primaryFacing = getTrackFacingMode(videoTracks[0]);
           if (primaryFacing) {
@@ -99,7 +123,10 @@ export class MediaSession {
       } catch {}
 
       if (adoptInitialStream) {
-        this.localStream = initialStream;
+        this.localStream = new MediaStream([
+          ...videoTracks,
+          ...audioTracks
+        ]);
         this.setupTrackHandlers();
         this.vLocal.srcObject = this.localStream;
         await this.resumePlay(this.vLocal);
@@ -216,8 +243,22 @@ export class MediaSession {
   async attachLocalTracksToPC() {
     if (!this.pc || !this.localStream) return false;
     
-    const tracks = this.localStream.getTracks();
-    if (tracks.length === 0) {
+    const allTracks = this.localStream.getTracks();
+    const liveTracks = allTracks.filter(track => track && track.readyState === 'live');
+    if (liveTracks.length !== allTracks.length) {
+      this.log('[media] attachLocalTracksToPC pruning ended tracks', {
+        before: allTracks.length,
+        after: liveTracks.length
+      });
+      allTracks
+        .filter(track => track && track.readyState !== 'live')
+        .forEach(track => {
+          try { this.localStream.removeTrack(track); } catch {}
+          try { track.stop(); } catch {}
+        });
+    }
+
+    if (liveTracks.length === 0) {
       this.log('[media] attachLocalTracksToPC: no tracks to attach (recvonly mode)');
       this.localTracksReady = true; // Ready for recvonly negotiation
       this.checkPendingNegotiation();
@@ -225,7 +266,7 @@ export class MediaSession {
       return false;
     }
     
-    const attachmentTasks = tracks.map(track => {
+    const attachmentTasks = liveTracks.map(track => {
       // Use stored transceiver reference
       const transceiver = this.transceivers.get(track.kind);
       
