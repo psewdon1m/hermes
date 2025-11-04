@@ -15,7 +15,7 @@
     }
 
     body {
-      background-color: #000000;
+      background-color: #141414;
       color: #ffffff;
       font-family: system-ui, -apple-system, sans-serif;
       min-height: 100vh;
@@ -208,7 +208,7 @@
     body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay {
       position: fixed;
       bottom: calc(env(safe-area-inset-bottom, 0px) + var(--mobile-small-tile-offset, 140px));
-      right: calc(30px + env(safe-area-inset-right, 0px));
+      right: calc(25px + env(safe-area-inset-right, 0px));
       width: clamp(132px, 32vw, 220px);
       max-width: min(220px, 40vw);
       aspect-ratio: var(--mobile-video-aspect, 4 / 3);
@@ -244,6 +244,13 @@
     body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay .placeholder-cross,
     body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay .placeholder-text {
       display: none;
+    }
+
+    body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #remoteVideoDisplay .placeholder-text,
+    body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #localVideoDisplay .placeholder-text {
+      top: 20px;
+      bottom: auto;
+      transform: translate(-50%, 0);
     }
 
     body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #remoteVideoDisplay video,
