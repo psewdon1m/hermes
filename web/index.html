@@ -161,7 +161,14 @@
     }
 
     body.mobile-ui .main-content {
+      position: absolute;
+      top: calc(var(--header-height) + 20px);
+      left: var(--layout-side-gap);
+      right: var(--layout-side-gap);
       bottom: calc(var(--mobile-controls-height) + env(safe-area-inset-bottom, 0px) + 20px);
+      display: block;
+      z-index: 5;
+      overflow: visible;
     }
 
     body.mobile-ui .footer-visual {
@@ -170,6 +177,85 @@
     
     body.mobile-ui .video-placeholder .fullscreen-button {
       display: none;
+    }
+
+    body.mobile-ui .video-placeholder {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background-color: #141414;
+      border: 1px solid #141414;
+      overflow: hidden;
+      padding: 0;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    body.mobile-ui .video-placeholder--primary {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    body.mobile-ui .video-placeholder--secondary {
+      width: auto;
+      max-width: none;
+      aspect-ratio: auto;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      right: calc(20px + env(safe-area-inset-right, 0px));
+      z-index: 2;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    body.mobile-ui .video-placeholder--secondary:hover {
+      transform: scale(1.03);
+    }
+
+    body.mobile-ui .video-placeholder--secondary .copy-link-button {
+      pointer-events: none;
+    }
+
+    body.mobile-ui .video-placeholder--secondary .placeholder-text {
+      display: none;
+    }
+
+    body.mobile-ui #remoteVideoDisplay {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      aspect-ratio: auto;
+      padding: 0;
+      border-radius: 16px;
+      box-shadow: none;
+    }
+
+    body.mobile-ui #remoteVideoDisplay video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    body.mobile-ui #localVideoDisplay {
+      width: clamp(140px, 32vw, 220px);
+      height: auto;
+      aspect-ratio: 16 / 9;
+      padding: 0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    body.mobile-ui #localVideoDisplay[data-aspect="portrait"] {
+      width: clamp(120px, 28vw, 180px);
+      aspect-ratio: 9 / 16;
+    }
+
+    body.mobile-ui #localVideoDisplay video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     body.mobile-ui.mobile-landscape .mobile-controls,
@@ -399,11 +485,14 @@
 
     .main-content {
       position: absolute;
-      top: calc(var(--header-height) + 20px);
-      left: var(--layout-side-gap);
-      right: var(--layout-side-gap);
-      bottom: calc(var(--footer-height) + 20px);
-      display: block;
+      top: 125px;
+      left: 80px;
+      right: 80px;
+      bottom: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2vw;
       z-index: 5;
       overflow: visible;
     }
@@ -632,48 +721,37 @@
 
 
     .video-placeholder {
-      position: absolute;
+      width: clamp(500px, 50vw, 869px);
+      height: clamp(10px, 70vh, 1575px);
+      aspect-ratio: 869 / 675;
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex: 1;
+      min-width: 0;
+      position: relative;
+      overflow: visible;
+      padding: 10px;
+    }
+    #remoteVideoDisplay,
+    #localVideoDisplay {
+      width: clamp(500px, 50vw, 869px);
+      height: clamp(10px, 70vh, 1575px);
+      aspect-ratio: 869 / 675;
       border-radius: 12px;
       background-color: #141414;
       border: 1px solid #141414;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-width: 0;
+      position: relative;
       overflow: hidden;
-      padding: 10px;
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    .video-placeholder--primary {
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-
-    .video-placeholder--secondary {
-      width: min(36%, 240px);
-      aspect-ratio: 4 / 3;
-      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-      right: calc(20px + env(safe-area-inset-right, 0px));
-      z-index: 2;
-      cursor: pointer;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-    }
-
-    .video-placeholder--secondary:hover {
-      transform: scale(1.03);
     }
 
     .video-placeholder.has-screen-share .copy-link-button {
-      display: none;
-    }
-
-    .video-placeholder--secondary .copy-link-button {
-      pointer-events: none;
-    }
-
-    .video-placeholder--secondary .placeholder-text {
       display: none;
     }
 
@@ -1466,51 +1544,6 @@
         --header-height: clamp(58px, 15vh, 110px);
         --footer-height: clamp(44px, 12vh, 84px);
       }
-
-      body {
-        padding: 0;
-      }
-
-      .header-visual {
-        padding: 0 var(--layout-side-gap);
-      }
-
-      .top-visual {
-        position: relative;
-        top: auto;
-        left: auto;
-        width: clamp(110px, 18vw, 150px);
-        height: clamp(36px, 6vh, 52px);
-      }
-
-      .timer {
-        position: relative;
-        top: auto;
-        right: auto;
-        font-size: clamp(16px, 2.4vw, 28px);
-      }
-
-      .main-content {
-        top: calc(var(--header-height) + 16px);
-        left: var(--layout-side-gap);
-        right: var(--layout-side-gap);
-        bottom: calc(var(--footer-height) + 20px);
-        display: block;
-        justify-content: initial;
-        align-items: initial;
-        gap: 0;
-        padding: 0;
-      }
-
-      .video-placeholder--secondary {
-        width: min(40%, 220px);
-        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-        right: calc(16px + env(safe-area-inset-right, 0px));
-      }
-
-      .controls-container {
-        padding: 0 var(--layout-side-gap);
-      }
     }
 
     @media (max-width: 768px) {
@@ -1520,63 +1553,6 @@
         --footer-height: clamp(44px, 14vh, 80px);
         --mobile-controls-height: 160px;
       }
-
-      body {
-        padding: 0;
-      }
-
-      .header-visual {
-        padding: 0 var(--layout-side-gap);
-      }
-
-      .top-visual {
-        width: clamp(96px, 32vw, 140px);
-        height: clamp(34px, 7vh, 48px);
-      }
-
-      .timer {
-        font-size: clamp(16px, 4vw, 26px);
-      }
-
-      .main-content {
-        bottom: calc(var(--mobile-controls-height) + env(safe-area-inset-bottom, 0px) + 20px);
-        display: block;
-        justify-content: initial;
-        align-items: initial;
-        gap: 0;
-        padding: 0;
-      }
-
-      .video-placeholder--secondary {
-        width: min(48%, 200px);
-        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-        right: calc(14px + env(safe-area-inset-right, 0px));
-      }
-
-      .controls-container {
-        padding: 0 var(--layout-side-gap);
-      }
-    }
-
-    @media (max-width: 645px) {
-      :root {
-        --layout-side-gap: clamp(16px, 8vw, 28px);
-      }
-
-      .header-visual {
-        padding: 0 var(--layout-side-gap);
-      }
-
-      .top-visual {
-        width: clamp(90px, 34vw, 128px);
-        height: clamp(32px, 7vh, 46px);
-      }
-
-      .video-placeholder--secondary {
-        width: min(50%, 180px);
-        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-        right: calc(12px + env(safe-area-inset-right, 0px));
-      }
     }
 
     @media (max-width: 480px) {
@@ -1584,26 +1560,6 @@
         --layout-side-gap: clamp(12px, 8vw, 24px);
         --header-height: clamp(52px, 18vh, 84px);
         --mobile-controls-height: 170px;
-      }
-
-      .header-visual {
-        padding: 0 var(--layout-side-gap);
-      }
-
-      .top-visual {
-        width: clamp(84px, 40vw, 120px);
-        height: clamp(30px, 9vh, 44px);
-        padding: 0 12px;
-      }
-
-      .logo-text {
-        font-size: clamp(20px, 8vw, 26px);
-      }
-
-      .video-placeholder--secondary {
-        width: min(56%, 160px);
-        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-        right: calc(10px + env(safe-area-inset-right, 0px));
       }
     }
   </style>
@@ -1648,20 +1604,7 @@
     </div>
     
     <!-- Visual elements for display -->
-    <div class="video-placeholder video-placeholder--primary" id="remoteVideoDisplay">
-      <button class="mic-indicator" type="button" data-role="remote-mic-indicator" aria-label="Remote microphone muted">
-        <span class="mic-indicator-icon"></span>
-      </button>
-      <div class="video-fallback" data-role="remote-video-fallback" aria-hidden="true">
-        <img src="src/no_video.png" alt="" class="video-fallback-image">
-      </div>
-      <button class="fullscreen-button" type="button" aria-label="toggle fullscreen for remote video">full</button>
-      <button class="copy-link-button" id="linkBtn">
-        <div class="placeholder-cross"></div>
-        <div class="placeholder-text">press to copy call link</div>
-      </button>
-    </div>
-    <div class="video-placeholder video-placeholder--secondary" id="localVideoDisplay">
+    <div class="video-placeholder" id="localVideoDisplay">
       <button class="mic-indicator" type="button" data-role="local-mic-indicator" aria-label="Microphone muted">
         <span class="mic-indicator-icon"></span>
       </button>
@@ -1670,6 +1613,19 @@
       </div>
       <button class="fullscreen-button" type="button" aria-label="toggle fullscreen for local video">full</button>
       <button class="copy-link-button" id="localCopyLinkButton" data-role="mirror-source">
+        <div class="placeholder-cross"></div>
+        <div class="placeholder-text">press to copy call link</div>
+      </button>
+    </div>
+    <div class="video-placeholder" id="remoteVideoDisplay">
+      <button class="mic-indicator" type="button" data-role="remote-mic-indicator" aria-label="Remote microphone muted">
+        <span class="mic-indicator-icon"></span>
+      </button>
+      <div class="video-fallback" data-role="remote-video-fallback" aria-hidden="true">
+        <img src="src/no_video.png" alt="" class="video-fallback-image">
+      </div>
+      <button class="fullscreen-button" type="button" aria-label="toggle fullscreen for remote video">full</button>
+      <button class="copy-link-button" id="linkBtn">
         <div class="placeholder-cross"></div>
         <div class="placeholder-text">press to copy call link</div>
       </button>
