@@ -52,6 +52,41 @@ export class MediaSession {
     this.cameraTrackBackup = null; // Stored camera track when screen sharing
     this.screenShareStream = null; // Active screen share stream
     this.currentCameraFacing = 'user'; // Track preferred camera facing
+    this.videoDevices = new Map(); // Cache video deviceIds by facing
+  }
+
+  async updateVideoDevices(stream) {
+    if (!navigator?.mediaDevices?.enumerateDevices) return;
+    const activeTrack = stream?.getVideoTracks?.()[0] || null;
+    let activeDeviceId = null;
+    const facingFromTrack = getTrackFacingMode(activeTrack);
+    if (activeTrack && typeof activeTrack.getSettings === 'function') {
+      const settings = activeTrack.getSettings();
+      activeDeviceId = settings.deviceId || null;
+      if (activeDeviceId && facingFromTrack) {
+        this.videoDevices.set(facingFromTrack, activeDeviceId);
+      }
+    }
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      devices
+        .filter((device) => device?.kind === 'videoinput')
+        .forEach((device) => {
+          const label = (device.label || '').toLowerCase();
+          let facing = null;
+          if (label.includes('front') || label.includes('user')) facing = 'user';
+          else if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('world')) facing = 'environment';
+          if (!facing && device.deviceId === activeDeviceId && facingFromTrack) {
+            facing = facingFromTrack;
+          }
+          if (!facing && !this.videoDevices.has('user')) facing = 'user'; // fallback mapping
+          if (facing && !this.videoDevices.has(facing)) {
+            this.videoDevices.set(facing, device.deviceId);
+          }
+        });
+    } catch (err) {
+      this.log('[media] enumerateDevices ERR', err?.name || err?.message || String(err));
+    }
   }
 
   async prepareLocalMedia(retry = false, options = {}) {
@@ -145,6 +180,7 @@ export class MediaSession {
           }
         }
 
+        await this.updateVideoDevices(this.localStream);
         await this.attachLocalTracksToPC();
         this.setStatus('media-ready', 'local tracks adopted');
         this.requestNegotiation('local tracks adopted');
@@ -211,6 +247,7 @@ export class MediaSession {
     this.vLocal.srcObject = this.localStream;
     this.setupTrackHandlers();
     this.resumePlay(this.vLocal);
+    await this.updateVideoDevices(this.localStream);
     
     // �'�<���<�?����? ��?�>�+�?�� �?�>�? �>�?����>�?�?�?�?�? ���?�'�?���
     if (this.onLocalStream && this.localStream) {

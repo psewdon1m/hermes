@@ -1,4 +1,4 @@
-﻿import http from "http";
+import http from "http";
 import { WebSocketServer } from "ws";
 import Redis from "ioredis";
 import crypto from "node:crypto";
@@ -72,7 +72,7 @@ async function removePeer(callId, peerId) {
 
 function truncate(text, max = 1024) {
   if (typeof text !== 'string') return text;
-  return text.length > max ? `${text.slice(0, max)}…` : text;
+  return text.length > max ? `${text.slice(0, max)}�` : text;
 }
 
 function sanitizeDetail(detail) {
@@ -127,7 +127,7 @@ wss.on('connection', async (ws, req) => {
         return;
       }
       await addPeer(callId, peerId);
-      announceJoin = !rejoining;
+
     }
 
     sockets.set(ws, { callId, peerId, role, observer });
@@ -135,10 +135,14 @@ wss.on('connection', async (ws, req) => {
     const peersNow = await listPeers(callId);
     send(ws, { type: 'peers', peers: peersNow.filter((p) => p !== peerId) });
 
-    if (!observer && announceJoin) {
+    if (!observer) {
       for (const [otherWs, meta] of sockets) {
         if (otherWs !== ws && meta.callId === callId && !meta.observer) {
-          send(otherWs, { type: 'peer-joined', peerId });
+          if (rejoining) {
+            send(otherWs, { type: 'peer-reconnected', peerId });
+          } else {
+            send(otherWs, { type: 'peer-joined', peerId });
+          }
         }
       }
     }

@@ -855,6 +855,15 @@ async function join(){
       handleMicNudge(msg.from);
       return;
     }
+    if (msg?.type === 'peer-reconnected') {
+      if (mediaSession) {
+        mediaSession.rebuildPCAndRenegotiate();
+      }
+      if (window.uiControls?.setRemoteParticipantPresent) {
+        window.uiControls.setRemoteParticipantPresent(true);
+      }
+      return;
+    }
     if (msg?.type === 'camera-state') {
       const isActive = msg?.payload?.active !== false;
       setRemoteCameraReportedActive(isActive);

@@ -68,11 +68,19 @@ export class UIControls {
     }
 
     this.skipInitialOverlay = false;
+    this.timerStorageKey = null;
     try {
       const currentUrl = new URL(location.href);
       const token = currentUrl.searchParams.get('token') || '';
       if (token) {
         this.skipInitialOverlay = sessionStorage.getItem(`overlayDismissed:${token}`) === '1';
+        this.timerStorageKey = `callTimer:${token}`;
+        const storedStart = sessionStorage.getItem(this.timerStorageKey);
+        const parsedStart = storedStart ? Number(storedStart) : NaN;
+        if (!Number.isNaN(parsedStart) && parsedStart > 0) {
+          this.callStartTime = parsedStart;
+          this.updateTimer();
+        }
       }
     } catch {}
     if (this.skipInitialOverlay && this.overlay) {
@@ -863,8 +871,21 @@ export class UIControls {
   startCallTimer() {
     if (this.timerInterval) return;
     if (!this.callStartTime) {
-      this.callStartTime = Date.now();
+      if (this.timerStorageKey) {
+        const stored = sessionStorage.getItem(this.timerStorageKey);
+        const parsed = stored ? Number(stored) : NaN;
+        if (!Number.isNaN(parsed) && parsed > 0) {
+          this.callStartTime = parsed;
+        }
+      }
+      if (!this.callStartTime) {
+        this.callStartTime = Date.now();
+      }
     }
+    if (this.timerStorageKey) {
+      try { sessionStorage.setItem(this.timerStorageKey, String(this.callStartTime)); } catch {}
+    }
+    this.updateTimer();
     this.timerInterval = setInterval(() => this.updateTimer(), 1000);
   }
 
@@ -876,6 +897,9 @@ export class UIControls {
     if (reset) {
       this.callStartTime = null;
       this.resetTimer();
+      if (this.timerStorageKey) {
+        try { sessionStorage.removeItem(this.timerStorageKey); } catch {}
+      }
     }
   }
 
