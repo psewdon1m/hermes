@@ -603,15 +603,16 @@ export class UIControls {
   updateMobileSmallTileOffset() {
     if (!this.isMobileDevice || !document?.body) return;
     const controlsInner = this.mobileControlsContainer?.querySelector('.mobile-controls__inner');
-    let baseOffset = 140;
+    let offset = 140;
     if (controlsInner) {
       const rect = controlsInner.getBoundingClientRect();
       if ((rect.width || rect.height) && rect.height > 0) {
-        const controlsTail = Math.max(0, window.innerHeight - rect.top);
-        baseOffset = controlsTail + 20;
+        const baseSpacing = 20;
+        const desiredGap = 20;
+        offset = rect.height + baseSpacing + desiredGap;
       }
     }
-    document.body.style.setProperty('--mobile-small-tile-bottom', `${Math.round(baseOffset)}px`);
+    document.body.style.setProperty('--mobile-small-tile-offset', `${Math.round(offset)}px`);
   }
 
   attachMobileTapFeedback(button) {
