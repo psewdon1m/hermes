@@ -113,11 +113,11 @@ wss.on('connection', async (ws, req) => {
       return;
     }
 
-    let announceJoin = false;
+    let rejoining = false;
     if (!observer) {
       const peersBefore = await listPeers(callId);
       const uniqueBefore = new Set(peersBefore);
-      const rejoining = uniqueBefore.has(peerId);
+      rejoining = uniqueBefore.has(peerId);
       uniqueBefore.delete(peerId);
       if (!rejoining && uniqueBefore.size >= Number(MAX_PEERS_PER_CALL)) {
         const entry = { ts: Date.now(), callId, peerId, role, message: 'room-full reject' };
@@ -127,7 +127,6 @@ wss.on('connection', async (ws, req) => {
         return;
       }
       await addPeer(callId, peerId);
-
     }
 
     sockets.set(ws, { callId, peerId, role, observer });

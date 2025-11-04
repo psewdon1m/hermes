@@ -1334,7 +1334,13 @@ window.requestMediaRetry = () => {
 // Prepare pre-join preview or show missing-token message
 if (token) {
   if (autoJoinFromStorage) {
-    window.handleOverlayEnter();
+    preparePrejoinPreview()
+      .catch(err => {
+        log('[preview] ERR', err?.message || String(err));
+      })
+      .finally(() => {
+        window.handleOverlayEnter();
+      });
   } else {
     preparePrejoinPreview().catch(err => {
       log('[preview] ERR', err?.message || String(err));

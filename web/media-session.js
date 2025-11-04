@@ -939,17 +939,27 @@ export class MediaSession {
       releaseActiveTrack();
     }
 
+    const preferredDeviceId = this.videoDevices.get(normalizedTarget) || null;
     const videoConstraints = { facingMode: { ideal: normalizedTarget } };
     if (normalizedTarget) {
       videoConstraints.advanced = [{ facingMode: normalizedTarget }];
     }
     let stream = null;
-    try {
-      stream = await requestStream({ video: videoConstraints, audio: false }, 'preferred');
-    } catch (err) {
-      await restoreAfterFailure();
-      this.log('[media] switchCameraFacing final ERR', err?.name || err?.message || String(err));
-      return null;
+    if (preferredDeviceId) {
+      try {
+        stream = await requestStream({ video: { deviceId: { exact: preferredDeviceId } }, audio: false }, 'deviceId');
+      } catch (err) {
+        this.log('[media] switchCameraFacing deviceId ERR', err?.name || err?.message || String(err));
+      }
+    }
+    if (!stream) {
+      try {
+        stream = await requestStream({ video: videoConstraints, audio: false }, 'preferred');
+      } catch (err) {
+        await restoreAfterFailure();
+        this.log('[media] switchCameraFacing final ERR', err?.name || err?.message || String(err));
+        return null;
+      }
     }
 
     const track = stream?.getVideoTracks?.()[0] || null;
@@ -960,6 +970,7 @@ export class MediaSession {
       return null;
     }
 
+    await this.updateVideoDevices(stream);
     track.enabled = previousEnabled;
 
     const switched = await this.switchVideoSource(track, `camera facing -> ${normalizedTarget}`);
