@@ -160,6 +160,33 @@
     body.mobile-ui .footer-visual {
       display: none;
     }
+
+    body.mobile-ui .header-visual {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(24px, 8vw, 80px);
+      gap: clamp(12px, 6vw, 32px);
+    }
+
+    body.mobile-ui .header-visual .top-visual,
+    body.mobile-ui .header-visual .timer {
+      position: static;
+      top: auto;
+      right: auto;
+      bottom: auto;
+      left: auto;
+      transform: none;
+    }
+
+    body.mobile-ui .header-visual .timer {
+      margin-left: auto;
+      text-align: right;
+    }
+
+    body.mobile-ui .header-visual .top-visual {
+      margin-right: auto;
+    }
     
     body.mobile-ui .video-placeholder .fullscreen-button {
       display: none;
@@ -1479,12 +1506,13 @@
 </head>
 
 <body>
-  <div class="timer" id="callTimer">00:00:00</div>
-  <div class="header-visual" id="headerVisual"></div>
-  <div class="footer-visual" id="footerVisual"></div>
-  <div class="top-visual" id="topVisual" data-button="topVisual">
-    <span class="logo-text">hermes</span>
+  <div class="header-visual" id="headerVisual">
+    <div class="top-visual" id="topVisual" data-button="topVisual">
+      <span class="logo-text">hermes</span>
+    </div>
+    <div class="timer" id="callTimer">00:00:00</div>
   </div>
+  <div class="footer-visual" id="footerVisual"></div>
   <div class="call-overlay call-overlay--visible" data-role="call-overlay" data-mode="prejoin">
     <div class="call-overlay__panel">
       <button class="call-overlay__close" type="button" data-role="overlay-exit" aria-label="Leave call">&times;</button>
