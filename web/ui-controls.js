@@ -51,6 +51,9 @@ export class UIControls {
     this.overlayPreviewStream = null;
     this.overlayEnterButton = this.overlay?.querySelector('[data-role="overlay-enter"]') || null;
     this.overlayPanel = this.overlay?.querySelector('.call-overlay__panel') || null;
+    this.remoteDisplay = null;
+    this.localDisplay = null;
+    this.primaryVideoDisplay = 'remote';
     this.mobileControlsContainer = null;
     this.mobileCamControl = null;
     this.mobileTurnControl = null;
@@ -98,6 +101,7 @@ export class UIControls {
     this.refreshRemoteMicIndicator();
     this.refreshLocalVideoFallback();
     this.refreshRemoteVideoFallback();
+    this.configureVideoPlaceholders();
     this.refreshOverlayPreview();
     this.updateOverlayScale();
     this.attachOverlayScaleListeners();
@@ -349,6 +353,55 @@ export class UIControls {
       this.collapseMobileView();
     }
     this.syncFullscreenButtons();
+  }
+
+  configureVideoPlaceholders() {
+    this.remoteDisplay = document.getElementById('remoteVideoDisplay');
+    this.localDisplay = document.getElementById('localVideoDisplay');
+    if (!this.remoteDisplay || !this.localDisplay) return;
+
+    if (this.remoteDisplay.classList.contains('video-placeholder--primary')) {
+      this.primaryVideoDisplay = 'remote';
+    } else if (this.localDisplay.classList.contains('video-placeholder--primary')) {
+      this.primaryVideoDisplay = 'local';
+    } else {
+      this.applyVideoLayoutState('remote');
+    }
+
+    const createSwapHandler = (target) => (event) => {
+      if (event.defaultPrevented) return;
+      if (event.target.closest('.fullscreen-button, .copy-link-button, .mic-indicator')) {
+        return;
+      }
+      if (this.primaryVideoDisplay === target) return;
+      this.applyVideoLayoutState(target);
+    };
+
+    this.localDisplay.addEventListener('click', createSwapHandler('local'));
+    this.remoteDisplay.addEventListener('click', createSwapHandler('remote'));
+  }
+
+  applyVideoLayoutState(nextPrimary) {
+    if (!this.remoteDisplay || !this.localDisplay) return;
+    const target = nextPrimary === 'local' ? 'local' : 'remote';
+    const primaryEl = target === 'remote' ? this.remoteDisplay : this.localDisplay;
+    const secondaryEl = target === 'remote' ? this.localDisplay : this.remoteDisplay;
+
+    primaryEl.classList.add('video-placeholder--primary');
+    primaryEl.classList.remove('video-placeholder--secondary');
+    secondaryEl.classList.add('video-placeholder--secondary');
+    secondaryEl.classList.remove('video-placeholder--primary');
+    this.primaryVideoDisplay = target;
+
+    try {
+      window.dispatchEvent(
+        new CustomEvent('videolayoutchange', {
+          detail: { primary: target }
+        })
+      );
+    } catch {
+      // Ignore environments without CustomEvent support
+    }
   }
 
   isLandscapeOrientation() {

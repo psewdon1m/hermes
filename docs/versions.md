@@ -1,3 +1,4 @@
+- 2.19 (2025-11-04 17:19): split primary/secondary video panes with layout variables and clickable swap.
 - 2.18 (2025-11-04 16:26): resume preview before auto-join, reuse device ids for camera flips, and propagate rejoin events.
 - 2.17 (2025-11-04 15:18): cached video device ids, handled peer-reconnected, and improved stall recovery loop.
 - 2.16 (2025-11-04 03:02): extended logging helper options and added overlay persistence notes.

@@ -24,6 +24,13 @@
       overflow: hidden;
     }
 
+    :root {
+      --layout-side-gap: clamp(40px, 6vw, 80px);
+      --header-height: clamp(60px, 16vh, 120px);
+      --footer-height: clamp(48px, 12vh, 96px);
+      --mobile-controls-height: 140px;
+    }
+
     .call-overlay {
       position: fixed;
       inset: 0;
@@ -154,7 +161,7 @@
     }
 
     body.mobile-ui .main-content {
-      padding-bottom: 140px;
+      bottom: calc(var(--mobile-controls-height) + env(safe-area-inset-bottom, 0px) + 20px);
     }
 
     body.mobile-ui .footer-visual {
@@ -392,14 +399,11 @@
 
     .main-content {
       position: absolute;
-      top: 125px;
-      left: 80px;
-      right: 80px;
-      bottom: 100px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 2vw;
+      top: calc(var(--header-height) + 20px);
+      left: var(--layout-side-gap);
+      right: var(--layout-side-gap);
+      bottom: calc(var(--footer-height) + 20px);
+      display: block;
       z-index: 5;
       overflow: visible;
     }
@@ -411,13 +415,11 @@
     }
 
     .timer {
-      position: absolute;
-      top: 40px;
-      right: 80px;
+      position: relative;
       font-family: 'Jersey 10', cursive;
       font-size: clamp(18px, 3vw, 32px);
       color: #000000;
-      z-index: 10;
+      z-index: 20;
     }
 
     .controls-container {
@@ -630,47 +632,61 @@
 
 
     .video-placeholder {
-      width: clamp(500px, 50vw, 869px);
-      height: clamp(10px, 70vh, 1575px);
-      aspect-ratio: 869 / 675;
-      border-radius: 4px;
+      position: absolute;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex: 1;
-      min-width: 0;
-      position: relative;
-      overflow: visible;
-      padding: 10px;
-    }
-    #remoteVideoDisplay,
-    #localVideoDisplay {
-      width: clamp(500px, 50vw, 869px);
-      height: clamp(10px, 70vh, 1575px);
-      aspect-ratio: 869 / 675;
       border-radius: 12px;
       background-color: #141414;
       border: 1px solid #141414;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      min-width: 0;
-      position: relative;
       overflow: hidden;
+      padding: 10px;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .video-placeholder--primary {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .video-placeholder--secondary {
+      width: min(36%, 240px);
+      aspect-ratio: 4 / 3;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      right: calc(20px + env(safe-area-inset-right, 0px));
+      z-index: 2;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .video-placeholder--secondary:hover {
+      transform: scale(1.03);
     }
 
     .video-placeholder.has-screen-share .copy-link-button {
       display: none;
     }
 
+    .video-placeholder--secondary .copy-link-button {
+      pointer-events: none;
+    }
+
+    .video-placeholder--secondary .placeholder-text {
+      display: none;
+    }
+
     .header-visual {
       position: absolute;
-      top: -2px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100vw;
-      height: clamp(60px, 16vh, 120px);
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--layout-side-gap);
       border-radius: 0px;
       background-color: #90a8ed;
       border: 0px solid #dddddd;
@@ -680,10 +696,9 @@
     .footer-visual {
       position: absolute;
       bottom: 0px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100vw;
-      height: clamp(48px, 12vh, 96px);
+      left: 0;
+      right: 0;
+      height: var(--footer-height);
       border-radius: 0px;
       background-color: #90a8ed;
       border: 0px solid #dddddd;
@@ -691,9 +706,7 @@
       overflow: visible;
     }
     .top-visual {
-      position: absolute;
-      top: 25px;
-      left: 80px;
+      position: relative;
       width: clamp(120px, 12vw, 180px);
       height: clamp(40px, 6vh, 60px);
       border-radius: 4px;
@@ -701,7 +714,7 @@
       border: 2px solid #000000;
       z-index: 20;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -712,7 +725,6 @@
     .top-visual:hover {
       transform: scale(1.05);
       box-shadow: 4px 4px 0 0 #000000;
-      transition: all 0.3s ease;
     }
 
     .placeholder-cross {
@@ -929,11 +941,6 @@
         height: clamp(300px, 60vh, 540px);
       }
 
-      #remoteVideoDisplay,
-      #localVideoDisplay {
-        width: clamp(400px, 45vw, 700px);
-        height: clamp(300px, 60vh, 540px);
-      }
 
 
       .controls-container {
@@ -1090,15 +1097,6 @@
         width: clamp(300px, 40vw, 500px);
         height: clamp(200px, 40vh, 300px);
       }
-
-      #remoteVideoDisplay,
-      #localVideoDisplay {
-        width: 100%;
-        max-width: 400px;
-        height: clamp(200px, 40vh, 300px);
-        aspect-ratio: 4/3;
-      }
-
 
       .controls-container {
         bottom: 30px;
@@ -1328,26 +1326,12 @@
         font-size: 16px;
       }
 
-      #remoteVideoDisplay,
-      #localVideoDisplay {
-        justify-self: center;
-        margin-left: 15px;
-        margin-right: 15px;
-      }
-
       .video-placeholder {
         width: min(85vw, 600px);
         height: clamp(325px, 50vh, 400px);
         min-height: 325px;
         padding: 10px;
         aspect-ratio: 5 / 4;
-      }
-      #remoteVideoDisplay,
-      #localVideoDisplay {
-        width: min(85vw, 600px);
-        height: clamp(325px, 50vh, 400px);
-        aspect-ratio: 5 / 4;
-        min-height: 325px;
       }
 
 
@@ -1475,16 +1459,164 @@
         background-color: rgba(255, 255, 255, 0.1);
       }
     }
+
+    @media (max-width: 1200px) {
+      :root {
+        --layout-side-gap: clamp(32px, 6vw, 56px);
+        --header-height: clamp(58px, 15vh, 110px);
+        --footer-height: clamp(44px, 12vh, 84px);
+      }
+
+      body {
+        padding: 0;
+      }
+
+      .header-visual {
+        padding: 0 var(--layout-side-gap);
+      }
+
+      .top-visual {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: clamp(110px, 18vw, 150px);
+        height: clamp(36px, 6vh, 52px);
+      }
+
+      .timer {
+        position: relative;
+        top: auto;
+        right: auto;
+        font-size: clamp(16px, 2.4vw, 28px);
+      }
+
+      .main-content {
+        top: calc(var(--header-height) + 16px);
+        left: var(--layout-side-gap);
+        right: var(--layout-side-gap);
+        bottom: calc(var(--footer-height) + 20px);
+        display: block;
+        justify-content: initial;
+        align-items: initial;
+        gap: 0;
+        padding: 0;
+      }
+
+      .video-placeholder--secondary {
+        width: min(40%, 220px);
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        right: calc(16px + env(safe-area-inset-right, 0px));
+      }
+
+      .controls-container {
+        padding: 0 var(--layout-side-gap);
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --layout-side-gap: clamp(20px, 8vw, 32px);
+        --header-height: clamp(54px, 16vh, 90px);
+        --footer-height: clamp(44px, 14vh, 80px);
+        --mobile-controls-height: 160px;
+      }
+
+      body {
+        padding: 0;
+      }
+
+      .header-visual {
+        padding: 0 var(--layout-side-gap);
+      }
+
+      .top-visual {
+        width: clamp(96px, 32vw, 140px);
+        height: clamp(34px, 7vh, 48px);
+      }
+
+      .timer {
+        font-size: clamp(16px, 4vw, 26px);
+      }
+
+      .main-content {
+        bottom: calc(var(--mobile-controls-height) + env(safe-area-inset-bottom, 0px) + 20px);
+        display: block;
+        justify-content: initial;
+        align-items: initial;
+        gap: 0;
+        padding: 0;
+      }
+
+      .video-placeholder--secondary {
+        width: min(48%, 200px);
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        right: calc(14px + env(safe-area-inset-right, 0px));
+      }
+
+      .controls-container {
+        padding: 0 var(--layout-side-gap);
+      }
+    }
+
+    @media (max-width: 645px) {
+      :root {
+        --layout-side-gap: clamp(16px, 8vw, 28px);
+      }
+
+      .header-visual {
+        padding: 0 var(--layout-side-gap);
+      }
+
+      .top-visual {
+        width: clamp(90px, 34vw, 128px);
+        height: clamp(32px, 7vh, 46px);
+      }
+
+      .video-placeholder--secondary {
+        width: min(50%, 180px);
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        right: calc(12px + env(safe-area-inset-right, 0px));
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --layout-side-gap: clamp(12px, 8vw, 24px);
+        --header-height: clamp(52px, 18vh, 84px);
+        --mobile-controls-height: 170px;
+      }
+
+      .header-visual {
+        padding: 0 var(--layout-side-gap);
+      }
+
+      .top-visual {
+        width: clamp(84px, 40vw, 120px);
+        height: clamp(30px, 9vh, 44px);
+        padding: 0 12px;
+      }
+
+      .logo-text {
+        font-size: clamp(20px, 8vw, 26px);
+      }
+
+      .video-placeholder--secondary {
+        width: min(56%, 160px);
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        right: calc(10px + env(safe-area-inset-right, 0px));
+      }
+    }
   </style>
 </head>
 
 <body>
-  <div class="timer" id="callTimer">00:00:00</div>
-  <div class="header-visual" id="headerVisual"></div>
-  <div class="footer-visual" id="footerVisual"></div>
-  <div class="top-visual" id="topVisual" data-button="topVisual">
-    <span class="logo-text">hermes</span>
+  <div class="header-visual" id="headerVisual">
+    <div class="top-visual" id="topVisual" data-button="topVisual">
+      <span class="logo-text">hermes</span>
+    </div>
+    <div class="timer" id="callTimer">00:00:00</div>
   </div>
+  <div class="footer-visual" id="footerVisual"></div>
   <div class="call-overlay call-overlay--visible" data-role="call-overlay" data-mode="prejoin">
     <div class="call-overlay__panel">
       <button class="call-overlay__close" type="button" data-role="overlay-exit" aria-label="Leave call">&times;</button>
@@ -1516,20 +1648,7 @@
     </div>
     
     <!-- Visual elements for display -->
-    <div class="video-placeholder" id="localVideoDisplay">
-      <button class="mic-indicator" type="button" data-role="local-mic-indicator" aria-label="Microphone muted">
-        <span class="mic-indicator-icon"></span>
-      </button>
-      <div class="video-fallback" data-role="local-video-fallback" aria-hidden="true">
-        <img src="src/no_video.png" alt="" class="video-fallback-image">
-      </div>
-      <button class="fullscreen-button" type="button" aria-label="toggle fullscreen for local video">full</button>
-      <button class="copy-link-button" id="localCopyLinkButton" data-role="mirror-source">
-        <div class="placeholder-cross"></div>
-        <div class="placeholder-text">press to copy call link</div>
-      </button>
-    </div>
-    <div class="video-placeholder" id="remoteVideoDisplay">
+    <div class="video-placeholder video-placeholder--primary" id="remoteVideoDisplay">
       <button class="mic-indicator" type="button" data-role="remote-mic-indicator" aria-label="Remote microphone muted">
         <span class="mic-indicator-icon"></span>
       </button>
@@ -1538,6 +1657,19 @@
       </div>
       <button class="fullscreen-button" type="button" aria-label="toggle fullscreen for remote video">full</button>
       <button class="copy-link-button" id="linkBtn">
+        <div class="placeholder-cross"></div>
+        <div class="placeholder-text">press to copy call link</div>
+      </button>
+    </div>
+    <div class="video-placeholder video-placeholder--secondary" id="localVideoDisplay">
+      <button class="mic-indicator" type="button" data-role="local-mic-indicator" aria-label="Microphone muted">
+        <span class="mic-indicator-icon"></span>
+      </button>
+      <div class="video-fallback" data-role="local-video-fallback" aria-hidden="true">
+        <img src="src/no_video.png" alt="" class="video-fallback-image">
+      </div>
+      <button class="fullscreen-button" type="button" aria-label="toggle fullscreen for local video">full</button>
+      <button class="copy-link-button" id="localCopyLinkButton" data-role="mirror-source">
         <div class="placeholder-cross"></div>
         <div class="placeholder-text">press to copy call link</div>
       </button>
