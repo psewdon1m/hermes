@@ -206,29 +206,29 @@
       width: min(92vw, 560px);
       max-width: 100%;
       height: auto;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: var(--mobile-video-aspect, 4 / 3);
       position: relative;
       margin: 0 auto;
+      z-index: 6;
       cursor: default;
     }
 
     body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #localVideoDisplay,
     body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay {
-      position: absolute;
-      bottom: calc(
-        20px + env(safe-area-inset-bottom, 0px) +
-        clamp(76px, 24vw, 96px) +
-        20px
-      );
+      position: fixed;
+      bottom: calc(var(--mobile-small-tile-bottom, 140px));
       right: calc(30px + env(safe-area-inset-right, 0px));
       width: clamp(132px, 32vw, 220px);
+      max-width: min(220px, 40vw);
       height: auto;
-      aspect-ratio: 4 / 3;
-      z-index: 12;
+      aspect-ratio: var(--mobile-video-aspect, 4 / 3);
+      z-index: 80;
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
       border: 1px solid rgba(0, 0, 0, 0.45);
+      border-radius: 16px;
       overflow: hidden;
       cursor: pointer;
+      background-color: #141414;
     }
 
     body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #localVideoDisplay .fullscreen-button,
@@ -713,6 +713,7 @@
 
 
     .video-placeholder {
+      --mobile-video-aspect: 4 / 3;
       width: clamp(500px, 50vw, 869px);
       height: clamp(10px, 70vh, 1575px);
       aspect-ratio: 869 / 675;

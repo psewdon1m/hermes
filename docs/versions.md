@@ -1,3 +1,4 @@
+- 2.25 (2025-11-04 20:05): enable static layout swap plus sticky header for mobile primary view.
 - 2.22 (2025-11-04 19:30): stabilized mobile tile sizing and removed redundant swap toggles.
 - 2.23 (2025-11-04 19:20): refine mobile header layout and remote video containment.
 - 2.22 (2025-11-04 19:30): reissued 2.18 baseline after reverting later layout experiments.

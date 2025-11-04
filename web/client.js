@@ -217,6 +217,9 @@ function setLocalDisplayStream(stream, mirror = false) {
   localPreviewMirrorPreference = mirror;
   applyLocalDisplayAttributes(stream || null);
   updateLocalDisplayAttachment();
+  if (window.uiControls?.updateVideoAspect) {
+    window.uiControls.updateVideoAspect('local', stream || null);
+  }
   if (window.uiControls?.refreshLocalMicIndicator) {
     window.uiControls.refreshLocalMicIndicator();
   }
@@ -252,6 +255,9 @@ function setRemoteDisplayStream(stream) {
     if (window.uiControls?.setRemoteVideoActive) {
       window.uiControls.setRemoteVideoActive(true);
     }
+  }
+  if (window.uiControls?.updateVideoAspect) {
+    window.uiControls.updateVideoAspect('remote', stream || null);
   }
   if (window.uiControls?.refreshRemoteMicIndicator) {
     window.uiControls.refreshRemoteMicIndicator();

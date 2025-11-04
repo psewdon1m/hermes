@@ -39,9 +39,13 @@ export class UIControls {
     this.localVideoActive = true;
     this.remoteVideoActive = true;
     this.remoteParticipantPresent = false;
+    this.localVideoStream = null;
+    this.remoteVideoStream = null;
     this.localVideoDisplayContainer = document.getElementById('localVideoDisplay') || null;
     this.remoteVideoDisplayContainer = document.getElementById('remoteVideoDisplay') || null;
     this.mobileSwapActive = false;
+    this.mobileControlsResizeObserver = null;
+    this.boundUpdateMobileSmallTileOffset = null;
     this.overlayVisible = false;
     this.overlayMode = 'prejoin';
     this.overlay = document.querySelector('[data-role="call-overlay"]');
@@ -355,6 +359,7 @@ export class UIControls {
       this.collapseMobileView();
     }
     this.syncFullscreenButtons();
+    this.updateMobileSmallTileOffset();
   }
 
   isLandscapeOrientation() {
@@ -446,6 +451,7 @@ export class UIControls {
 
     const localContainer = this.localVideoDisplayContainer || document.getElementById('localVideoDisplay');
     const remoteContainer = this.remoteVideoDisplayContainer || document.getElementById('remoteVideoDisplay');
+    const controlsInner = this.mobileControlsContainer?.querySelector('.mobile-controls__inner') || null;
 
     if (!localContainer || !remoteContainer) return;
 
@@ -461,6 +467,24 @@ export class UIControls {
       remoteContainer.dataset.swapHandlerAttached = '1';
       remoteContainer.addEventListener('click', (event) => this.handleMobileSwapClick(event, 'remote'));
     }
+
+    this.attachVideoAspectListeners(localContainer, 'local');
+    this.attachVideoAspectListeners(remoteContainer, 'remote');
+    this.updateVideoAspect('local');
+    this.updateVideoAspect('remote');
+
+    if (controlsInner && !controlsInner.dataset.mobileResizeObserved && typeof ResizeObserver === 'function') {
+      controlsInner.dataset.mobileResizeObserved = '1';
+      this.mobileControlsResizeObserver = new ResizeObserver(() => this.updateMobileSmallTileOffset());
+      this.mobileControlsResizeObserver.observe(controlsInner);
+    }
+
+    if (!this.boundUpdateMobileSmallTileOffset) {
+      this.boundUpdateMobileSmallTileOffset = () => this.updateMobileSmallTileOffset();
+      window.addEventListener('resize', this.boundUpdateMobileSmallTileOffset, { passive: true });
+    }
+
+    this.updateMobileSmallTileOffset();
   }
 
   handleMobileSwapClick(event, source) {
@@ -484,6 +508,110 @@ export class UIControls {
     const nextState = typeof forceState === 'boolean' ? forceState : !this.mobileSwapActive;
     this.mobileSwapActive = nextState;
     document.body.classList.toggle('mobile-video-swap-active', nextState);
+    this.updateMobileSmallTileOffset();
+  }
+
+  attachVideoAspectListeners(container, type) {
+    if (!container) return;
+    const video = container.querySelector('video');
+    if (!video || video.dataset.mobileAspectAttached === '1') return;
+    video.dataset.mobileAspectAttached = '1';
+    const handler = () => this.updateVideoAspect(type);
+    video.addEventListener('loadedmetadata', handler);
+    video.addEventListener('resize', handler);
+  }
+
+  updateVideoAspect(type, stream = undefined) {
+    if (!this.isMobileDevice) return;
+    const container = type === 'remote' ? this.remoteVideoDisplayContainer : this.localVideoDisplayContainer;
+    if (!container) return;
+    this.attachVideoAspectListeners(container, type);
+
+    if (typeof stream !== 'undefined') {
+      if (type === 'remote') {
+        this.remoteVideoStream = stream instanceof MediaStream ? stream : null;
+      } else {
+        this.localVideoStream = stream instanceof MediaStream ? stream : null;
+      }
+    }
+
+    const effectiveStream =
+      typeof stream === 'undefined'
+        ? (type === 'remote' ? this.remoteVideoStream : this.localVideoStream)
+        : (stream instanceof MediaStream ? stream : null);
+
+    const aspectValue = this.resolveStreamAspectRatio(effectiveStream, container);
+    if (aspectValue) {
+      container.style.setProperty('--mobile-video-aspect', aspectValue);
+    } else {
+      container.style.removeProperty('--mobile-video-aspect');
+    }
+  }
+
+  resolveStreamAspectRatio(stream, container) {
+    let width = null;
+    let height = null;
+
+    if (stream instanceof MediaStream) {
+      const [track] = stream.getVideoTracks();
+      if (track && typeof track.getSettings === 'function') {
+        const settings = track.getSettings();
+        if (settings.width && settings.height) {
+          width = settings.width;
+          height = settings.height;
+        } else if (settings.aspectRatio) {
+          const aspectSetting = Number(settings.aspectRatio);
+          if (!Number.isNaN(aspectSetting) && aspectSetting > 0) {
+            return this.formatAspectRatio(aspectSetting);
+          }
+        }
+      }
+    }
+
+    const video = container?.querySelector('video');
+    if (video) {
+      const vWidth = video.videoWidth;
+      const vHeight = video.videoHeight;
+      if (!width && vWidth) {
+        width = vWidth;
+      }
+      if (!height && vHeight) {
+        height = vHeight;
+      }
+    }
+
+    if (width && height) {
+      return `${Math.max(1, width)} / ${Math.max(1, height)}`;
+    }
+    return null;
+  }
+
+  formatAspectRatio(value) {
+    if (!value || !(value > 0)) return null;
+    const normalized = Number(value);
+    if (Number.isNaN(normalized) || normalized <= 0) return null;
+    const precision = Math.pow(10, 4);
+    const scaledW = Math.round(normalized * precision);
+    const scaledH = precision;
+    const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+    const divisor = gcd(scaledW, scaledH);
+    const ratioW = Math.max(1, scaledW / divisor);
+    const ratioH = Math.max(1, scaledH / divisor);
+    return `${ratioW} / ${ratioH}`;
+  }
+
+  updateMobileSmallTileOffset() {
+    if (!this.isMobileDevice || !document?.body) return;
+    const controlsInner = this.mobileControlsContainer?.querySelector('.mobile-controls__inner');
+    let baseOffset = 140;
+    if (controlsInner) {
+      const rect = controlsInner.getBoundingClientRect();
+      if ((rect.width || rect.height) && rect.height > 0) {
+        const controlsTail = Math.max(0, window.innerHeight - rect.top);
+        baseOffset = controlsTail + 20;
+      }
+    }
+    document.body.style.setProperty('--mobile-small-tile-bottom', `${Math.round(baseOffset)}px`);
   }
 
   attachMobileTapFeedback(button) {
