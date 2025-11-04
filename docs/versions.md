@@ -1,3 +1,4 @@
+- 2.27 (2025-11-04 20:46): adjusted mobile layout spacing and clarified logs helper path.
 - 2.26 (2025-11-04 20:32): refine portrait swap sizing and pre-join preview sequence.
 - 2.25 (2025-11-04 20:05): enable static layout swap plus sticky header for mobile primary view.
 - 2.22 (2025-11-04 19:30): stabilized mobile tile sizing and removed redundant swap toggles.
