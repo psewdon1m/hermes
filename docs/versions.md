@@ -1,3 +1,4 @@
+- 2.22 (2025-11-04 19:30): reissued 2.18 baseline after reverting later layout experiments.
 - 2.17 (2025-11-04 15:18): cached video device ids, handled peer-reconnected, and improved stall recovery loop.
 - 2.16 (2025-11-04 03:02): extended logging helper options and added overlay persistence notes.
 - 2.15 (2025-11-03 23:18): handled peer rejoin logic, persisted overlay dismissal, and improved polite stall recovery.
