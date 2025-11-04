@@ -149,6 +149,8 @@
 
     body.mobile-ui {
       overflow: hidden;
+      --header-height: clamp(52px, 16vh, 88px);
+      --mobile-controls-height: 160px;
     }
 
     body.mobile-ui .controls-container {
@@ -163,8 +165,8 @@
     body.mobile-ui .main-content {
       position: absolute;
       top: calc(var(--header-height) + 20px);
-      left: var(--layout-side-gap);
-      right: var(--layout-side-gap);
+      left: calc(30px + env(safe-area-inset-left, 0px));
+      right: calc(30px + env(safe-area-inset-right, 0px));
       bottom: calc(var(--mobile-controls-height) + env(safe-area-inset-bottom, 0px) + 20px);
       display: block;
       z-index: 5;
@@ -174,7 +176,7 @@
     body.mobile-ui .footer-visual {
       display: none;
     }
-    
+
     body.mobile-ui .video-placeholder .fullscreen-button {
       display: none;
     }
@@ -200,11 +202,11 @@
     }
 
     body.mobile-ui .video-placeholder--secondary {
-      width: auto;
-      max-width: none;
-      aspect-ratio: auto;
+      width: clamp(120px, 28vw, 180px);
+      height: auto;
+      aspect-ratio: 9 / 16;
       bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-      right: calc(20px + env(safe-area-inset-right, 0px));
+      right: calc(30px + env(safe-area-inset-right, 0px));
       z-index: 2;
       cursor: pointer;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
@@ -224,9 +226,6 @@
 
     body.mobile-ui #remoteVideoDisplay {
       inset: 0;
-      width: 100%;
-      height: 100%;
-      aspect-ratio: auto;
       padding: 0;
       border-radius: 16px;
       box-shadow: none;
@@ -235,27 +234,48 @@
     body.mobile-ui #remoteVideoDisplay video {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      background-color: #000000;
     }
 
     body.mobile-ui #localVideoDisplay {
-      width: clamp(140px, 32vw, 220px);
-      height: auto;
-      aspect-ratio: 16 / 9;
       padding: 0;
       border-radius: 12px;
       overflow: hidden;
-    }
-
-    body.mobile-ui #localVideoDisplay[data-aspect="portrait"] {
-      width: clamp(120px, 28vw, 180px);
-      aspect-ratio: 9 / 16;
     }
 
     body.mobile-ui #localVideoDisplay video {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    body.mobile-ui .header-visual {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(16px, 6vw, 32px);
+      height: clamp(52px, 16vh, 88px);
+    }
+
+    body.mobile-ui .top-visual,
+    body.mobile-ui .timer {
+      position: relative;
+      top: 0;
+      right: 0;
+      left: 0;
+      margin: 0;
+      align-self: center;
+    }
+
+    body.mobile-ui .top-visual {
+      width: clamp(96px, 30vw, 150px);
+      height: clamp(32px, 9vh, 52px);
+      padding: 0 clamp(12px, 4vw, 18px);
+    }
+
+    body.mobile-ui .timer {
+      font-size: clamp(18px, 5vw, 30px);
     }
 
     body.mobile-ui.mobile-landscape .mobile-controls,
@@ -975,183 +995,34 @@
     .video-placeholder.hidden-logic {
       display: none;
     }
-    @media (max-width: 1200px) {
-      .top-visual {
-        top: 35px;
-        left: 40px;
-        width: clamp(100px, 10vw, 150px);
-        height: clamp(35px, 5vh, 50px);
-      }
-
-      .top-visual:hover {
-        transform: scale(1.05);
-        box-shadow: 4px 4px 0 0 #000000;
-      }
-
-      .logo-text {
-        font-size: clamp(18px, 3vw, 30px);
-      }
-
-      .timer {
-        top: 45px;
-        right: 40px;
-      }
-
-      body {
-        padding: 100px 40px 120px;
-      }
-
-      .main-content {
-        top: 100px;
-        left: 40px;
-        right: 40px;
-        bottom: 120px;
-        gap: 1.5vw;
-      }
-
-      .video-placeholder {
-        width: clamp(400px, 45vw, 700px);
-        height: clamp(300px, 60vh, 540px);
-        padding: 10px;
-      }\r\n\r\n\r\n\r\n\r\n
-      .video-placeholder {
-        width: clamp(400px, 45vw, 700px);
-        height: clamp(300px, 60vh, 540px);
-      }
-
-
-
-      .controls-container {
-        bottom: 25px;
-        padding: 0 40px;
-      }
-
-      .control-button {
-        width: 120px;
-        height: 40px;
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 700;
-        font-size: 20px;
-      }
-
-      .control-button.primary {
-        width: 50px;
-        height: 50px;
-        background-color: #141414;
-        color: #D9D9D9;
-        border: 1px solid #000000;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .button-icon {
-        width: 20px;
-        height: 20px;
-      }
-      .mic-indicator {
-        top: 10px;
-        left: 10px;
-        width: 26px;
-        height: 26px;
-      }
-      .mic-indicator-icon {
-        width: 14px;
-        height: 14px;
-      }
-      .mic-indicator {
-        top: 10px;
-        left: 10px;
-        width: 26px;
-        height: 26px;
-      }
-      .mic-indicator-icon {
-        width: 14px;
-        height: 14px;
-      }
-      .video-fallback {
-        inset: 10px;
-        border-radius: 14px;
-      }
-
-
-      .control-button.primary.disabled {
-        background-color: #90a8ed;
-        color: #000000;
-        border: 1px solid #000000;
-      }
-
-      .control-button.exit {
-        width: 150px;
-        height: 50px;
-        background-color: #90a8ed;
-        color: #000000;
-        border: 1px solid #000000;
-        border-radius: 4px;
-        font-size: 16px;
-      }
-
-
-      .center-buttons {
-        gap: 50px;
-      }
-
-      .placeholder-cross {
-        width: min(12vw, 80px);
-        height: min(12vw, 80px);
-      }
-
-      .overlay-content p {
-        font-size: 16px;
-      }
-
-      .control-button.primary:hover {
-        transform: scale(1.05) translateY(-6px);
-        box-shadow: 4px 4px 0 0 #000000;
-        border: 1px solid #000000;
-      }
-
-      .control-button.exit:hover {
-        transform: scale(1.05) translateY(-6px);
-        box-shadow: 4px 4px 0 0 #ffffff;
-        background-color: #f190ec;
-        color: #000000;
-      }
-
-      .copy-link-button:hover {
-        transform: scale(1.04);
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-    }
     @media (max-width: 768px) {
-      .top-visual {
-        top: 40px;
+      body:not(.mobile-ui) .top-visual {
+        top: 20px;
         left: 40px;
         width: clamp(80px, 8vw, 120px);
         height: clamp(30px, 4vh, 40px);
         padding: 0 12px;
       }
 
-      .top-visual:hover {
+      body:not(.mobile-ui) .top-visual:hover {
         transform: scale(1.05);
         box-shadow: 4px 4px 0 0 #000000;
       }
 
-      .logo-text {
+      body:not(.mobile-ui) .logo-text {
         font-size: clamp(18px, 3vw, 27px);
       }
 
-      .timer {
-        top: 50px;
+      body:not(.mobile-ui) .timer {
+        top: 25px;
         right: 40px;
       }
 
-      body {
+      body:not(.mobile-ui) {
         padding: 80px 20px 140px;
       }
 
-      .main-content {
+      body:not(.mobile-ui) .main-content {
         top: 140px;
         left: 20px;
         right: 20px;
@@ -1163,7 +1034,7 @@
         padding-top: 20px;
       }
 
-      .video-placeholder {
+      body:not(.mobile-ui) .video-placeholder {
         width: 100%;
         max-width: 400px;
         height: clamp(200px, 40vh, 300px);
@@ -1171,13 +1042,13 @@
         padding: 10px;
       }\r\n\r\n
 
-      .video-placeholder {
+      body:not(.mobile-ui) .video-placeholder {
         width: clamp(300px, 40vw, 500px);
         height: clamp(200px, 40vh, 300px);
       }
 
-      .controls-container {
-        bottom: 30px;
+      body:not(.mobile-ui) .controls-container {
+        bottom: 20px;
         left: 20px;
         padding: 0 20px;
         flex-direction: row;
@@ -1186,14 +1057,14 @@
         gap: 0;
       }
 
-      .center-buttons {
+      body:not(.mobile-ui) .center-buttons {
         gap: 20px;
         order: 0;
         display: flex;
         align-items: flex-end;
       }
 
-      .control-button {
+      body:not(.mobile-ui) .control-button {
         width: 100px;
         height: 36px;
         font-family: 'JetBrains Mono', monospace;
@@ -1201,7 +1072,7 @@
         font-size: 18px;
       }
 
-      .control-button.primary {
+      body:not(.mobile-ui) .control-button.primary {
         width: 40px;
         height: 40px;
         background-color: #141414;
@@ -1213,41 +1084,41 @@
         justify-content: center;
       }
 
-      .button-icon {
+      body:not(.mobile-ui) .button-icon {
         width: 18px;
         height: 18px;
       }
 
-      .call-overlay__actions .control-button.primary {
+      body:not(.mobile-ui) .call-overlay__actions .control-button.primary {
         width: 230px;
         height: 230px;
       }
 
-      .call-overlay__actions .control-button.primary .button-icon {
+      body:not(.mobile-ui) .call-overlay__actions .control-button.primary .button-icon {
         width: 32px;
         height: 32px;
       }
-      .mic-indicator {
+      body:not(.mobile-ui) .mic-indicator {
         top: 10px;
         left: 10px;
         width: 24px;
         height: 24px;
       }
-      .mic-indicator-icon {
+      body:not(.mobile-ui) .mic-indicator-icon {
         width: 12px;
         height: 12px;
       }
-      .video-fallback {
+      body:not(.mobile-ui) .video-fallback {
         inset: 10px;
         border-radius: 12px;
       }
-      .mic-indicator {
+      body:not(.mobile-ui) .mic-indicator {
         top: 10px;
         left: 10px;
         width: 24px;
         height: 24px;
       }
-      .mic-indicator-icon {
+      body:not(.mobile-ui) .mic-indicator-icon {
         width: 12px;
         height: 12px;
       }
@@ -1345,66 +1216,38 @@
     }
 
     @media (max-width: 480px) {
-      .top-visual {
-        top: 10px;
-        left: 30px;
-        width: clamp(100px, 10vw, 150px);
-        height: clamp(30px, 6vh, 50px);
-        padding: 0 10px;
+      body:not(.mobile-ui) .top-visual {
+        width: clamp(100px, 36vw, 150px);
+        height: clamp(34px, 8vh, 50px);
+        padding: 0 12px;
       }
 
-      .top-visual:hover {
-        transform: scale(1.05);
-        box-shadow: 4px 4px 0 0 #000000;
+      body:not(.mobile-ui) .logo-text {
+        font-size: clamp(16px, 6vw, 32px);
       }
 
-      .logo-text {
-        font-size: clamp(16px, 3vw, 32px);
+      body:not(.mobile-ui) .timer {
+        font-size: clamp(16px, 5vw, 32px);
       }
 
-      .timer {
-        top: 25px;
-        right: 30px;
-        font-size: clamp(16px, 4vw, 32px);
-      }
-
-      .header-visual {
-        height: clamp(40px, 8vh, 80px);
-      }
-
-      .footer-visual {
-        height: clamp(40px, 8vh, 80px);
-      }
-
-      body {
-        padding: 50px 15px 160px;
-      }
-
-      .main-content {
-        top: 60px;
-        column-gap: 15px;
-        row-gap: 15px;
-        margin-top: 15px;
-      }
-
-      .call-overlay__panel {
+      body:not(.mobile-ui) .call-overlay__panel {
         width: min(calc(100vw - 80px), 360px);
         padding: 20px;
         gap: 20px;
       }
 
-      .call-overlay__actions {
+      body:not(.mobile-ui) .call-overlay__actions {
         gap: 12px;
         align-items: center;
       }
 
-      .call-overlay__enter {
+      body:not(.mobile-ui) .call-overlay__enter {
         width: clamp(180px, 100%, 320px);
         height: 80px;
         font-size: 16px;
       }
 
-      .video-placeholder {
+      body:not(.mobile-ui) .video-placeholder {
         width: min(85vw, 600px);
         height: clamp(325px, 50vh, 400px);
         min-height: 325px;
@@ -1413,7 +1256,7 @@
       }
 
 
-      .controls-container {
+      body:not(.mobile-ui) .controls-container {
         bottom: 15px;
         padding: 0 15px;
         flex-direction: row;

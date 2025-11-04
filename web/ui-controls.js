@@ -64,7 +64,6 @@ export class UIControls {
     this.mobileExpandedManual = false;
     this.orientationChangeHandler = null;
     this.resizeOrientationHandler = null;
-    this.localSecondaryAspect = 'landscape';
     this.deviceProfile = applyClientProfileToDOM();
     this.isMobileDevice = !!this.deviceProfile?.isMobile;
     if (this.isMobileDevice && document.body) {
@@ -378,7 +377,6 @@ export class UIControls {
 
     this.localDisplay.addEventListener('click', createSwapHandler('local'));
     this.remoteDisplay.addEventListener('click', createSwapHandler('remote'));
-    this.setLocalSecondaryAspect(this.localSecondaryAspect);
   }
 
   applyVideoLayoutState(nextPrimary) {
@@ -393,9 +391,6 @@ export class UIControls {
     secondaryEl.classList.add('video-placeholder--secondary');
     secondaryEl.classList.remove('video-placeholder--primary');
     this.primaryVideoDisplay = target;
-    if (this.localDisplay) {
-      this.localDisplay.dataset.aspect = this.localSecondaryAspect;
-    }
 
     try {
       window.dispatchEvent(
@@ -405,15 +400,6 @@ export class UIControls {
       );
     } catch {
       // Ignore environments without CustomEvent support
-    }
-  }
-
-  setLocalSecondaryAspect(aspect) {
-    if (!this.isMobileDevice) return;
-    const next = aspect === 'portrait' ? 'portrait' : 'landscape';
-    this.localSecondaryAspect = next;
-    if (this.localDisplay) {
-      this.localDisplay.dataset.aspect = next;
     }
   }
 
