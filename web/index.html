@@ -140,6 +140,24 @@
       transition: filter 0.2s ease, opacity 0.2s ease;
     }
 
+    body:not(.mobile-ui) .controls-container,
+    body:not(.mobile-ui) .header-visual,
+    body:not(.mobile-ui) .footer-visual,
+    body:not(.mobile-ui) .top-visual,
+    body:not(.mobile-ui) .timer {
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    body.desktop-idle:not(.mobile-ui) .controls-container,
+    body.desktop-idle:not(.mobile-ui) .header-visual,
+    body.desktop-idle:not(.mobile-ui) .footer-visual,
+    body.desktop-idle:not(.mobile-ui) .top-visual,
+    body.desktop-idle:not(.mobile-ui) .timer {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     body.mobile-ui {
       overflow: hidden;
     }
@@ -862,6 +880,9 @@
       border-radius: 20px;
       position: relative;
       z-index: 2;
+    }
+    body:not(.mobile-ui) .video-placeholder.has-media video {
+      object-fit: contain;
     }
     .video-placeholder.video-inactive video {
       opacity: 0;

@@ -46,6 +46,11 @@ export class UIControls {
     this.mobileSwapActive = false;
     this.mobileControlsResizeObserver = null;
     this.boundUpdateMobileSmallTileOffset = null;
+    this.desktopIdleDelay = 6000;
+    this.desktopIdleTimer = null;
+    this.desktopIdleActive = false;
+    this.desktopIdleEnabled = false;
+    this.boundDesktopActivityHandler = null;
     this.overlayVisible = false;
     this.overlayMode = 'prejoin';
     this.overlay = document.querySelector('[data-role="call-overlay"]');
@@ -109,6 +114,7 @@ export class UIControls {
     this.updateOverlayScale();
     this.attachOverlayScaleListeners();
     this.initializeMobileVideoSwap();
+    this.initializeDesktopIdleMode();
     if (!this.skipInitialOverlay) {
       this.showCallOverlay('prejoin');
     }
@@ -485,6 +491,64 @@ export class UIControls {
     }
 
     this.updateMobileSmallTileOffset();
+  }
+
+  initializeDesktopIdleMode() {
+    if (this.isMobileDevice) return;
+    if (!document?.body || typeof window === 'undefined') return;
+    if (this.desktopIdleEnabled) return;
+
+    this.desktopIdleEnabled = true;
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'wheel', 'pointerdown', 'pointermove', 'touchstart', 'touchmove'];
+    this.boundDesktopActivityHandler = () => this.handleDesktopActivity();
+    activityEvents.forEach((type) => {
+      window.addEventListener(type, this.boundDesktopActivityHandler, { passive: true });
+    });
+    this.scheduleDesktopIdle();
+  }
+
+  handleDesktopActivity() {
+    if (!this.desktopIdleEnabled) return;
+    this.applyDesktopIdleState(false);
+    this.scheduleDesktopIdle();
+  }
+
+  scheduleDesktopIdle() {
+    if (!this.desktopIdleEnabled) return;
+    if (this.overlayVisible) {
+      this.clearDesktopIdleTimer();
+      return;
+    }
+    const delay = typeof this.desktopIdleDelay === 'number' ? Math.max(2000, this.desktopIdleDelay) : 6000;
+    this.clearDesktopIdleTimer();
+    this.desktopIdleTimer = setTimeout(() => {
+      this.applyDesktopIdleState(true);
+    }, delay);
+  }
+
+  clearDesktopIdleTimer() {
+    if (this.desktopIdleTimer) {
+      clearTimeout(this.desktopIdleTimer);
+      this.desktopIdleTimer = null;
+    }
+  }
+
+  applyDesktopIdleState(nextIdle) {
+    if (!document?.body) return;
+    const shouldBeIdle = !!nextIdle && !this.overlayVisible && this.desktopIdleEnabled;
+    if (this.desktopIdleActive === shouldBeIdle) return;
+    this.desktopIdleActive = shouldBeIdle;
+    document.body.classList.toggle('desktop-idle', shouldBeIdle);
+  }
+
+  handleDesktopIdleOverlayChange(isVisible) {
+    if (!this.desktopIdleEnabled) return;
+    if (isVisible) {
+      this.applyDesktopIdleState(false);
+      this.clearDesktopIdleTimer();
+    } else {
+      this.scheduleDesktopIdle();
+    }
   }
 
   handleMobileSwapClick(event, source) {
@@ -1009,12 +1073,14 @@ export class UIControls {
     this.overlay.classList.add('call-overlay--visible');
     this.overlayVisible = true;
     this.updateOverlayScale();
+    this.handleDesktopIdleOverlayChange(true);
   }
 
   hideCallOverlay() {
     if (!this.overlay) return;
     this.overlay.classList.remove('call-overlay--visible');
     this.overlayVisible = false;
+    this.handleDesktopIdleOverlayChange(false);
   }
 
   applyMicIndicator(container, shouldShowMuted) {

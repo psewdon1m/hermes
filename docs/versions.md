@@ -1,3 +1,4 @@
+- 2.31 (2025-11-04 21:45): desktop idle chrome and swap logic tuning.
 - 2.30 (2025-11-04 21:15): allow overlay buttons to scale slightly larger on tall devices.
 - 2.29 (2025-11-04 21:10): tweaked call overlay button sizing for narrow screens.
 - 2.28 (2025-11-04 21:05): restored dark background and tweaked portrait swap copy positioning.
