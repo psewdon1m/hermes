@@ -187,6 +187,62 @@
     body.mobile-ui .header-visual .top-visual {
       margin-right: auto;
     }
+
+    body.mobile-ui:not(.mobile-landscape) .main-content {
+      position: relative;
+      inset: auto;
+      padding: clamp(96px, 18vh, 144px) clamp(16px, 6vw, 32px) clamp(144px, 24vh, 180px);
+      margin: 0 auto;
+      width: 100%;
+      max-width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+    }
+
+    body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #remoteVideoDisplay,
+    body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #localVideoDisplay {
+      width: min(92vw, 560px);
+      max-width: 100%;
+      height: auto;
+      aspect-ratio: 4 / 3;
+      position: relative;
+      margin: 0 auto;
+      cursor: default;
+    }
+
+    body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #localVideoDisplay,
+    body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay {
+      position: absolute;
+      bottom: calc(
+        20px + env(safe-area-inset-bottom, 0px) +
+        clamp(76px, 24vw, 96px) +
+        20px
+      );
+      right: calc(30px + env(safe-area-inset-right, 0px));
+      width: clamp(132px, 32vw, 220px);
+      height: auto;
+      aspect-ratio: 4 / 3;
+      z-index: 12;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(0, 0, 0, 0.45);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #localVideoDisplay .fullscreen-button,
+    body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #localVideoDisplay .copy-link-button,
+    body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay .fullscreen-button,
+    body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay .copy-link-button {
+      display: none;
+    }
+
+    body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #localVideoDisplay .mic-indicator,
+    body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay .mic-indicator {
+      top: 6px;
+      left: 6px;
+    }
     
     body.mobile-ui .video-placeholder .fullscreen-button {
       display: none;

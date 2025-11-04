@@ -39,6 +39,9 @@ export class UIControls {
     this.localVideoActive = true;
     this.remoteVideoActive = true;
     this.remoteParticipantPresent = false;
+    this.localVideoDisplayContainer = document.getElementById('localVideoDisplay') || null;
+    this.remoteVideoDisplayContainer = document.getElementById('remoteVideoDisplay') || null;
+    this.mobileSwapActive = false;
     this.overlayVisible = false;
     this.overlayMode = 'prejoin';
     this.overlay = document.querySelector('[data-role="call-overlay"]');
@@ -101,6 +104,7 @@ export class UIControls {
     this.refreshOverlayPreview();
     this.updateOverlayScale();
     this.attachOverlayScaleListeners();
+    this.initializeMobileVideoSwap();
     if (!this.skipInitialOverlay) {
       this.showCallOverlay('prejoin');
     }
@@ -308,6 +312,7 @@ export class UIControls {
     }
     this.orientationForcedView = !!options.forced;
     this.mobileExpandedManual = !options.forced;
+    this.toggleMobileVideoSwap(false);
     document.body.classList.add('mobile-landscape');
     this.syncFullscreenButtons();
   }
@@ -318,6 +323,7 @@ export class UIControls {
     this.mobileExpandedView = null;
     this.orientationForcedView = false;
     this.mobileExpandedManual = false;
+    this.toggleMobileVideoSwap(false);
     this.syncFullscreenButtons();
   }
 
@@ -432,6 +438,52 @@ export class UIControls {
       this.mobileTurnControl.classList.add('disabled');
     }
     this.updateMobileTurnButton('user');
+  }
+
+  initializeMobileVideoSwap() {
+    if (!this.isMobileDevice) return;
+    if (!document?.body) return;
+
+    const localContainer = this.localVideoDisplayContainer || document.getElementById('localVideoDisplay');
+    const remoteContainer = this.remoteVideoDisplayContainer || document.getElementById('remoteVideoDisplay');
+
+    if (!localContainer || !remoteContainer) return;
+
+    this.localVideoDisplayContainer = localContainer;
+    this.remoteVideoDisplayContainer = remoteContainer;
+
+    if (!localContainer.dataset.swapHandlerAttached) {
+      localContainer.dataset.swapHandlerAttached = '1';
+      localContainer.addEventListener('click', (event) => this.handleMobileSwapClick(event, 'local'));
+    }
+
+    if (!remoteContainer.dataset.swapHandlerAttached) {
+      remoteContainer.dataset.swapHandlerAttached = '1';
+      remoteContainer.addEventListener('click', (event) => this.handleMobileSwapClick(event, 'remote'));
+    }
+  }
+
+  handleMobileSwapClick(event, source) {
+    if (!this.isMobileDevice) return;
+    if (!document?.body) return;
+    if (document.body.classList.contains('mobile-landscape')) return;
+    if (event.target.closest('.mic-indicator') || event.target.closest('.fullscreen-button') || event.target.closest('.copy-link-button')) {
+      return;
+    }
+
+    const isSwapActive = this.mobileSwapActive === true;
+    const isLocalSource = source === 'local';
+    const isSmallTile = (!isSwapActive && isLocalSource) || (isSwapActive && !isLocalSource);
+    if (!isSmallTile) return;
+
+    this.toggleMobileVideoSwap();
+  }
+
+  toggleMobileVideoSwap(forceState) {
+    if (!this.isMobileDevice || !document?.body) return;
+    const nextState = typeof forceState === 'boolean' ? forceState : !this.mobileSwapActive;
+    this.mobileSwapActive = nextState;
+    document.body.classList.toggle('mobile-video-swap-active', nextState);
   }
 
   attachMobileTapFeedback(button) {
