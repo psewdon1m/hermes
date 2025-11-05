@@ -1,3 +1,4 @@
+- 2.34 (2025-11-05 20:43): landing/join copy in English, auto-copy redirect flow after call creation.
 - 2.33 (2025-11-05 20:08): landing/join split rollout, docs refresh, static server updates.
 - 2.32 (2025-11-04 22:05): restructure documentation set and polish reconnect UI logic.
 - 2.31 (2025-11-04 21:45): desktop idle chrome and swap logic tuning.

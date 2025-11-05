@@ -1,4 +1,4 @@
-const canvas = document.getElementById(''backgroundCanvas'');
+const canvas = document.getElementById("backgroundCanvas");
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 async function startBackground() {
@@ -13,15 +13,7 @@ const form = document.querySelector('[data-role="create-call-form"]');
 const initiatorInput = document.querySelector('[data-role="initiator-input"]');
 const createButton = document.querySelector('[data-role="create-call"]');
 const statusEl = document.querySelector('[data-role="cta-status"]');
-const resultBox = document.querySelector('[data-role="call-result"]');
-const codeEl = document.querySelector('[data-role="call-code"]');
-const linkEl = document.querySelector('[data-role="call-link"]');
-const copyCodeBtn = document.querySelector('[data-role="copy-code"]');
-const copyLinkBtn = document.querySelector('[data-role="copy-link"]');
-const openCallBtn = document.querySelector('[data-role="open-call"]');
 
-let currentJoinUrl = '';
-let currentCode = '';
 let isSubmitting = false;
 
 function sanitizeInput(value = '') {
@@ -50,16 +42,28 @@ function toggleSubmitting(state) {
     createButton.disabled = state;
   }
   if (state) {
-    setStatus('Создаём звонок…');
+    setStatus('Creating a call...');
   }
 }
 
-function showResult({ code, joinUrl }) {
-  currentCode = code || '';
-  currentJoinUrl = joinUrl || '';
-  if (codeEl) codeEl.textContent = currentCode || '—';
-  if (linkEl) linkEl.textContent = currentJoinUrl || '—';
-  if (resultBox) resultBox.classList.remove('hidden');
+async function copyToClipboard(value) {
+  if (!value) return false;
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+    } else {
+      const temp = document.createElement('textarea');
+      temp.value = value;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+    }
+    return true;
+  } catch (error) {
+    console.error('[landing] clipboard failed', error);
+    return false;
+  }
 }
 
 async function handleSubmit(event) {
@@ -85,58 +89,39 @@ async function handleSubmit(event) {
       const data = await response.json().catch(() => ({}));
       const errorCode = data?.error || response.status;
       if (response.status === 429) {
-        throw new Error('Слишком много запросов. Попробуйте ещё раз через минуту.');
+        throw new Error('Too many requests. Please try again in a minute.');
       }
       if (response.status === 400) {
-        throw new Error('Проверьте введённый Telegram ID — сервер вернул 400.');
+        throw new Error('Check the Telegram ID - the server responded with 400.');
       }
-      throw new Error(`Не удалось создать звонок (${errorCode}).`);
+      throw new Error(`Call creation failed (${errorCode}).`);
     }
 
     const data = await response.json();
     if (!data?.joinUrl || !data?.code) {
-      throw new Error('Сервер вернул неожиданный ответ без ссылки или кода.');
+      throw new Error('Unexpected response: join link or code is missing.');
     }
-    showResult(data);
-    setStatus('Готово! Отправьте код или ссылку собеседнику.');
+
+    const joinUrl = data.joinUrl;
+    const copied = await copyToClipboard(joinUrl);
+    if (copied) {
+      setStatus('Call link copied. Redirecting you to the session...');
+    } else {
+      setStatus('Redirecting you to the session...');
+    }
+
+    setTimeout(() => {
+      window.location.assign(joinUrl);
+    }, 50);
   } catch (error) {
     console.error('[landing] create call failed', error);
-    setStatus(error.message || 'Не удалось создать звонок.', 'error');
+    setStatus(error.message || 'Could not create the call.', 'error');
   } finally {
     toggleSubmitting(false);
   }
 }
 
-async function copyToClipboard(value, label) {
-  if (!value) return;
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(value);
-    } else {
-      const temp = document.createElement('textarea');
-      temp.value = value;
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand('copy');
-      document.body.removeChild(temp);
-    }
-    setStatus(`${label} скопирован. Поделитесь им с собеседником.`);
-  } catch (error) {
-    console.error('[landing] clipboard failed', error);
-    setStatus('Не удалось скопировать. Сделайте это вручную.', 'error');
-  }
-}
-
 form?.addEventListener('submit', handleSubmit);
-copyCodeBtn?.addEventListener('click', () => copyToClipboard(currentCode, 'Код'));
-copyLinkBtn?.addEventListener('click', () => copyToClipboard(currentJoinUrl, 'Ссылка'));
-openCallBtn?.addEventListener('click', () => {
-  if (!currentJoinUrl) {
-    setStatus('Создайте звонок, чтобы перейти на страницу подключения.', 'error');
-    return;
-  }
-  window.location.assign(currentJoinUrl);
-});
 
 window.addEventListener('pageshow', () => {
   setStatus('');

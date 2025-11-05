@@ -1,26 +1,26 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Hermes - P2P videocall platform</title>
   <meta name="title" content="Hermes - P2P videocall platform" />
-  <meta name="description" content="Hermes — self-hosted WebRTC платформа: создавайте защищённые P2P-видеозвонки, делитесь кодами доступа и управляйте инфраструктурой из одного стека." />
+  <meta name="description" content="Secure peer-to-peer video calls that stay private and easy to share." />
   <meta property="og:type" content="website" />
-  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="Hermes - P2P videocall platform" />
-  <meta property="og:description" content="Hermes — self-hosted WebRTC платформа: создавайте защищённые P2P-видеозвонки, делитесь кодами доступа и управляйте инфраструктурой из одного стека." />
+  <meta property="og:description" content="Secure peer-to-peer video calls that stay private and easy to share." />
   <meta property="og:site_name" content="Hermes" />
   <meta property="og:url" content="https://call.tgcall.us/" />
-  <meta property="og:image" content="https://call.tgcall.us/src/no_video.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Hermes: интерфейс P2P видеозвонка" />
+  <meta property="og:image" content="https://call.tgcall.us/src/favicon.svg" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta property="og:image:alt" content="Hermes logo" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Hermes - P2P videocall platform" />
-  <meta name="twitter:description" content="Hermes — self-hosted WebRTC платформа: создавайте защищённые P2P-видеозвонки, делитесь кодами доступа и управляйте инфраструктурой из одного стека." />
-  <meta name="twitter:image" content="https://call.tgcall.us/src/no_video.png" />
-  <meta name="twitter:image:alt" content="Hermes: интерфейс P2P видеозвонка" />
+  <meta name="twitter:description" content="Secure peer-to-peer video calls that stay private and easy to share." />
+  <meta name="twitter:image" content="https://call.tgcall.us/src/favicon.svg" />
+  <meta name="twitter:image:alt" content="Hermes logo" />
   <meta name="theme-color" content="#0c0f15" />
   <link rel="icon" type="image/svg+xml" href="./src/favicon.svg" />
   <link rel="apple-touch-icon" href="./src/favicon.svg" />
@@ -50,11 +50,6 @@
       flex-direction: column;
     }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
     .background-canvas {
       position: fixed;
       inset: 0;
@@ -71,80 +66,48 @@
       pointer-events: none;
     }
 
-    .site-header {
-      width: min(1200px, 100%);
-      margin: 0 auto;
-      padding: 32px 32px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-    }
-
-    .logo {
-      font-family: 'JetBrains Mono', monospace;
-      text-transform: lowercase;
-      font-size: clamp(22px, 4vw, 28px);
-      letter-spacing: 0.2em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo span {
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(125, 146, 255, 0.2);
-      border: 1px solid rgba(125, 146, 255, 0.4);
-      font-size: 0.75em;
-      letter-spacing: 0.3em;
-    }
-
-    .site-nav {
-      display: flex;
-      gap: 20px;
-      font-size: 15px;
-    }
-
-    .site-nav a {
-      opacity: 0.85;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-
-    .site-nav a:hover,
-    .site-nav a:focus-visible {
-      opacity: 1;
-      transform: translateY(-1px);
-    }
-
     .page {
-      width: min(1200px, 100%);
+      width: min(1080px, 100%);
       margin: 0 auto;
-      padding: clamp(32px, 6vw, 56px) clamp(20px, 5vw, 40px) clamp(56px, 8vw, 96px);
+      padding: clamp(32px, 6vw, 56px) clamp(20px, 6vw, 40px) clamp(56px, 8vw, 96px);
       display: flex;
       flex-direction: column;
-      gap: clamp(72px, 12vh, 140px);
+      gap: clamp(60px, 12vh, 120px);
       flex: 1 0 auto;
     }
 
     .hero {
-      padding-top: clamp(24px, 12vh, 140px);
       display: grid;
-      gap: 32px;
-      max-width: 760px;
-      min-height: clamp(320px, 60vh, 640px);
+      gap: 28px;
+      max-width: 720px;
+      padding-top: clamp(16px, 12vh, 120px);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(125, 146, 255, 0.18);
+      border: 1px solid rgba(125, 146, 255, 0.4);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #dfe4ff;
+      width: fit-content;
     }
 
     .hero h1 {
-      font-size: clamp(32px, 6vw, 60px);
+      font-size: clamp(36px, 6vw, 64px);
       font-weight: 700;
       line-height: 1.05;
       letter-spacing: -0.02em;
-      text-wrap: balance;
     }
 
     .hero p {
-      font-size: clamp(18px, 2.2vw, 22px);
+      font-size: clamp(18px, 2vw, 22px);
       opacity: 0.85;
       text-wrap: pretty;
     }
@@ -155,7 +118,7 @@
       background: rgba(24, 28, 40, 0.72);
       border: 1px solid rgba(125, 146, 255, 0.25);
       border-radius: 18px;
-      padding: 24px;
+      padding: clamp(20px, 4vw, 28px);
       box-shadow: 0 18px 60px rgba(19, 23, 40, 0.45);
       backdrop-filter: blur(8px);
     }
@@ -163,7 +126,7 @@
     .cta label {
       font-size: 14px;
       text-transform: uppercase;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.14em;
       opacity: 0.7;
     }
 
@@ -175,8 +138,8 @@
 
     .cta input {
       flex: 1 1 220px;
-      min-width: 180px;
-      background: rgba(9, 12, 20, 0.86);
+      min-width: 200px;
+      background: rgba(9, 12, 20, 0.9);
       border: 1px solid rgba(125, 146, 255, 0.25);
       border-radius: 12px;
       padding: 14px 16px;
@@ -188,7 +151,7 @@
       flex: 0 0 auto;
       border: none;
       border-radius: 12px;
-      padding: 14px 22px;
+      padding: 14px 24px;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
@@ -213,8 +176,7 @@
 
     .cta-hint {
       font-size: 14px;
-      opacity: 0.65;
-      text-wrap: pretty;
+      opacity: 0.7;
     }
 
     .cta-status {
@@ -225,84 +187,6 @@
 
     .cta-status.error {
       color: #ff8fa3;
-    }
-
-    .call-result {
-      display: grid;
-      gap: 12px;
-      padding: 20px;
-      border-radius: 16px;
-      background: rgba(12, 15, 21, 0.82);
-      border: 1px solid rgba(125, 146, 255, 0.2);
-    }
-
-    .call-result.hidden {
-      display: none;
-    }
-
-    .call-result__label {
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.2em;
-      opacity: 0.6;
-    }
-
-    .call-result__row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 15px;
-    }
-
-    .call-result__row span {
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: rgba(22, 27, 40, 0.88);
-      border: 1px solid rgba(125, 146, 255, 0.25);
-      word-break: break-word;
-    }
-
-    .call-result__row button {
-      border: none;
-      background: none;
-      color: #7d92ff;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 8px 10px;
-      border-radius: 10px;
-      transition: background 0.2s ease;
-    }
-
-    .call-result__row button:hover,
-    .call-result__row button:focus-visible {
-      background: rgba(125, 146, 255, 0.18);
-    }
-
-    .call-result__actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .call-result__actions button {
-      border: none;
-      border-radius: 12px;
-      padding: 12px 18px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      background: rgba(125, 146, 255, 0.2);
-      border: 1px solid rgba(125, 146, 255, 0.4);
-      color: inherit;
-      transition: background 0.2s ease, transform 0.2s ease;
-    }
-
-    .call-result__actions button:hover,
-    .call-result__actions button:focus-visible {
-      background: rgba(125, 146, 255, 0.3);
-      transform: translateY(-1px);
     }
 
     .feature-grid {
@@ -318,25 +202,50 @@
       border-radius: 18px;
       padding: 24px;
       display: grid;
-      gap: 12px;
+      gap: 16px;
       backdrop-filter: blur(6px);
     }
 
-    .feature-card h3 {
-      font-size: 18px;
+    .feature-card h2 {
+      font-size: 20px;
       font-weight: 600;
     }
 
     .feature-card p {
       font-size: 15px;
-      opacity: 0.75;
+      opacity: 0.78;
       text-wrap: pretty;
+    }
+
+    .feature-card__cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(125, 146, 255, 0.4);
+      color: #dfe4ff;
+      font-weight: 600;
+      transition: background 0.2s ease, transform 0.2s ease;
+      background: rgba(125, 146, 255, 0.16);
+    }
+
+    .feature-card__cta:hover,
+    .feature-card__cta:focus-visible {
+      background: rgba(125, 146, 255, 0.28);
+      transform: translateY(-1px);
     }
 
     .how-it-works {
       display: grid;
       gap: 20px;
       max-width: 680px;
+    }
+
+    .how-it-works h2 {
+      font-size: 24px;
+      font-weight: 600;
     }
 
     .how-it-works ol {
@@ -382,58 +291,18 @@
     }
 
     @media (max-width: 768px) {
-      .site-header {
-        padding: 24px 20px 16px;
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .site-nav {
-        flex-wrap: wrap;
-        gap: 12px 18px;
-        font-size: 14px;
-      }
-
       .page {
         padding: clamp(24px, 7vw, 40px) 20px clamp(40px, 10vw, 64px);
-        gap: clamp(56px, 14vw, 96px);
-      }
-
-      .cta {
-        padding: 20px;
-      }
-
-      .call-result__row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .call-result__row button {
-        align-self: flex-start;
-      }
-
-      .how-it-works li {
-        padding-left: 52px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .hero {
-        gap: 24px;
-        min-height: auto;
-        padding-top: clamp(32px, 16vw, 72px);
-      }
-
-      .cta {
-        padding: 18px;
-      }
-
-      .hero h1 {
-        font-size: clamp(30px, 10vw, 40px);
+        gap: clamp(48px, 14vw, 80px);
       }
 
       .cta-controls {
         flex-direction: column;
+        align-items: stretch;
+      }
+
+      .cta input {
+        min-width: 100%;
       }
 
       .cta button {
@@ -455,78 +324,47 @@
   <canvas id="backgroundCanvas" class="background-canvas" aria-hidden="true"></canvas>
   <div class="background-overlay" aria-hidden="true"></div>
 
-  <header class="site-header">
-    <div class="logo">hermes <span>call</span></div>
-    <nav class="site-nav">
-      <a href="#features">Возможности</a>
-      <a href="#how-it-works">Как это работает</a>
-      <a href="https://github.com/psewdon1m/hermes" target="_blank" rel="noopener">GitHub</a>
-    </nav>
-  </header>
-
   <main class="page">
     <section class="hero">
-      <h1>Привет! Это Hermes.</h1>
-      <p>Платформа для мгновенных P2P-видеозвонков: шифрование, TURN/STUN, WebRTC — всё развёрнуто и готово. Создайте звонок и пришлите ссылку коллегам в пару кликов.</p>
+      <span class="hero-badge">hermes call</span>
+      <h1>Secure peer-to-peer video calls in a single click.</h1>
+      <p>Hermes keeps your team connected with private WebRTC calls you can self-host in minutes. Share a link, join instantly, and stay in control of your data.</p>
 
       <form class="cta" data-role="create-call-form">
-        <label for="initiatorInput">Telegram ID (опционально)</label>
+        <label for="initiatorInput">Telegram ID (optional)</label>
         <div class="cta-controls">
-          <input id="initiatorInput" name="initiatorInput" type="text" autocomplete="off" placeholder="@username или ID" maxlength="64" data-role="initiator-input" />
-          <button type="submit" data-role="create-call">Создать звонок</button>
+          <input id="initiatorInput" name="initiatorInput" type="text" autocomplete="off" placeholder="@username or numeric ID" maxlength="64" data-role="initiator-input" />
+          <button type="submit" data-role="create-call">Start call</button>
         </div>
-        <p class="cta-hint">Если поле оставить пустым — сгенерируем гостевой идентификатор. Код живёт 15 минут, ссылка действует сутки.</p>
-
-        <div class="call-result hidden" data-role="call-result">
-          <div class="call-result__label">Звонок готов</div>
-          <div class="call-result__row">
-            <span data-role="call-code">—</span>
-            <button type="button" data-role="copy-code">Скопировать код</button>
-          </div>
-          <div class="call-result__row">
-            <span data-role="call-link">—</span>
-            <button type="button" data-role="copy-link">Скопировать ссылку</button>
-          </div>
-          <div class="call-result__actions">
-            <button type="button" data-role="open-call">Открыть страницу звонка</button>
-          </div>
-        </div>
-
+        <p class="cta-hint">Leave the field empty to generate a guest identifier. Codes expire after 15 minutes, links stay valid for 24 hours.</p>
         <div class="cta-status" data-role="cta-status"></div>
       </form>
     </section>
 
-    <section class="feature-grid" id="features">
+    <section class="feature-grid">
       <article class="feature-card">
-        <h3>Полный стек</h3>
-        <p>REST API, WebSocket сигналинг, TURN/STUN и веб-клиент — всё в одном docker-compose, готово к деплою.</p>
+        <h2>Private by default</h2>
+        <p>Hermes keeps media peer-to-peer, issues one-time access codes, and lets you host the entire stack yourself so conversations remain yours.</p>
       </article>
       <article class="feature-card">
-        <h3>Быстрый старт</h3>
-        <p>Несколько строк — и вы уже создали защищённый звонок с кодом доступа и пригласительной ссылкой.</p>
-      </article>
-      <article class="feature-card">
-        <h3>Умный UI</h3>
-        <p>Адаптивный интерфейс, управление микрофоном и камерой, предпросмотр и автоподключение.</p>
-      </article>
-      <article class="feature-card">
-        <h3>Надёжная инфраструктура</h3>
-        <p>Rate limiting, авторизация через JWT, логирование и диагностика — продумано по умолчанию.</p>
+        <h2>Open source project</h2>
+        <p>The platform is MIT-licensed. Inspect the signaling server, adapt the WebRTC client, and extend the tooling without vendor lock-in.</p>
+        <a class="feature-card__cta" href="https://github.com/psewdon1m/hermes" target="_blank" rel="noopener">View on GitHub</a>
       </article>
     </section>
 
     <section class="how-it-works" id="how-it-works">
-      <h2>Как это работает</h2>
+      <h2>How it works</h2>
       <ol>
-        <li>Вы нажимаете «Создать звонок». Hermes запрашивает API и получает код, ссылку и JWT токен.</li>
-        <li>Отправляете ссылку собеседнику. Он переходит на страницу `/join` и подключается через WebRTC.</li>
-        <li>TURN/STUN обеспечивают соединение за NAT, а шифрование WebRTC сохраняет приватность разговора.</li>
+        <li>Click "Start call". Hermes contacts the API and issues a code plus a join link with a 24 hour token.</li>
+        <li>Share the link or code. Your teammate opens /join and connects straight into the same session.</li>
+        <li>Hermes manages TURN/STUN handshakes behind the scenes while the WebRTC channel stays encrypted.</li>
       </ol>
     </section>
   </main>
 
   <footer>
-    Hermes © 2025. Документация и исходники — в репозитории.
+    Hermes (c) 2025. Documentation and source are available in the repository.
   </footer>
 
   <script type="module" src="./landing.js"></script>
