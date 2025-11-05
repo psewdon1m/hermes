@@ -17,7 +17,6 @@ const diagEl  = document.getElementById('diag');
 let remotePlaybackGranted = false; // Tracks whether remote playback has been unlocked (overlay flow removed)
 let speakerOutputEnabled = true;
 let screenShareActive = false;
-let micNudgeHandlerRegistered = false;
 let prejoinOverlayDismissed = false;
 let localPreviewMirrorPreference = true;
 let pendingLocalStream = null;
@@ -259,9 +258,6 @@ function setRemoteDisplayStream(stream) {
   if (window.uiControls?.updateVideoAspect) {
     window.uiControls.updateVideoAspect('remote', stream || null);
   }
-  if (window.uiControls?.refreshRemoteMicIndicator) {
-    window.uiControls.refreshRemoteMicIndicator();
-  }
   updateRemoteVideoActiveState(stream);
 }
 
@@ -409,30 +405,6 @@ function cleanupFallbackMedia() {
   updateLocalVideoActiveState();
 }
 
-function ensureMicNudgeHandler() {
-  if (micNudgeHandlerRegistered) return;
-  if (!window.uiControls || typeof window.uiControls.onRemoteMicNudge !== 'function') {
-    setTimeout(ensureMicNudgeHandler, 250);
-    return;
-  }
-  window.uiControls.onRemoteMicNudge(() => {
-    if (!signalingSession || !signalingSession.otherPeer) return;
-    signalingSession.send({
-      type: 'mic-nudge',
-      target: signalingSession.otherPeer,
-      payload: { ts: Date.now() }
-    });
-  });
-  micNudgeHandlerRegistered = true;
-}
-
-function handleMicNudge(from) {
-  log('[signal] mic nudge received', from || null);
-  if (window.uiControls && typeof window.uiControls.flashMicrophoneButton === 'function') {
-    window.uiControls.flashMicrophoneButton(3);
-  }
-}
-
 async function fallbackToggleCamera() {
   const stream = await ensureFallbackLocalStream();
   if (!stream) return fallbackMedia.cameraOn;
@@ -463,9 +435,38 @@ async function fallbackToggleMicrophone() {
 
 async function fallbackStartScreenShare() {
   try {
-    const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    const controller = typeof window !== 'undefined' && 'CaptureController' in window
+      ? new window.CaptureController()
+      : null;
+    if (controller) {
+      try {
+        if (controller.setFocusBehavior) {
+          controller.setFocusBehavior('no-focus-change');
+        }
+        if (controller.setMonitorTypeSurfaces) {
+          controller.setMonitorTypeSurfaces(['monitor', 'window', 'browser']);
+        }
+        if (controller.setSurfaceSwitchingBehavior) {
+          controller.setSurfaceSwitchingBehavior('include');
+        }
+      } catch (controllerErr) {
+        log('[fallback] capture controller setup failed', controllerErr?.message || controllerErr);
+      }
+    }
+    const captureOpts = {
+      video: {
+        cursor: 'always',
+        logicalSurface: true,
+        surfaceSwitching: 'include',
+        displaySurface: 'monitor'
+      },
+      audio: false,
+      ...(controller ? { controller } : {})
+    };
+    const displayStream = await navigator.mediaDevices.getDisplayMedia(captureOpts);
     const displayTrack = displayStream.getVideoTracks()[0];
     if (displayTrack) {
+      try { displayTrack.contentHint = 'detail'; } catch {}
       displayTrack.addEventListener('ended', () => {
         fallbackStopScreenShare();
       });
@@ -778,8 +779,6 @@ document.addEventListener('visibilitychange', () => {
 
 // ---------- Global instances ----------
 
-ensureMicNudgeHandler();
-
 // ICE restart functionality moved to MediaSession
 
 // This function is now handled by SignalingSession.send()
@@ -844,9 +843,6 @@ async function join(){
         if (window.uiControls.setRemoteParticipantPresent) {
           window.uiControls.setRemoteParticipantPresent(false);
         }
-        if (window.uiControls.setRemoteMicrophoneState) {
-          window.uiControls.setRemoteMicrophoneState(true);
-        }
       }
       if (mediaSession) {
         mediaSession.rebuildPCAndRenegotiate();
@@ -857,10 +853,6 @@ async function join(){
   };
 
   signalingSession.onMessage = (msg) => {
-    if (msg?.type === 'mic-nudge') {
-      handleMicNudge(msg.from);
-      return;
-    }
     if (msg?.type === 'peer-reconnected') {
       if (mediaSession) {
         mediaSession.rebuildPCAndRenegotiate();
@@ -990,11 +982,6 @@ async function join(){
 
     if (!stream) {
       remotePlaybackGranted = false;
-      if (window.uiControls?.setRemoteMicrophoneState) {
-        window.uiControls.setRemoteMicrophoneState(true);
-      } else if (window.uiControls?.refreshRemoteMicIndicator) {
-        window.uiControls.refreshRemoteMicIndicator();
-      }
       if (window.uiControls?.setRemoteVideoActive) {
         window.uiControls.setRemoteVideoActive(true);
       }
@@ -1013,20 +1000,6 @@ async function join(){
       });
     }
 
-    const updateRemoteMicState = () => {
-      const audioTracks = stream.getAudioTracks();
-      const hasActiveAudio = audioTracks.some(track =>
-        track &&
-        track.readyState === 'live' &&
-        track.enabled !== false &&
-        track.muted !== true
-      );
-      if (window.uiControls?.setRemoteMicrophoneState) {
-        window.uiControls.setRemoteMicrophoneState(hasActiveAudio);
-      }
-    };
-
-    updateRemoteMicState();
     const videoTracksRemote = stream.getVideoTracks();
     videoTracksRemote.forEach((track) => {
       if (!track || track.__hermesVideoListener) return;
@@ -1055,36 +1028,6 @@ async function join(){
       }
     });
     updateRemoteVideoActiveState(stream);
-    const audioTracks = stream.getAudioTracks();
-    audioTracks.forEach((track) => {
-      if (!track || track.__hermesMicListener) return;
-      const listener = () => updateRemoteMicState();
-      track.__hermesMicListener = listener;
-      if (track.addEventListener) {
-        track.addEventListener('mute', listener);
-        track.addEventListener('unmute', listener);
-        track.addEventListener('ended', listener);
-      } else {
-        const originalMute = track.onmute;
-        const originalUnmute = track.onunmute;
-        const originalEnded = track.onended;
-        track.onmute = (...args) => {
-          listener();
-          if (typeof originalMute === 'function') originalMute.apply(track, args);
-        };
-        track.onunmute = (...args) => {
-          listener();
-          if (typeof originalUnmute === 'function') originalUnmute.apply(track, args);
-        };
-        track.onended = (...args) => {
-          listener();
-          if (typeof originalEnded === 'function') originalEnded.apply(track, args);
-        };
-      }
-    });
-    if (window.uiControls?.refreshRemoteMicIndicator) {
-      window.uiControls.refreshRemoteMicIndicator();
-    }
 
   };
 
@@ -1288,12 +1231,6 @@ window.endCall = () => {
       window.uiControls.updateCameraState(true);
       window.uiControls.updateMicrophoneState(true);
       window.uiControls.updateSpeakerState(true);
-      if (window.uiControls.setRemoteMicrophoneState) {
-        window.uiControls.setRemoteMicrophoneState(true);
-      }
-      if (window.uiControls.refreshRemoteMicIndicator) {
-        window.uiControls.refreshRemoteMicIndicator();
-      }
       if (window.uiControls.setRemoteParticipantPresent) {
         window.uiControls.setRemoteParticipantPresent(false);
       }

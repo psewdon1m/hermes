@@ -249,12 +249,6 @@
       display: none;
     }
 
-    body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #localVideoDisplay .mic-indicator,
-    body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay .mic-indicator {
-      top: 6px;
-      left: 6px;
-    }
-
     body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #localVideoDisplay .video-fallback,
     body.mobile-ui:not(.mobile-landscape).mobile-video-swap-active #remoteVideoDisplay .video-fallback,
     body.mobile-ui:not(.mobile-landscape):not(.mobile-video-swap-active) #localVideoDisplay .placeholder-cross,
@@ -609,43 +603,6 @@
     .call-overlay__actions .control-button.primary .button-icon {
       width: 32px;
       height: 32px;
-    }
-    .mic-indicator {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      width: 28px;
-      height: 28px;
-      border: none;
-      padding: 0;
-      border-radius: 8px;
-      background: rgba(20, 20, 20, 0.85);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 6;
-      transition: transform 0.2s ease, background-color 0.2s ease;
-    }
-    .mic-indicator.visible {
-      display: flex;
-    }
-    .mic-indicator:disabled {
-      cursor: not-allowed;
-      opacity: 0.65;
-    }
-    .mic-indicator.visible:active:not(:disabled) {
-      transform: scale(0.94);
-    }
-    .mic-indicator.feedback {
-      animation: micIndicatorPulse 0.6s ease;
-    }
-    .mic-indicator-icon {
-      width: 16px;
-      height: 16px;
-      background-color: #f190ec;
-      -webkit-mask: url('src/speaker.svg') center/contain no-repeat;
-      mask: url('src/speaker.svg') center/contain no-repeat;
     }
     .video-fallback {
       position: absolute;
@@ -1091,26 +1048,6 @@
         width: 20px;
         height: 20px;
       }
-      .mic-indicator {
-        top: 10px;
-        left: 10px;
-        width: 26px;
-        height: 26px;
-      }
-      .mic-indicator-icon {
-        width: 14px;
-        height: 14px;
-      }
-      .mic-indicator {
-        top: 10px;
-        left: 10px;
-        width: 26px;
-        height: 26px;
-      }
-      .mic-indicator-icon {
-        width: 14px;
-        height: 14px;
-      }
       .video-fallback {
         inset: 10px;
         border-radius: 14px;
@@ -1277,29 +1214,9 @@
         width: 32px;
         height: 32px;
       }
-      .mic-indicator {
-        top: 10px;
-        left: 10px;
-        width: 24px;
-        height: 24px;
-      }
-      .mic-indicator-icon {
-        width: 12px;
-        height: 12px;
-      }
       .video-fallback {
         inset: 10px;
         border-radius: 12px;
-      }
-      .mic-indicator {
-        top: 10px;
-        left: 10px;
-        width: 24px;
-        height: 24px;
-      }
-      .mic-indicator-icon {
-        width: 12px;
-        height: 12px;
       }
       .video-fallback {
         inset: 8px;
@@ -1521,26 +1438,6 @@
         width: 16px;
         height: 16px;
       }
-      .mic-indicator {
-        top: 8px;
-        left: 8px;
-        width: 22px;
-        height: 22px;
-      }
-      .mic-indicator-icon {
-        width: 12px;
-        height: 12px;
-      }
-      .mic-indicator {
-        top: 8px;
-        left: 8px;
-        width: 22px;
-        height: 22px;
-      }
-      .mic-indicator-icon {
-        width: 12px;
-        height: 12px;
-      }
 
 
       .control-button.primary.disabled {
@@ -1644,9 +1541,6 @@
     
     <!-- Visual elements for display -->
     <div class="video-placeholder" id="localVideoDisplay">
-      <button class="mic-indicator" type="button" data-role="local-mic-indicator" aria-label="Microphone muted">
-        <span class="mic-indicator-icon"></span>
-      </button>
       <div class="video-fallback" data-role="local-video-fallback" aria-hidden="true">
         <img src="src/no_video.png" alt="" class="video-fallback-image">
       </div>
@@ -1657,9 +1551,6 @@
       </button>
     </div>
     <div class="video-placeholder" id="remoteVideoDisplay">
-      <button class="mic-indicator" type="button" data-role="remote-mic-indicator" aria-label="Remote microphone muted">
-        <span class="mic-indicator-icon"></span>
-      </button>
       <div class="video-fallback" data-role="remote-video-fallback" aria-hidden="true">
         <img src="src/no_video.png" alt="" class="video-fallback-image">
       </div>

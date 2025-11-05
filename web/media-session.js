@@ -1002,7 +1002,35 @@ export class MediaSession {
       return true;
     }
     try {
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const controller = typeof window !== 'undefined' && 'CaptureController' in window
+        ? new window.CaptureController()
+        : null;
+      if (controller) {
+        try {
+          if (controller.setFocusBehavior) {
+            controller.setFocusBehavior('no-focus-change');
+          }
+          if (controller.setMonitorTypeSurfaces) {
+            controller.setMonitorTypeSurfaces(['monitor', 'window', 'browser']);
+          }
+          if (controller.setSurfaceSwitchingBehavior) {
+            controller.setSurfaceSwitchingBehavior('include');
+          }
+        } catch (controllerErr) {
+          this.log('[media] capture controller setup failed', controllerErr?.message || controllerErr);
+        }
+      }
+      const captureOpts = {
+        video: {
+          cursor: 'always',
+          logicalSurface: true,
+          surfaceSwitching: 'include',
+          displaySurface: 'monitor'
+        },
+        audio: false,
+        ...(controller ? { controller } : {})
+      };
+      const displayStream = await navigator.mediaDevices.getDisplayMedia(captureOpts);
       const displayTrack = displayStream.getVideoTracks()[0];
       if (!displayTrack) {
         displayStream.getTracks().forEach(t => t.stop());
@@ -1019,6 +1047,7 @@ export class MediaSession {
         this.log('[media] screen share track ended by user');
         this.stopScreenShare().catch(() => {});
       };
+      try { displayTrack.contentHint = 'detail'; } catch {}
 
       this.screenShareStream = displayStream;
       try {
@@ -1302,5 +1331,6 @@ export class MediaSession {
     this.setStatus('idle', 'media session closed');
   }
 }
+
 
 

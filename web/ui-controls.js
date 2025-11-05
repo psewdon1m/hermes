@@ -29,13 +29,6 @@ export class UIControls {
     this.microphoneEnabled = true;
     this.speakerEnabled = true;
     this.screenSharing = false;
-    this.remoteMicrophoneEnabled = true;
-    this.remoteMicNudgeHandler = null;
-    this.localMicIndicator = null;
-    this.remoteMicIndicator = null;
-    this.micButton = null;
-    this.localVideoFallback = null;
-    this.remoteVideoFallback = null;
     this.localVideoActive = true;
     this.remoteVideoActive = true;
     this.remoteParticipantPresent = false;
@@ -46,6 +39,8 @@ export class UIControls {
     this.mobileSwapActive = false;
     this.mobileControlsResizeObserver = null;
     this.boundUpdateMobileSmallTileOffset = null;
+    this.localVideoFallback = document.querySelector('[data-role="local-video-fallback"]');
+    this.remoteVideoFallback = document.querySelector('[data-role="remote-video-fallback"]');
     this.desktopIdleDelay = 6000;
     this.desktopIdleTimer = null;
     this.desktopIdleActive = false;
@@ -106,8 +101,6 @@ export class UIControls {
     this.updateMicrophoneState(this.microphoneEnabled);
     this.updateSpeakerState(this.speakerEnabled);
     this.updateScreenState(this.screenSharing);
-    this.refreshLocalMicIndicator();
-    this.refreshRemoteMicIndicator();
     this.refreshLocalVideoFallback();
     this.refreshRemoteVideoFallback();
     this.refreshOverlayPreview();
@@ -123,7 +116,6 @@ export class UIControls {
   initializeEventListeners() {
     this.setupCopyLinkButtons();
     this.setupFullscreenButtons();
-    this.setupMicIndicators();
     this.setupOverlayControls();
     this.attachControlButton('camBtn', () => this.handleCamClick());
     this.attachControlButton('micBtn', () => this.handleMicClick());
@@ -175,46 +167,6 @@ export class UIControls {
       this.syncFullscreenButtons();
     });
     this.syncFullscreenButtons();
-  }
-
-  setupMicIndicators() {
-    this.localMicIndicator = document.querySelector('[data-role="local-mic-indicator"]');
-    this.remoteMicIndicator = document.querySelector('[data-role="remote-mic-indicator"]');
-    this.micButton = document.getElementById('micBtn');
-    this.localVideoFallback = document.querySelector('[data-role="local-video-fallback"]');
-    this.remoteVideoFallback = document.querySelector('[data-role="remote-video-fallback"]');
-
-    if (this.localMicIndicator) {
-      this.localMicIndicator.disabled = true;
-    }
-
-    if (this.remoteMicIndicator) {
-      this.remoteMicIndicator.addEventListener('click', (event) => {
-        if (!this.remoteMicIndicator.classList.contains('visible')) return;
-        event.preventDefault();
-        event.stopPropagation();
-        if (this.remoteMicIndicator.disabled) return;
-        this.triggerRemoteMicIndicatorFeedback();
-        try {
-          if (typeof this.remoteMicNudgeHandler === 'function') {
-            this.remoteMicNudgeHandler();
-          }
-        } catch (err) {
-          console.error('[ui] remote mic nudge handler failed', err);
-        }
-      });
-    }
-
-    if (this.micButton) {
-      this.micButton.addEventListener('animationend', (event) => {
-        if (event.animationName === 'micButtonNudge') {
-          this.micButton.classList.remove('mic-nudge');
-        }
-      });
-    }
-
-    this.refreshLocalVideoFallback();
-    this.refreshRemoteVideoFallback();
   }
 
   setupOverlayControls() {
@@ -555,7 +507,7 @@ export class UIControls {
     if (!this.isMobileDevice) return;
     if (!document?.body) return;
     if (document.body.classList.contains('mobile-landscape')) return;
-    if (event.target.closest('.mic-indicator') || event.target.closest('.fullscreen-button') || event.target.closest('.copy-link-button')) {
+    if (event.target.closest('.fullscreen-button') || event.target.closest('.copy-link-button')) {
       return;
     }
 
@@ -897,7 +849,6 @@ export class UIControls {
       this.mobileCamControl.classList.add(this.cameraEnabled ? 'active' : 'inactive');
       this.updateControlButtonIcon(this.mobileCamControl, 'camera', this.cameraEnabled);
     }
-    this.refreshLocalMicIndicator();
     this.refreshOverlayPreview();
   }
 
@@ -919,7 +870,6 @@ export class UIControls {
       this.mobileMicControl.classList.add(this.microphoneEnabled ? 'active' : 'inactive');
       this.updateControlButtonIcon(this.mobileMicControl, 'microphone', this.microphoneEnabled);
     }
-    this.refreshLocalMicIndicator();
   }
 
   updateSpeakerState(isEnabled) {
@@ -947,19 +897,8 @@ export class UIControls {
       } else if (!this.cameraEnabled) {
         localDisplay.classList.remove('has-media');
       }
-      this.refreshLocalMicIndicator();
       this.refreshLocalVideoFallback();
     }
-  }
-
-  refreshLocalMicIndicator() {
-    const container = document.getElementById('localVideoDisplay');
-    this.applyMicIndicator(container, !this.microphoneEnabled);
-  }
-
-  refreshRemoteMicIndicator() {
-    const container = document.getElementById('remoteVideoDisplay');
-    this.applyMicIndicator(container, !this.remoteMicrophoneEnabled);
   }
 
   setRemoteParticipantPresent(isPresent) {
@@ -969,36 +908,6 @@ export class UIControls {
       container.classList.toggle('participant-present', this.remoteParticipantPresent);
     }
     this.refreshRemoteVideoFallback();
-  }
-
-  setRemoteMicrophoneState(isEnabled) {
-    this.remoteMicrophoneEnabled = !!isEnabled;
-    this.refreshRemoteMicIndicator();
-  }
-
-  onRemoteMicNudge(handler) {
-    this.remoteMicNudgeHandler = typeof handler === 'function' ? handler : null;
-  }
-
-  flashMicrophoneButton(times = 3) {
-    const button = this.micButton || document.getElementById('micBtn');
-    if (!button) return;
-    const iterations = Math.max(1, Number(times) || 1);
-    button.style.setProperty('--mic-nudge-iterations', iterations);
-    button.classList.remove('mic-nudge');
-    // force reflow to restart animation
-    void button.offsetWidth;
-    button.classList.add('mic-nudge');
-  }
-
-  triggerRemoteMicIndicatorFeedback() {
-    if (!this.remoteMicIndicator) return;
-    this.remoteMicIndicator.classList.add('feedback');
-    setTimeout(() => {
-      if (this.remoteMicIndicator) {
-        this.remoteMicIndicator.classList.remove('feedback');
-      }
-    }, 600);
   }
 
   setLocalVideoActive(isVideoActive) {
@@ -1081,38 +990,6 @@ export class UIControls {
     this.overlay.classList.remove('call-overlay--visible');
     this.overlayVisible = false;
     this.handleDesktopIdleOverlayChange(false);
-  }
-
-  applyMicIndicator(container, shouldShowMuted) {
-    if (!container) return;
-    const indicator = container.querySelector('.mic-indicator');
-    if (!indicator) return;
-    const hasMedia = container.classList.contains('has-media');
-    const role = indicator.dataset.role || '';
-    const remotePresence =
-      role === 'remote-mic-indicator' &&
-      (hasMedia || container.classList.contains('participant-present') || container.classList.contains('video-inactive'));
-    const isVisible = !!shouldShowMuted && (role === 'remote-mic-indicator' ? remotePresence : hasMedia);
-    indicator.classList.toggle('visible', isVisible);
-    if (role === 'local-mic-indicator') {
-      indicator.disabled = true;
-      indicator.setAttribute('aria-label', isVisible ? 'Microphone muted' : 'Microphone active');
-      indicator.title = isVisible ? 'Microphone is muted' : '';
-    } else if (role === 'remote-mic-indicator') {
-      indicator.disabled = !isVisible;
-      indicator.setAttribute('aria-label', isVisible ? 'Remote microphone muted - request unmute' : 'Remote microphone active');
-      indicator.title = isVisible ? 'Ask participant to enable microphone' : '';
-      indicator.classList.remove('feedback');
-    } else {
-      indicator.disabled = !isVisible;
-      indicator.title = '';
-    }
-    indicator.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
-    if (role === 'local-mic-indicator') {
-      this.refreshLocalVideoFallback();
-    } else if (role === 'remote-mic-indicator') {
-      this.refreshRemoteVideoFallback();
-    }
   }
 
   startCallTimer() {
