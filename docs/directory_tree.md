@@ -1,52 +1,59 @@
-# Дерево директорий проекта Hermes
+﻿# Структура каталогов Hermes
 
 ```
 hermes/
-├── api/                           # API сервер (Node.js/Express)
+├── api/                           # API сервис (Node.js/Express)
 │   ├── Dockerfile                 # Docker образ для API
-│   ├── package.json              # Зависимости API сервера
-│   └── src/                      # Исходный код API
-│       ├── app.js                # Создание Express приложения
-│       ├── server.js             # Запуск сервера
-│       ├── lib/                  # Библиотеки и утилиты
-│       │   ├── env.js            # Переменные окружения
-│       │   ├── errors.js         # Обработчики ошибок
-│       │   ├── ratelimit.js      # Rate limiting middleware
-│       │   └── redis.js          # Redis клиент
-│       ├── routes/               # API маршруты
-│       │   ├── call.js           # Маршруты для звонков
-│       │   └── join.js           # Маршруты для присоединения
-│       └── services/             # Бизнес-логика
-│           ├── calls.js          # Управление звонками
-│           ├── tokens.js         # JWT токены
-│           └── turn.js           # TURN сервер интеграция
+│   ├── package.json               # зависимости API сервиса
+│   └── src/                       # исходники API
+│       ├── app.js                 # конфигурация Express приложения
+│       ├── server.js              # точка входа сервиса
+│       ├── lib/                   # утилиты и вспомогательные модули
+│       │   ├── env.js             # загрузка переменных окружения
+│       │   ├── errors.js          # описание ошибок и фабрики
+│       │   ├── ratelimit.js       # middleware для rate limiting
+│       │   └── redis.js           # клиент Redis
+│       ├── routes/                # HTTP роуты
+│       │   ├── call.js            # обработчик создания звонка
+│       │   └── join.js            # обработчик присоединения
+│       └── services/              # слой сервисов
+│           ├── calls.js           # доменная логика звонков
+│           ├── tokens.js          # выпуск JWT
+│           └── turn.js            # выдача TURN-учеток
 ├── caddy/                        # HTTP/HTTPS прокси
-│   ├── Caddyfile                 # Конфигурация Caddy
+│   ├── Caddyfile                 # конфигурация Caddy
 │   └── Dockerfile                # Docker образ для Caddy
 ├── coturn/                       # TURN/STUN сервер
-│   └── turnserver.conf           # Конфигурация CoTURN
-├── docker-compose.yml            # Docker Compose конфигурация
-├── .env                          # Переменные окружения
-├── log-output/                   # Выходные логи
-│   └── actual.logs               # Файл логов
-├── logger/                       # Сервис логирования
-│   ├── Dockerfile                # Docker образ для логгера
-│   ├── package.json              # Зависимости логгера
+│   └── turnserver.conf           # конфигурация CoTURN
+├── docker-compose.yml            # оркестрация сервисов
+├── .env                          # переменные окружения
+├── docs/                         # документация проекта
+├── log-output/                   # выгрузки логов и диагностика
+│   └── actual.logs               # пример журнала
+├── logger/                       # сервис логирования
+│   ├── Dockerfile
+│   ├── package.json
 │   └── src/
-│       └── index.js              # Основной файл логгера
-├── redis/                        # Redis сервер
-│   └── Dockerfile                # Docker образ для Redis
-├── scripts/                      # Скрипты
-│   └── follow-logs.sh            # Скрипт для отслеживания логов
-├── signal/                       # WebSocket сигнальный сервер
-│   ├── Dockerfile                # Docker образ для signal сервера
-│   ├── package.json              # Зависимости signal сервера
+│       └── index.js
+├── redis/                        # конфигурация Redis
+│   └── Dockerfile
+├── scripts/                      # вспомогательные скрипты
+│   ├── follow-logs.sh            # просмотр логов в реальном времени
+│   └── start-web-test-server.ps1 # локальный статический сервер
+├── signal/                       # WebSocket сигналинг
+│   ├── Dockerfile
+│   ├── package.json
 │   └── src/
-│       └── server.js             # WebSocket сервер
-└── web/                          # Веб-клиент
-    ├── client.js                 # Основной клиентский код
-    ├── index.html                # HTML страница
-    ├── media-session.js          # Управление медиа потоками
-    ├── signaling-session.js      # WebSocket сигналинг
-    └── ui-controls.js            # Управление интерфейсом
+│       └── server.js
+└── web/                          # веб-клиент
+    ├── index.html                # лендинг с приветствием и CTA
+    ├── join.html                 # страница подключения к звонку
+    ├── landing.js                # логика создания звонка и работа с API
+    ├── background-animation.js   # канвас-анимация абстрактного фона
+    ├── client.js                 # основной скрипт звонка
+    ├── media-session.js          # управление WebRTC-медиа
+    ├── signaling-session.js      # работа с WebSocket-сигналингом
+    ├── ui-controls.js            # управление элементами интерфейса
+    ├── device-info.js            # определение профиля клиента и окружения
+    └── src/                      # SVG/PNG ассеты (иконки, заглушки, favicon)
 ```

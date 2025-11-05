@@ -19,8 +19,10 @@ const fs=require('fs');
 const path=require('path');
 http.createServer((req,res)=>{
   const url=new URL(req.url,'http://localhost');
-  const pathname=url.pathname==='/'?'/index.html':url.pathname;
-  const file=path.join(process.cwd(),decodeURIComponent(pathname));
+  let pathname=decodeURIComponent(url.pathname);
+  if(pathname==='/'){pathname='/index.html';}
+  else if(pathname==='/join'){pathname='/join.html';}
+  const file=path.join(process.cwd(),pathname);
   const types={
     '.html':'text/html; charset=utf-8',
     '.js':'text/javascript; charset=utf-8',
@@ -41,11 +43,13 @@ http.createServer((req,res)=>{
     res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});
     fs.createReadStream(file).pipe(res);
   });
-}).listen(3000,()=>console.log('http://localhost:3000'));
+}).listen(3000,()=>console.log('http://localhost:3000 (landing) | http://localhost:3000/join (call UI)'));
 '@
 
 Write-Host 'Starting test server (Ctrl+C to stop)...' -ForegroundColor Green
-Write-Host 'Open this URL to load the frontend:' -ForegroundColor Yellow
-Write-Host 'http://localhost:3000/index.html?token=mock-token' -ForegroundColor Magenta
+Write-Host 'Landing:' -ForegroundColor Yellow
+Write-Host '  http://localhost:3000/' -ForegroundColor Magenta
+Write-Host 'Call UI:' -ForegroundColor Yellow
+Write-Host '  http://localhost:3000/join?token=mock-token' -ForegroundColor Magenta
 
 & node -e $nodeInlineScript

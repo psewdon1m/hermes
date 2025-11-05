@@ -22,7 +22,7 @@
 
   @join path /join /join/*
   handle @join {
-    rewrite * /index.html
+    rewrite * /join.html
     file_server
   }
 

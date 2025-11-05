@@ -1,3 +1,4 @@
+- 2.33 (2025-11-05 20:08): landing/join split rollout, docs refresh, static server updates.
 - 2.32 (2025-11-04 22:05): restructure documentation set and polish reconnect UI logic.
 - 2.31 (2025-11-04 21:45): desktop idle chrome and swap logic tuning.
 - 2.30 (2025-11-04 21:15): allow overlay buttons to scale slightly larger on tall devices.
