@@ -1,11 +1,34 @@
+import hashlib
 import logging
+from urllib.parse import urlparse
+
 from aiogram import Router, F
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    InlineQuery,
+    InlineQueryResultArticle,
+    InputTextMessageContent,
+    Message,
+)
 from call_api import create_call
 
 logger = logging.getLogger(__name__)
 router = Router()
+
+
+def _is_join_link(candidate: str) -> bool:
+    """Validate that inline query payload looks like a join link we issued."""
+    if not candidate:
+        return False
+    try:
+        parsed = urlparse(candidate)
+    except ValueError:
+        return False
+    if parsed.scheme not in {"https", "http"}:
+        return False
+    return bool(parsed.netloc)
 
 @router.message(Command("start"))
 async def cmd_start(message: Message):
@@ -63,7 +86,7 @@ async def create_call_handler(message: Message, user_id: int = None):
         # Создаем клавиатуру с кнопкой открытия ссылки
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="🔗 Открыть ссылку", url=data["joinUrl"])],
+                [InlineKeyboardButton(text="Переслать ссылку", switch_inline_query=data["joinUrl"])],
                 [InlineKeyboardButton(text="🔄 Создать новый звонок", callback_data="create_call")]
             ]
         )
@@ -106,3 +129,46 @@ async def handle_other_messages(message: Message):
     )
     
     await message.answer(help_text, reply_markup=keyboard)
+
+
+@router.inline_query()
+async def handle_inline_share(inline_query: InlineQuery):
+    """Allow users to forward join links via inline mode."""
+    query = inline_query.query.strip()
+
+    if not query:
+        await inline_query.answer(
+            [],
+            is_personal=True,
+            cache_time=0,
+            switch_pm_text="Создать ссылку",
+            switch_pm_parameter="create_call",
+        )
+        return
+
+    if not _is_join_link(query):
+        await inline_query.answer(
+            [],
+            is_personal=True,
+            cache_time=0,
+            switch_pm_text="Получить ссылку",
+            switch_pm_parameter="create_call",
+        )
+        return
+
+    result = InlineQueryResultArticle(
+        id=hashlib.sha256(query.encode("utf-8")).hexdigest(),
+        title="Отправить ссылку на звонок",
+        description="Собеседник получит ссылку для подключения",
+        input_message_content=InputTextMessageContent(
+            message_text=f"Приглашаю тебя на звонок: {query}",
+            disable_web_page_preview=True,
+        ),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="Присоединиться к звонку", url=query)]
+            ]
+        ),
+    )
+
+    await inline_query.answer([result], is_personal=True, cache_time=0)

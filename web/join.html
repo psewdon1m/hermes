@@ -36,7 +36,7 @@
     }
 
     body {
-      background: radial-gradient(circle at 20% 20%, #110e29, #0e0014);
+      background: radial-gradient(circle at 20% 20%, #110e29, #000000);
       color: #ffffff;
       font-family: system-ui, -apple-system, sans-serif;
       min-height: 100vh;
@@ -417,7 +417,7 @@
     }
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button.turn.rear-camera {
-      background-color: #f190ec;
+      background-color: #110e29;
       box-shadow: 2px 2px 0 0 #ffffff;
       color: #000000;
     }
@@ -435,7 +435,7 @@
     }
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button.inactive {
-      background-color: #f890ea;
+      background-color: #f85284;
       box-shadow: 2px 2px 0 0 #ffffff;
       color: #000000;
     }
@@ -457,7 +457,7 @@
     }
 
     .call-overlay__actions .control-button.primary.active {
-      background-color: #90a8ed;
+      background-color: #7884f7;
       color: #000000;
       border: 1px solid #000000;
     }
@@ -468,7 +468,7 @@
     }
 
     .call-overlay__actions .control-button.primary.inactive {
-      background-color: #f890ea;
+      background-color: #f85284;
       border: 1px solid #000000;
       color: #000000;
       filter: none;
@@ -483,7 +483,7 @@
       width: clamp(200px, 100%, 480px);
       height: 96px;
       border-radius: 4px;
-      background-color: #f190ec;
+      background-color: #f85284;
       color: #000000;
       border: 1px solid #000000;
       font-family: 'JetBrains Mono', monospace;
@@ -498,7 +498,7 @@
     .call-overlay__enter:hover {
       transform: scale(1.05) translateY(-6px);
       box-shadow: 4px 4px 0 0 #ffffff;
-      background-color: #f190ec;
+      background-color: #f890ea;
       color: #000000;
     }
 
@@ -510,9 +510,9 @@
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 0px solid #dddddd;
-      background-color: #f190ec;
-      color: #d9d9d9;
+      border: 0px solid #ffffff;
+      background-color: #f85284;
+      color: #ffffff;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -659,7 +659,7 @@
       opacity: 1;
     }
     .control-button.primary.inactive {
-      background-color: #f890ea;
+      background-color: #f85284;
       border: 1px solid #000000;
     }
 
@@ -688,7 +688,7 @@
     }
 
     .control-button.primary.active:hover {
-      background-color: #90a8ed;
+      background-color: #f890ea;
       box-shadow: 4px 4px 0 0 #000000;
     }
 
@@ -723,7 +723,7 @@
     .control-button.exit:hover {
       transform: scale(1.05) translateY(-6px);
       box-shadow: 4px 4px 0 0 #ffffff;
-      background-color: #f190ec;
+      background-color: #f890ea;
       color: #000000;
       transition: all 0.3s ease;
     }
@@ -750,8 +750,8 @@
       height: clamp(10px, 70vh, 1575px);
       aspect-ratio: 869 / 675;
       border-radius: 12px;
-      background-color: #141414;
-      border: 1px solid #141414;
+      background-color: none;
+      border: 1px solid none;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -812,6 +812,7 @@
 
     .top-visual:hover {
       transform: scale(1.05);
+      background-color: #f890ea;
       box-shadow: 4px 4px 0 0 #000000;
       transition: all 0.3s ease;
     }
@@ -909,7 +910,7 @@
 
     .video-placeholder.fullscreen-active .fullscreen-button:hover,
     .video-placeholder:fullscreen .fullscreen-button:hover {
-      background-color: #f190ec;
+      background-color: #90a8ed;
       color: #000000;
       transform: scale(1.05);
     }
@@ -1114,7 +1115,7 @@
       .control-button.exit:hover {
         transform: scale(1.05) translateY(-6px);
         box-shadow: 4px 4px 0 0 #ffffff;
-        background-color: #f190ec;
+        background-color: #110e29;
         color: #000000;
       }
 
@@ -1291,7 +1292,7 @@
       .control-button.exit:hover {
         transform: scale(1.05) translateY(-6px);
         box-shadow: 4px 4px 0 0 #ffffff;
-        background-color: #f190ec;
+        background-color: #110e29;
         color: #000000;
       }
 
@@ -1451,8 +1452,8 @@
 
       .call-overlay__actions .control-button,
       .call-overlay__actions .control-button.primary {
-        width: clamp(140px, 25vh, 160px);
-        height: clamp(140px, 15vh, 160px);
+        width: clamp(140px, 20vh, 160px);
+        height: clamp(140px, 20vh, 160px);
       }
 
       .call-overlay__actions .control-button.primary .button-icon {
@@ -1510,7 +1511,7 @@
       .control-button.exit:hover {
         transform: scale(1.05) translateY(-6px);
         box-shadow: 4px 4px 0 0 #ffffff;
-        background-color: #f190ec;
+        background-color: #110e29;
         color: #000000;
       }
 

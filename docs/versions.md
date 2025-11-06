@@ -1,4 +1,10 @@
-- 2.36 (2025-11-06 21:45): introduced 16-char join codes mapped to JWT tokens; updated join API/client flows.
+
+## Не изменять содержание файла versions.md без реального пуша новой версии на удаленный репозиторий и без явного указания сделать это в моем сообщении
+
+
+
+- 2.37 (2025-11-06 20:37): added Telegram inline sharing flow and refreshed join UI palette.
+- 2.36 (2025-11-06 21:45): introduced 16-char join codes mapped to JWT tokens; updated join API/client flows
 - 2.35 (2025-11-06 17:21): refreshed landing palette and CTA, tuned join overlay button sizing.
 - 2.34 (2025-11-05 20:43): landing/join copy in English, auto-copy redirect flow after call creation.
 - 2.33 (2025-11-05 20:08): landing/join split rollout, docs refresh, static server updates.
