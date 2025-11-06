@@ -3,6 +3,7 @@
 
 
 
+- 2.38 (2025-11-06 21:19): added bot inline copy helper, refreshed join/mobile palette, updated icon set.
 - 2.37 (2025-11-06 20:37): added Telegram inline sharing flow and refreshed join UI palette.
 - 2.36 (2025-11-06 21:45): introduced 16-char join codes mapped to JWT tokens; updated join API/client flows
 - 2.35 (2025-11-06 17:21): refreshed landing palette and CTA, tuned join overlay button sizing.

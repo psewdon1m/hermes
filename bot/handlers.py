@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import (
+    CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InlineQuery,
@@ -60,6 +61,18 @@ async def callback_create_call(callback_query):
     await callback_query.answer()
     await create_call_handler(callback_query.message, callback_query.from_user.id)
 
+
+@router.callback_query(F.data.startswith("copy_link:"))
+async def callback_copy_link(callback_query: CallbackQuery):
+    """Show the join link in an alert so the user can copy it."""
+    join_url = callback_query.data[len("copy_link:"):]
+
+    if not join_url:
+        await callback_query.answer("Не удалось получить ссылку", show_alert=True)
+        return
+
+    await callback_query.answer(f"Скопируйте ссылку:\n{join_url}", show_alert=True)
+
 async def create_call_handler(message: Message, user_id: int = None):
     """Общий обработчик создания звонка"""
     if user_id is None:
@@ -86,7 +99,10 @@ async def create_call_handler(message: Message, user_id: int = None):
         # Создаем клавиатуру с кнопкой открытия ссылки
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="Переслать ссылку", switch_inline_query=data["joinUrl"])],
+                [
+                    InlineKeyboardButton(text="📤 Переслать ссылку", switch_inline_query=data["joinUrl"]),
+                    InlineKeyboardButton(text="📋 Скопировать ссылку", callback_data=f"copy_link:{data['joinUrl']}")
+                ],
                 [InlineKeyboardButton(text="🔄 Создать новый звонок", callback_data="create_call")]
             ]
         )
