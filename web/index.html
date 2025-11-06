@@ -12,7 +12,7 @@
   <meta property="og:description" content="Secure peer-to-peer video calls that stay private and easy to share." />
   <meta property="og:site_name" content="Hermes" />
   <meta property="og:url" content="https://call.tgcall.us/" />
-  <meta property="og:image" content="https://call.tgcall.us/src/og-card.png" />
+  <meta property="og:image" content="https://call.tgcall.us/src/og-card.png?v=2" />
   <meta property="og:image:width" content="512" />
   <meta property="og:image:height" content="512" />
   <meta property="og:image:type" content="image/png" />
@@ -20,7 +20,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Hermes - P2P videocall platform" />
   <meta name="twitter:description" content="Secure peer-to-peer video calls that stay private and easy to share." />
-  <meta name="twitter:image" content="https://call.tgcall.us/src/og-card.png" />
+  <meta name="twitter:image" content="https://call.tgcall.us/src/og-card.png?v=2" />
   <meta name="twitter:image:alt" content="Hermes logo" />
   <meta name="theme-color" content="#0c0f15" />
   <link rel="icon" type="image/svg+xml" href="./src/favicon.svg" />
@@ -62,12 +62,12 @@
     .background-overlay {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at 20% 20%, #1c213e, #0e111a);
+      background: radial-gradient(circle at 20% 20%, rgba(100, 123, 255, 0.18), rgba(15, 12, 21, 0.95));
       z-index: -1;
       pointer-events: none;
       background-repeat: no-repeat;
       background-size: 140% 140%;
-      animation: gradientDrift 4s ease-in-out infinite alternate;
+      animation: gradientDrift 12s ease-in-out infinite alternate;
     }
 
     .page {
@@ -123,7 +123,7 @@
       border-radius: 18px;
       padding: clamp(20px, 4vw, 28px);
       backdrop-filter: blur(8px);
-      box-shadow: 4px 4px 0 0 rgba(1, 51, 255, 0.18);
+      box-shadow: 4px 4px 0 0 rgba(9, 12, 20, 0.9);
     }
 
     .cta label {
@@ -160,7 +160,7 @@
       cursor: pointer;
       border: 2px solid #141414;
       transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-      background: #f85284;
+      background: #4863ff;
       color: #0c0f15;
     }
 
@@ -231,6 +231,7 @@
     .section p {
       font-size: 15px;
       opacity: 0.8;
+      left: 50px;
       text-wrap: pretty;
     }
 

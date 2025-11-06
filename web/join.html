@@ -12,7 +12,7 @@
   <meta property="og:description" content="Join a secure Hermes peer-to-peer video call and stay in control of your connection." />
   <meta property="og:site_name" content="Hermes" />
   <meta property="og:url" content="https://call.tgcall.us/join" />
-  <meta property="og:image" content="https://call.tgcall.us/src/og-card.png" />
+  <meta property="og:image" content="https://call.tgcall.us/src/og-card.png?v=2" />
   <meta property="og:image:width" content="512" />
   <meta property="og:image:height" content="512" />
   <meta property="og:image:type" content="image/png" />
@@ -20,7 +20,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Hermes - P2P videocall platform" />
   <meta name="twitter:description" content="Join a secure Hermes peer-to-peer video call and stay in control of your connection." />
-  <meta name="twitter:image" content="https://call.tgcall.us/src/og-card.png" />
+  <meta name="twitter:image" content="https://call.tgcall.us/src/og-card.png?v=2" />
   <meta name="twitter:image:alt" content="Hermes logo" />
   <meta name="theme-color" content="#0c0f15" />
   <link rel="icon" type="image/svg+xml" href="./src/favicon.svg" />
@@ -436,7 +436,7 @@
 
     body.mobile-ui .mobile-controls__inner .mobile-control-button.inactive {
       background-color: #f85284;
-      box-shadow: 2px 2px 0 0 #141414;
+      box-shadow: 2px 2px 0 0 #ffffff;
       color: #141414;
     }
 
@@ -519,6 +519,7 @@
       cursor: pointer;
       font-size: 20px;
       line-height: 1;
+      box-shadow: 2px 2px 0px 0px #141414;
       transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
     }
 
@@ -684,17 +685,17 @@
     .control-button.primary:hover {
       transform: scale(1.05) translateY(-6px);
       background-color: #1f1f1f;
-      box-shadow: 4px 4px 0 0 #141414;
+      box-shadow: 4px 4px 0 0 #ffffff;
     }
 
     .control-button.primary.active:hover {
       background-color: #f890ea;
-      box-shadow: 4px 4px 0 0 #141414;
+      box-shadow: 4px 4px 0 0 #ffffff;
     }
 
     .control-button.primary.inactive:hover {
       background-color: #f890ea;
-      box-shadow: 4px 4px 0 0 #dddddd;
+      box-shadow: 4px 4px 0 0 #ffffff;
     }
 
     .control-button.primary.disabled:hover {
@@ -1452,8 +1453,8 @@
 
       .call-overlay__actions .control-button,
       .call-overlay__actions .control-button.primary {
-        width: clamp(140px, 20vh, 160px);
-        height: clamp(140px, 20vh, 160px);
+        width: clamp(130px, 20vh, 150px);
+        height: clamp(130px, 20vh, 150px);
       }
 
       .call-overlay__actions .control-button.primary .button-icon {
