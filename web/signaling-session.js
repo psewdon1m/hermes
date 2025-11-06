@@ -41,15 +41,34 @@ export class SignalingSession {
     }
   }
 
-  async join(token) {
+  async join(credentials) {
     try {
       this.setStatus('signal-request', 'requesting join parameters');
-      const resp = await this.api('/join', { token });
+      let payload;
+      if (typeof credentials === 'string') {
+        payload = { token: credentials };
+      } else if (credentials && typeof credentials === 'object') {
+        payload = {};
+        if (credentials.token) payload.token = credentials.token;
+        if (credentials.code) payload.code = credentials.code;
+      } else {
+        payload = {};
+      }
+
+      if ((!payload.token || payload.token.length === 0) && (!payload.code || payload.code.length === 0)) {
+        throw new Error('join credentials missing');
+      }
+
+      const resp = await this.api('/join', payload);
+      const resolvedToken = resp.token || payload.token;
+      if (!resolvedToken) {
+        throw new Error('join response missing token');
+      }
       this.callId = resp.callId;
       this.role = resp.role;
       this.iceServers = resp.iceServers || [];
       this.wsUrl = resp.wsUrl;
-      this.joinSigToken = token;
+      this.joinSigToken = resolvedToken;
       this.lastJoinRefresh = Date.now();
       
       // Pre-set politeness from role: answerer starts polite
@@ -60,7 +79,7 @@ export class SignalingSession {
       this.myPeerId = sessionStorage.getItem(storageKey) || this.rid();
       sessionStorage.setItem(storageKey, this.myPeerId);
       
-      try { sessionStorage.setItem('joinToken', token); } catch {}
+      try { sessionStorage.setItem('joinToken', resolvedToken); } catch {}
       
       this.log('[signal] join ok', this.callId, this.role, 'polite=', this.polite);
       this.setStatus('signal-ready', 'join parameters obtained');

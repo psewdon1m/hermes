@@ -4,6 +4,7 @@ import * as crypto from 'node:crypto';
 import { z } from 'zod';
 import { redis } from '../lib/redis.js';
 import { badRequest, internal } from '../lib/errors.js';
+import { allocateJoinCode } from '../lib/joinTokens.js';
 
 export const callRouter = express.Router();
 
@@ -37,8 +38,8 @@ const ResolveSchema = z.object({
 });
 
 // Строим публичную ссылку для присоединения
-function buildJoinUrl(token) {
-  return `${API_ORIGIN.replace(/\/+$/, '')}/join?token=${encodeURIComponent(token)}`;
+function buildJoinUrl(code) {
+  return `${API_ORIGIN.replace(/\/+$/, '')}/join?code=${encodeURIComponent(code)}`;
 }
 
 // POST /api/call/create -> { callId, code, joinUrl }
@@ -65,10 +66,13 @@ callRouter.post('/create', async (req, res) => {
 
     // Генерируем токен offerer для инициатора (по умолчанию живёт 24 часа)
     const tokenOfferer = jwtSign({ callId, role: 'offerer' }, JWT_SECRET, Number(JOIN_TOKEN_TTL_SECONDS));
+    const joinCode = await allocateJoinCode(tokenOfferer, { callId, role: 'offerer' });
     return res.json({
       callId,
       code,
-      joinUrl: buildJoinUrl(tokenOfferer),
+      joinUrl: buildJoinUrl(joinCode),
+      joinCode,
+      joinToken: tokenOfferer,
     });
   } catch (e) {
     console.error(e);
@@ -90,7 +94,12 @@ callRouter.post('/resolve', async (req, res) => {
     await redis.del(key);
 
     const token = jwtSign({ callId, role: 'answerer' }, JWT_SECRET, Number(JOIN_TOKEN_TTL_SECONDS));
-    return res.json({ joinUrl: buildJoinUrl(token) });
+    const joinCode = await allocateJoinCode(token, { callId, role: 'answerer' });
+    return res.json({
+      joinUrl: buildJoinUrl(joinCode),
+      joinCode,
+      joinToken: token,
+    });
   } catch (e) {
     console.error(e);
     return internal(res);

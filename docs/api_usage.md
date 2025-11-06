@@ -30,7 +30,9 @@ Creates a new call session and returns the data required for the initiator.
   {
     "callId": "c_ab12cd34ef56",
     "code": "A1B2C3",
-    "joinUrl": "https://call.tgcall.us/join?token=..."
+    "joinUrl": "https://call.tgcall.us/join?code=Z8sK1L0PqR4TuWxy",
+    "joinCode": "Z8sK1L0PqR4TuWxy",
+    "joinToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
   ```
 
@@ -38,7 +40,9 @@ Creates a new call session and returns the data required for the initiator.
   |-------|------|-------|
   | `callId` | string | Internal call identifier (prefixed with `c_`). |
   | `code` | string | 6-character alphanumeric code (upper-case) valid for 15 minutes. |
-  | `joinUrl` | string | Pre-signed join link for the initiator (JWT token valid for 24 hours). |
+  | `joinUrl` | string | Short join link carrying a random code (JWT token stored server-side, valid for 24 hours). |
+  | `joinCode` | string | 16-character code bound to the join token. |
+  | `joinToken` | string | Full JWT join token (HS256) for direct API usage. |
 
 - **Error responses**
 
@@ -68,11 +72,19 @@ Trades a previously issued call code for a join link intended for the answering 
 
   ```json
   {
-    "joinUrl": "https://call.tgcall.us/join?token=..."
+    "joinUrl": "https://call.tgcall.us/join?code=Z8sK1L0PqR4TuWxy",
+    "joinCode": "Z8sK1L0PqR4TuWxy",
+    "joinToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
   ```
 
-  The returned JWT link is valid for 24 hours and grants the role `answerer`.
+  | Field | Type | Notes |
+  |-------|------|-------|
+  | `joinUrl` | string | Short join link for the participant (16-char code encoded in URL). |
+  | `joinCode` | string | 16-character code bound to the join token. |
+  | `joinToken` | string | Full JWT token (24-hour TTL) for direct API usage. |
+
+  The JWT grants the role `answerer`.
 
 - **Error responses**
 
@@ -85,19 +97,20 @@ Trades a previously issued call code for a join link intended for the answering 
 
 ## `POST /api/join`
 
-Exchanges a join token (JWT) for connection parameters used by the WebRTC client.
+Exchanges a join token (JWT) or short code for connection parameters used by the WebRTC client.
 
 - **Request body**
 
   ```json
   {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "code": "Z8sK1L0PqR4TuWxy"
   }
   ```
 
   | Field | Type | Notes |
   |-------|------|-------|
   | `token` | string | Join token received from `joinUrl`. Minimum length 10 characters. |
+  | `code` | string | 16-character short code from the join link. Either `token` or `code` must be provided. |
 
 - **Success response (`200`)**
 
@@ -118,7 +131,8 @@ Exchanges a join token (JWT) for connection parameters used by the WebRTC client
         "credential": "base64-hmac"
       }
     ],
-    "wsUrl": "wss://call.tgcall.us/ws"
+    "wsUrl": "wss://call.tgcall.us/ws",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
   ```
 
@@ -128,13 +142,14 @@ Exchanges a join token (JWT) for connection parameters used by the WebRTC client
   | `role` | string | Either `offerer` or `answerer` depending on join order. |
   | `iceServers` | array | STUN/TURN credentials valid for 10 minutes. |
   | `wsUrl` | string | Signaling WebSocket endpoint. |
+  | `token` | string | Join token returned by the server (mirrors the JWT used for secure access). |
 
 - **Error responses**
 
   | Status | Body | Meaning |
   |--------|------|---------|
   | `400` | `{"error":"bad_request","details":[...]}` | Payload validation failed. |
-  | `401` | `{"error":"bad_jwt" \| "bad_jwt_sig" \| "jwt_expired" \| "bad_jwt_payload"}` | Token invalid or expired. |
+  | `401` | `{"error":"bad_jwt" \| "bad_jwt_sig" \| "jwt_expired" \| "bad_jwt_payload" \| "bad_join_code"}` | Token/code invalid or expired. |
   | `500` | `{"error":"internal_error"}` | Unexpected server failure. |
 
 ## `GET /healthz`

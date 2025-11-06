@@ -2,6 +2,7 @@
 import * as crypto from 'node:crypto';
 import { z } from 'zod';
 import { redis } from '../lib/redis.js';
+import { resolveJoinCode } from '../lib/joinTokens.js';
 
 export const joinRouter = express.Router();
 
@@ -32,7 +33,10 @@ function jwtVerify(token, secret){
 }
 
 const JoinSchema = z.object({
-  token: z.string().min(10),
+  token: z.string().min(10).optional(),
+  code: z.string().trim().regex(/^[A-Za-z0-9_-]{12,32}$/).optional(),
+}).refine((value) => !!value.token || !!value.code, {
+  message: 'token_or_code_required',
 });
 
 // Формируем список ICE-серверов с приоритетом TLS/TCP на порту 5349
@@ -54,7 +58,17 @@ joinRouter.post('/', async (req, res) => {
     const parse = JoinSchema.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ error: 'bad_request', details: parse.error.issues });
 
-    const { token } = parse.data;
+    const input = parse.data;
+    let token = input.token || '';
+
+    if (!token && input.code) {
+      const resolved = await resolveJoinCode(input.code);
+      if (!resolved || !resolved.token) {
+        return res.status(401).json({ error: 'bad_join_code' });
+      }
+      token = resolved.token;
+    }
+
     const payload = jwtVerify(token, process.env.JWT_SECRET);
     const callId = payload.callId;
 
@@ -68,7 +82,8 @@ joinRouter.post('/', async (req, res) => {
       callId,
       role,
       iceServers: buildIceServers(),
-      wsUrl: WS_PUBLIC
+      wsUrl: WS_PUBLIC,
+      token,
     });
   } catch (e) {
     console.error(e);

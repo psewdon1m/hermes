@@ -12,14 +12,15 @@
   <meta property="og:description" content="Secure peer-to-peer video calls that stay private and easy to share." />
   <meta property="og:site_name" content="Hermes" />
   <meta property="og:url" content="https://call.tgcall.us/" />
-  <meta property="og:image" content="https://call.tgcall.us/src/favicon.svg" />
+  <meta property="og:image" content="https://call.tgcall.us/src/og-card.png" />
   <meta property="og:image:width" content="512" />
   <meta property="og:image:height" content="512" />
+  <meta property="og:image:type" content="image/png" />
   <meta property="og:image:alt" content="Hermes logo" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Hermes - P2P videocall platform" />
   <meta name="twitter:description" content="Secure peer-to-peer video calls that stay private and easy to share." />
-  <meta name="twitter:image" content="https://call.tgcall.us/src/favicon.svg" />
+  <meta name="twitter:image" content="https://call.tgcall.us/src/og-card.png" />
   <meta name="twitter:image:alt" content="Hermes logo" />
   <meta name="theme-color" content="#0c0f15" />
   <link rel="icon" type="image/svg+xml" href="./src/favicon.svg" />
@@ -61,9 +62,12 @@
     .background-overlay {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at 20% 20%, #f190ec, #90a8ed);
+      background: radial-gradient(circle at 20% 20%, #90a8ed, #ee90f1);
       z-index: -1;
       pointer-events: none;
+      background-repeat: no-repeat;
+      background-size: 140% 140%;
+      animation: gradientDrift 4s ease-in-out infinite alternate;
     }
 
     .page {
@@ -115,7 +119,7 @@
     .cta {
       display: grid;
       gap: 16px;
-      background: rgba(125, 146, 255, 0.18);
+      background: #90a8ed;
       border-radius: 18px;
       padding: clamp(20px, 4vw, 28px);
       backdrop-filter: blur(8px);
@@ -360,6 +364,25 @@
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
       }
+
+      .background-overlay {
+        animation: none;
+      }
+    }
+
+    @keyframes gradientDrift {
+      0% {
+        background-position: 10% 15%;
+      }
+      40% {
+        background-position: 80% 25%;
+      }
+      70% {
+        background-position: 60% 80%;
+      }
+      100% {
+        background-position: 20% 70%;
+      }
     }
   </style>
 </head>
@@ -399,8 +422,8 @@
         <h2 class="section-title">How it works</h2>
       </div>
       <ol class="how-steps">
-        <li class="how-step">Press "Start call". Hermes requests the API and returns a join link paired with a 24-hour token.</li>
-        <li class="how-step">Share the link or access code. Your teammate opens `/join`, enters the token, and lands in the same room.</li>
+        <li class="how-step">Press "Start call". Hermes requests the API and returns a short join link backed by a 24-hour token.</li>
+        <li class="how-step">Share the link or access code. Your teammate opens `/join` via the link (or enters the code/token) and lands in the same room.</li>
         <li class="how-step">Hermes negotiates TURN/STUN and keeps the WebRTC media channel encrypted the entire time.</li>
       </ol>
     </section>

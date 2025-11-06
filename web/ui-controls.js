@@ -79,9 +79,11 @@ export class UIControls {
     try {
       const currentUrl = new URL(location.href);
       const token = currentUrl.searchParams.get('token') || '';
-      if (token) {
-        this.skipInitialOverlay = sessionStorage.getItem(`overlayDismissed:${token}`) === '1';
-        this.timerStorageKey = `callTimer:${token}`;
+      const code = currentUrl.searchParams.get('code') || '';
+      const joinKey = token || code || '';
+      if (joinKey) {
+        this.skipInitialOverlay = sessionStorage.getItem(`overlayDismissed:${joinKey}`) === '1';
+        this.timerStorageKey = `callTimer:${joinKey}`;
         const storedStart = sessionStorage.getItem(this.timerStorageKey);
         const parsedStart = storedStart ? Number(storedStart) : NaN;
         if (!Number.isNaN(parsedStart) && parsedStart > 0) {

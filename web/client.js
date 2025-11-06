@@ -299,7 +299,7 @@ async function ensureFallbackLocalStream() {
 
 function startJoinIfNeeded() {
   if (joinPromise) return joinPromise;
-  if (!token) {
+  if (!joinCredentialKey) {
     return Promise.resolve(null);
   }
   joinPromise = join().catch(err => {
@@ -662,12 +662,14 @@ async function switchCameraFacing(targetFacing) {
 
 
 // ---------- Helpers ----------
-const url   = new URL(location.href);
-const token = url.searchParams.get('token') || '';
+const url = new URL(location.href);
+const tokenFromUrl = url.searchParams.get('token') || '';
+const joinCode = url.searchParams.get('code') || '';
+const joinCredentialKey = tokenFromUrl || joinCode || '';
 const debugSDP = url.searchParams.get('debug') === '1';
 const wsRetryLimit = Number(url.searchParams.get('wsRetryLimit') ?? 5);
 const wsRetryDelayMs = Number(url.searchParams.get('wsRetryDelayMs') ?? 1500);
-const overlayStorageKey = token ? `overlayDismissed:${token}` : null;
+const overlayStorageKey = joinCredentialKey ? `overlayDismissed:${joinCredentialKey}` : null;
 try {
   if (overlayStorageKey && sessionStorage.getItem(overlayStorageKey) === '1') {
     prejoinOverlayDismissed = true;
@@ -795,7 +797,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ---------- Join flow ----------
 async function join(){
-  if (!token) { alert('Token is missing in URL'); return; }
+  if (!tokenFromUrl && !joinCode) { alert('Join code is missing in URL'); return; }
 
   logClientInfo();
 
@@ -809,7 +811,11 @@ async function join(){
     }
 
   };
-  const signalingOk = await signalingSession.join(token);
+  const credentialPayload = {};
+  if (tokenFromUrl) credentialPayload.token = tokenFromUrl;
+  if (joinCode) credentialPayload.code = joinCode;
+
+  const signalingOk = await signalingSession.join(credentialPayload);
   if (!signalingOk) {
     alert('Failed to establish signaling session');
     return;
@@ -1045,7 +1051,7 @@ async function join(){
   }
 }
 
-// btnJoin.onclick is unused - production flow passes the token via URL
+// btnJoin.onclick is unused - production flow passes the token/code via URL
 
 // Global UI helpers
 window.toggleCameraFacingMode = async () => {
@@ -1275,7 +1281,7 @@ window.requestMediaRetry = () => {
 // Global click/touch handlers removed - pre-join overlay will drive playback
 
 // Prepare pre-join preview or show missing-token message
-if (token) {
+if (joinCredentialKey) {
   if (autoJoinFromStorage) {
     preparePrejoinPreview()
       .catch(err => {
@@ -1290,15 +1296,15 @@ if (token) {
     });
   }
 } else {
-  // In production the token must be provided via the URL
+  // In production the token or join code must be provided via the URL
   // Show an error when the token is missing
-  log('ERR: No token provided in URL');
-  
+  log('ERR: No join code provided in URL');
+
   // Hide interactive controls because they require a valid token
   // Delay to ensure the UI initialises before disabling controls
   const diagContainer = document.getElementById('diag');
   if (diagContainer) {
-    diagContainer.textContent = 'Add ?token=... to the URL to join the call.';
+    diagContainer.textContent = 'Add ?token=... or ?code=... to the URL to join the call.';
   }
   const controls = document.querySelector('.controls-container');
   if (controls) {
