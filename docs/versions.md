@@ -1,3 +1,4 @@
+- 2.35 (2025-11-06 17:21): refreshed landing palette and CTA, tuned join overlay button sizing.
 - 2.34 (2025-11-05 20:43): landing/join copy in English, auto-copy redirect flow after call creation.
 - 2.33 (2025-11-05 20:08): landing/join split rollout, docs refresh, static server updates.
 - 2.32 (2025-11-04 22:05): restructure documentation set and polish reconnect UI logic.
@@ -49,6 +50,3 @@
 - 1.81 (2025-10-02): join overlay redesign, playback retries, device selectors, hh:mm:ss timer, renegotiation tweaks.
 - 1.80 (2025-10-02): telegram bot hooked to call create API, compose updates.
 - 1.79 (2025-10-02): telegram bot scaffold, Docker service, basic /start handler.
-
-
-

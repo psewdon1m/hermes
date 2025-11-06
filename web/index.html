@@ -61,7 +61,7 @@
     .background-overlay {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at 20% 20%, rgba(100, 123, 255, 0.18), rgba(12, 15, 21, 0.95));
+      background: radial-gradient(circle at 20% 20%, #f190ec, #90a8ed);
       z-index: -1;
       pointer-events: none;
     }
@@ -84,7 +84,7 @@
     }
 
     .hero-badge {
-      display: inline-flex;
+      display: none;
       align-items: center;
       gap: 8px;
       padding: 6px 14px;
@@ -115,12 +115,11 @@
     .cta {
       display: grid;
       gap: 16px;
-      background: rgba(24, 28, 40, 0.72);
-      border: 1px solid rgba(125, 146, 255, 0.25);
+      background: rgba(125, 146, 255, 0.18);
       border-radius: 18px;
       padding: clamp(20px, 4vw, 28px);
-      box-shadow: 0 18px 60px rgba(19, 23, 40, 0.45);
       backdrop-filter: blur(8px);
+      box-shadow: 4px 4px 0 0 rgba(1, 51, 255, 0.18);
     }
 
     .cta label {
@@ -155,16 +154,18 @@
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
+      border: 2px solid #141414;
       transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-      background: linear-gradient(120deg, #7d92ff, #4a66ff);
+      background: #f190ec;
       color: #0c0f15;
-      box-shadow: 0 12px 30px rgba(77, 102, 255, 0.35);
     }
 
     .cta button:hover,
     .cta button:focus-visible {
-      transform: translateY(-1px);
-      box-shadow: 0 16px 40px rgba(77, 102, 255, 0.45);
+      transform: scale(1.05) translateY(-6px);
+      box-shadow: 4px 4px 0 0 #ffffff;
+      background-color: #f190ec;
+      color: #000000;
     }
 
     .cta button[disabled] {
@@ -182,104 +183,134 @@
     .cta-status {
       min-height: 22px;
       font-size: 15px;
-      color: #f3cb7a;
+      color: #ffffff;
     }
 
     .cta-status.error {
-      color: #ff8fa3;
+      color: #ffffff;
     }
 
-    .feature-grid {
+    .section {
       display: grid;
-      gap: 24px;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      align-items: stretch;
-    }
-
-    .feature-card {
-      background: rgba(16, 19, 30, 0.78);
-      border: 1px solid rgba(125, 146, 255, 0.18);
+      gap: 18px;
+      background: none;
       border-radius: 18px;
-      padding: 24px;
-      display: grid;
-      gap: 16px;
+      padding: clamp(20px, 4vw, 32px);
       backdrop-filter: blur(6px);
     }
 
-    .feature-card h2 {
-      font-size: 20px;
-      font-weight: 600;
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
-    .feature-card p {
-      font-size: 15px;
-      opacity: 0.78;
-      text-wrap: pretty;
-    }
-
-    .feature-card__cta {
+    .section-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(125, 146, 255, 0.22);
+      border: 1px solid rgba(125, 146, 255, 0.45);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 12px 18px;
-      border-radius: 12px;
-      border: 1px solid rgba(125, 146, 255, 0.4);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
       color: #dfe4ff;
-      font-weight: 600;
-      transition: background 0.2s ease, transform 0.2s ease;
-      background: rgba(125, 146, 255, 0.16);
     }
 
-    .feature-card__cta:hover,
-    .feature-card__cta:focus-visible {
-      background: rgba(125, 146, 255, 0.28);
-      transform: translateY(-1px);
-    }
-
-    .how-it-works {
-      display: grid;
-      gap: 20px;
-      max-width: 680px;
-    }
-
-    .how-it-works h2 {
-      font-size: 24px;
+    .section-title {
+      font-size: clamp(20px, 3vw, 26px);
       font-weight: 600;
     }
 
-    .how-it-works ol {
+    .section p {
+      font-size: 15px;
+      opacity: 0.8;
+      text-wrap: pretty;
+    }
+
+    .section p + p {
+      margin-top: 10px;
+    }
+
+    .how-steps {
       display: grid;
       gap: 16px;
       counter-reset: steps;
     }
 
-    .how-it-works li {
+    .how-step {
       list-style: none;
-      background: rgba(18, 21, 32, 0.78);
-      border: 1px solid rgba(125, 146, 255, 0.15);
-      border-radius: 16px;
-      padding: 18px 20px 18px 54px;
+      background: rgba(125, 146, 255, 0.18);
+      border: 1px solid rgba(125, 146, 255, 0.18);
+      border-radius: 14px;
+      padding: 18px 20px 18px 58px;
       position: relative;
+      font-size: 15px;
+      opacity: 0.85;
       text-wrap: pretty;
     }
 
-    .how-it-works li::before {
+    .how-step::before {
       counter-increment: steps;
       content: counter(steps);
       position: absolute;
-      left: 18px;
-      top: 18px;
-      width: 22px;
-      height: 22px;
+      left: 20px;
+      top: 16px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
-      background: rgba(125, 146, 255, 0.25);
-      border: 1px solid rgba(125, 146, 255, 0.45);
+      background: rgba(125, 146, 255, 0.18);
+      border: 1px solid rgba(125, 146, 255, 0.35);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #e6e9ff;
+    }
+
+    .opensource-card {
+      display: grid;
+      gap: 18px;
+      background: none;
+      border: none;
+      border-radius: 18px;
+      padding: clamp(20px, 4vw, 30px);
+    }
+
+    .opensource-card h2 {
+      font-size: clamp(20px, 3vw, 26px);
       font-weight: 600;
+    }
+
+    .opensource-card p {
+      font-size: 15px;
+      opacity: 0.85;
+      text-wrap: pretty;
+    }
+
+    .opensource-card a {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: #a990ed;
+      border: 2px solid rgba(214, 222, 255, 0.4);
+      color: #dfe4ff;
+      font-weight: 600;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .opensource-card a:hover,
+    .opensource-card a:focus-visible {
+      transform: scale(1.05) translateY(-6px);
+      box-shadow: 4px 4px 0 0 #ffffff;
+      background-color: #f190ec;
+      color: #000000;
     }
 
     footer {
@@ -308,6 +339,18 @@
       .cta button {
         width: 100%;
       }
+
+      .section {
+        gap: 16px;
+      }
+
+      .section-header {
+        align-items: flex-start;
+      }
+
+      .how-step {
+        padding-left: 54px;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -327,8 +370,8 @@
   <main class="page">
     <section class="hero">
       <span class="hero-badge">hermes call</span>
-      <h1>Secure peer-to-peer video calls in a single click.</h1>
-      <p>Hermes keeps your team connected with private WebRTC calls you can self-host in minutes. Share a link, join instantly, and stay in control of your data.</p>
+      <h1>Hi! This is Hermes. Secure video calls made simple.</h1>
+      <p>Spin up a self-hosted WebRTC room in seconds. Share a link, join instantly, and keep every conversation private.</p>
 
       <form class="cta" data-role="create-call-form">
         <label for="initiatorInput">Telegram ID (optional)</label>
@@ -336,30 +379,36 @@
           <input id="initiatorInput" name="initiatorInput" type="text" autocomplete="off" placeholder="@username or numeric ID" maxlength="64" data-role="initiator-input" />
           <button type="submit" data-role="create-call">Start call</button>
         </div>
-        <p class="cta-hint">Leave the field empty to generate a guest identifier. Codes expire after 15 minutes, links stay valid for 24 hours.</p>
+        <p class="cta-hint">Leave the field empty to generate a guest identifier. Codes expire after 15 minutes, links stay valid for 24-hours.</p>
         <div class="cta-status" data-role="cta-status"></div>
       </form>
     </section>
 
-    <section class="feature-grid">
-      <article class="feature-card">
-        <h2>Private by default</h2>
-        <p>Hermes keeps media peer-to-peer, issues one-time access codes, and lets you host the entire stack yourself so conversations remain yours.</p>
-      </article>
-      <article class="feature-card">
-        <h2>Open source project</h2>
-        <p>The platform is MIT-licensed. Inspect the signaling server, adapt the WebRTC client, and extend the tooling without vendor lock-in.</p>
-        <a class="feature-card__cta" href="https://github.com/psewdon1m/hermes" target="_blank" rel="noopener">View on GitHub</a>
-      </article>
+    <section class="section" id="about">
+      <div class="section-header">
+        <span class="section-icon">i</span>
+        <h2 class="section-title">About</h2>
+      </div>
+      <p>Hermes is a lightweight, self-hosted platform for real-time peer-to-peer video calls. It brings the signalling server, TURN/STUN infrastructure, and WebRTC client into a single deployable bundle.</p>
+      <p>Give teams a private space to connect: every session issues short-lived access codes, traffic stays encrypted end-to-end, and you decide where the stack runs.</p>
     </section>
 
-    <section class="how-it-works" id="how-it-works">
-      <h2>How it works</h2>
-      <ol>
-        <li>Click "Start call". Hermes contacts the API and issues a code plus a join link with a 24 hour token.</li>
-        <li>Share the link or code. Your teammate opens /join and connects straight into the same session.</li>
-        <li>Hermes manages TURN/STUN handshakes behind the scenes while the WebRTC channel stays encrypted.</li>
+    <section class="section" id="how-it-works">
+      <div class="section-header">
+        <span class="section-icon">?</span>
+        <h2 class="section-title">How it works</h2>
+      </div>
+      <ol class="how-steps">
+        <li class="how-step">Press "Start call". Hermes requests the API and returns a join link paired with a 24-hour token.</li>
+        <li class="how-step">Share the link or access code. Your teammate opens `/join`, enters the token, and lands in the same room.</li>
+        <li class="how-step">Hermes negotiates TURN/STUN and keeps the WebRTC media channel encrypted the entire time.</li>
       </ol>
+    </section>
+
+    <section class="opensource-card" id="open-source">
+      <h2>Open source & self-hosted</h2>
+      <p>The whole stack is MIT-licensed. Explore the signalling layer, customise the web client, or wire Hermes into your own infrastructure without vendor lock-in.</p>
+      <a href="https://github.com/psewdon1m/hermes" target="_blank" rel="noopener">View on GitHub</a>
     </section>
   </main>
 
