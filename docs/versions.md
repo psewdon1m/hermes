@@ -1,6 +1,7 @@
 
 ## Не изменять содержание файла versions.md без реального пуша новой версии на удаленный репозиторий и без явного указания сделать это в моем сообщении
 
+- 2.40 (2025-11-06 22:05): reworked landing CTA layout, rebalanced join overlay colors, refreshed no-camera/screen icons.
 
 
 - 2.39 (2025-11-06 21:56): tweaked landing gradient/cta shadow, bumped OG cache buster, and tightened mobile controls.

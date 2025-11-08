@@ -111,7 +111,7 @@
     }
 
     .hero p {
-      font-size: clamp(18px, 2vw, 22px);
+      font-size: clamp(18px, 1vw, 22px);
       opacity: 0.85;
       text-wrap: pretty;
     }
@@ -123,7 +123,8 @@
       border-radius: 18px;
       padding: clamp(20px, 4vw, 28px);
       backdrop-filter: blur(8px);
-      box-shadow: 4px 4px 0 0 rgba(9, 12, 20, 0.9);
+      font-size: clamp(36px, 6vw, 64px);
+      box-shadow: 4px 4px 0 0 #f85284;
     }
 
     .cta label {
@@ -131,6 +132,13 @@
       text-transform: uppercase;
       letter-spacing: 0.14em;
       opacity: 0.7;
+    }
+
+    .cta p {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      opacity: 1;
     }
 
     .cta-controls {
@@ -144,7 +152,7 @@
       min-width: 200px;
       background: rgba(9, 12, 20, 0.9);
       border: 1px solid rgba(125, 146, 255, 0.25);
-      border-radius: 12px;
+      border-radius: 4px;
       padding: 14px 16px;
       color: inherit;
       font-size: 16px;
@@ -153,14 +161,14 @@
     .cta button {
       flex: 0 0 auto;
       border: none;
-      border-radius: 12px;
+      border-radius: 4px;
       padding: 14px 24px;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      border: 2px solid #141414;
       transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-      background: #4863ff;
+      background: #f85284;
+      border: 1px solid #141414;
       color: #0c0f15;
     }
 
@@ -169,6 +177,7 @@
       transform: scale(1.05) translateY(-6px);
       box-shadow: 4px 4px 0 0 #ffffff;
       background-color: #f190ec;
+      border: 1px solid #141414;
       color: #000000;
     }
 
@@ -180,7 +189,8 @@
     }
 
     .cta-hint {
-      font-size: 14px;
+      font-size: 12px;
+      line-height: 1.45;
       opacity: 0.7;
     }
 
@@ -198,9 +208,12 @@
       display: grid;
       gap: 18px;
       background: none;
+      border: 1px solid rgba(125, 146, 255, 0.2);
       border-radius: 18px;
       padding: clamp(20px, 4vw, 32px);
       backdrop-filter: blur(6px);
+      max-width: 1080px;
+      margin: 0 auto 0 0;
     }
 
     .section-header {
@@ -231,7 +244,6 @@
     .section p {
       font-size: 15px;
       opacity: 0.8;
-      left: 50px;
       text-wrap: pretty;
     }
 
@@ -247,9 +259,10 @@
 
     .how-step {
       list-style: none;
-      background: rgba(125, 146, 255, 0.18);
-      border: 1px solid rgba(125, 146, 255, 0.18);
-      border-radius: 14px;
+      background: none;
+      background: rgba(125, 146, 255, 0.38);
+      border: 1px solid rgba(125, 146, 255, 0.38);
+      border-radius: 4px;
       padding: 18px 20px 18px 58px;
       position: relative;
       font-size: 15px;
@@ -279,10 +292,12 @@
     .opensource-card {
       display: grid;
       gap: 18px;
-      background: none;
-      border: none;
+      background: rgba(125, 146, 255, 0.38);
+      border: 1px solid rgba(125, 146, 255, 0.38);
       border-radius: 18px;
       padding: clamp(20px, 4vw, 30px);
+      max-width: 1080px;
+      margin: 0 auto 0 0;
     }
 
     .opensource-card h2 {
@@ -302,7 +317,7 @@
       align-items: center;
       gap: 8px;
       padding: 12px 18px;
-      border-radius: 12px;
+      border-radius: 4px;
       background: #a990ed;
       border: 2px solid rgba(214, 222, 255, 0.4);
       color: #dfe4ff;
@@ -312,10 +327,8 @@
 
     .opensource-card a:hover,
     .opensource-card a:focus-visible {
-      transform: scale(1.05) translateY(-6px);
-      box-shadow: 4px 4px 0 0 #ffffff;
-      background-color: #f190ec;
-      color: #000000;
+      transform: translateY(-2px);
+      background: #f190ec;
     }
 
     footer {
@@ -394,14 +407,14 @@
   <main class="page">
     <section class="hero">
       <span class="hero-badge">hermes call</span>
-      <h1>Hi! This is Hermes. Secure video calls made simple.</h1>
+      <h1>Hi! This is Hermes.<br /><br />Secure video calls made simple.</h1>
       <p>Spin up a self-hosted WebRTC room in seconds. Share a link, join instantly, and keep every conversation private.</p>
 
       <form class="cta" data-role="create-call-form">
         <label for="initiatorInput">Telegram ID (optional)</label>
         <div class="cta-controls">
           <input id="initiatorInput" name="initiatorInput" type="text" autocomplete="off" placeholder="@username or numeric ID" maxlength="64" data-role="initiator-input" />
-          <button type="submit" data-role="create-call">Start call</button>
+          <button type="submit" data-role="create-call">START CALL</button>
         </div>
         <p class="cta-hint">Leave the field empty to generate a guest identifier. Codes expire after 15 minutes, links stay valid for 24-hours.</p>
         <div class="cta-status" data-role="cta-status"></div>

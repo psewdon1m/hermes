@@ -67,7 +67,7 @@
       flex: 0 0 auto;
       width: min(calc(100vw - 80px), 560px);
       height: min(calc(100vh - 160px), 720px);
-      background-color: #90a8ed;
+      background-color: rgba(125, 147, 255, 0.596);
       border: none;
       border-radius: 14px;
       padding: clamp(24px, 4vw, 32px);
@@ -156,7 +156,7 @@
     .call-overlay__actions .control-button.primary .button-icon {
       width: 32px;
       height: 32px;
-      filter: invert(92%);
+      filter: none;
       opacity: 0.9;
       transition: filter 0.2s ease, opacity 0.2s ease;
     }
@@ -349,6 +349,7 @@
       display: flex;
       justify-content: center;
       z-index: 60;
+      background-color: #b2bfff;
       pointer-events: none;
     }
 
@@ -457,7 +458,7 @@
     }
 
     .call-overlay__actions .control-button.primary.active {
-      background-color: #7884f7;
+      background-color: #96a8ff;
       color: #141414;
       border: 1px solid #141414;
     }
@@ -468,10 +469,15 @@
     }
 
     .call-overlay__actions .control-button.primary.inactive {
-      background-color: #f85284;
+      background-color: #f890ea;
       border: 1px solid #141414;
       color: #141414;
       filter: none;
+    }
+
+    .call-overlay__actions .control-button.primary.inactive .button-icon {
+      filter: invert(100%);
+      opacity: 1;
     }
 
     .call-overlay__actions .control-button.primary:hover {
@@ -651,7 +657,7 @@
     }
     .control-button.primary.active {
       border: 1px solid #141414;
-      background-color: #90a8ed;
+      background-color: #96a8ff;
       color: #141414;
     }
 
@@ -660,7 +666,7 @@
       opacity: 1;
     }
     .control-button.primary.inactive {
-      background-color: #f85284;
+      background-color: #f890ea;
       border: 1px solid #141414;
     }
 
@@ -711,7 +717,7 @@
     .control-button.exit {
       width: 180px;
       height: 50px; 
-      background-color: #90a8ed;
+      background-color: #f85284;
       color: #141414;
       border: 1px solid #141414;
       border-radius: 4px;
@@ -774,7 +780,7 @@
       width: 100vw;
       height: clamp(60px, 16vh, 120px);
       border-radius: 0px;
-      background-color: #90a8ed;
+      background-color: #96a8ff;
       border: 0px solid #dddddd;
       z-index: 4;
       overflow: visible;
@@ -787,7 +793,7 @@
       width: 100vw;
       height: clamp(48px, 12vh, 96px);
       border-radius: 0px;
-      background-color: #90a8ed;
+      background-color: #b2bfff;
       border: 0px solid #dddddd;
       z-index: 1;
       overflow: visible;
@@ -799,7 +805,7 @@
       width: clamp(120px, 12vw, 180px);
       height: clamp(40px, 6vh, 60px);
       border-radius: 4px;
-      background-color: #90a8ed;
+      background-color: #96a8ff;
       border: 2px solid #000000;
       z-index: 20;
       cursor: pointer;
@@ -1001,7 +1007,7 @@
 
       .top-visual:hover {
         transform: scale(1.05);
-        box-shadow: 4px 4px 0 0 #000000;
+        box-shadow: 4px 4px 0 0 #141414;
       }
 
       .logo-text {
@@ -1059,8 +1065,8 @@
         width: 50px;
         height: 50px;
         background-color: #141414;
-        color: #D9D9D9;
-        border: 1px solid #000000;
+        color: #ffffff;
+        border: 1px solid #141414;
         border-radius: 4px;
         display: flex;
         align-items: center;
@@ -1079,16 +1085,15 @@
 
       .control-button.primary.disabled {
         background-color: #90a8ed;
-        color: #000000;
-        border: 1px solid #000000;
+        color: #141414;
+        border: 1px solid #141414;
       }
 
       .control-button.exit {
         width: 150px;
-        height: 50px;
-        background-color: #90a8ed;
+        height: 50px;;
         color: #000000;
-        border: 1px solid #000000;
+        border: 1px solid #141414;
         border-radius: 4px;
         font-size: 16px;
       }
@@ -1109,8 +1114,8 @@
 
       .control-button.primary:hover {
         transform: scale(1.05) translateY(-6px);
-        box-shadow: 4px 4px 0 0 #000000;
-        border: 1px solid #000000;
+        box-shadow: 4px 4px 0 0 #141414;
+        border: 1px solid #141414;
       }
 
       .control-button.exit:hover {
