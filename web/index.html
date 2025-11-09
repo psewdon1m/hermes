@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-page="landing">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -153,9 +153,11 @@
       background: rgba(9, 12, 20, 0.9);
       border: 1px solid rgba(125, 146, 255, 0.25);
       border-radius: 4px;
-      padding: 14px 16px;
+      padding: 0 16px;
       color: inherit;
       font-size: 16px;
+      line-height: 48px;
+      height: 48px;
     }
 
     .cta button {
@@ -178,7 +180,7 @@
       box-shadow: 4px 4px 0 0 #ffffff;
       background-color: #f190ec;
       border: 1px solid #141414;
-      color: #000000;
+      color: #141414;
     }
 
     .cta button[disabled] {
@@ -352,6 +354,11 @@
 
       .cta input {
         min-width: 100%;
+        flex: 0 0 auto;
+        padding: 0 14px;
+        font-size: 15px;
+        line-height: 44px;
+        height: 44px;
       }
 
       .cta button {
@@ -453,6 +460,8 @@
     Hermes (c) 2025. Documentation and source are available in the repository.
   </footer>
 
+  <script type="module" src="./i18n.js"></script>
   <script type="module" src="./landing.js"></script>
 </body>
 </html>
+

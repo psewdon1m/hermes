@@ -135,7 +135,8 @@ export class UIControls {
       const label = button.querySelector('.placeholder-text');
       const defaultText = (label ? label.textContent : button.textContent) ?? '';
       if (!button.dataset.defaultText) {
-        button.dataset.defaultText = defaultText.trim() || 'press to copy call link';
+        button.dataset.defaultText =
+          defaultText.trim() || this.translate('join.copyPrompt', 'press to copy call link');
       }
       button.addEventListener('click', () => this.handleLinkClick(button));
     });
@@ -147,16 +148,19 @@ export class UIControls {
       const button = container.querySelector('.fullscreen-button');
       if (!button) return;
       if (!button.dataset.fullLabel) {
-        button.dataset.fullLabel = button.textContent.trim() || 'full';
+        button.dataset.fullLabel =
+          button.textContent.trim() || this.translate('join.fullscreenEnter', 'full');
       }
       if (!button.dataset.exitLabel) {
-        button.dataset.exitLabel = 'exit';
+        button.dataset.exitLabel = this.translate('join.fullscreenExit', 'exit');
       }
       if (!button.dataset.mobileFullLabel) {
-        button.dataset.mobileFullLabel = button.dataset.fullLabel || 'full';
+        button.dataset.mobileFullLabel =
+          button.dataset.fullLabel || this.translate('join.fullscreenEnter', 'full');
       }
       if (!button.dataset.mobileExitLabel) {
-        button.dataset.mobileExitLabel = 'back';
+        button.dataset.mobileExitLabel =
+          button.dataset.mobileExitLabel || this.translate('join.fullscreenBack', 'back');
       }
       button.addEventListener('click', async (event) => {
         event.preventDefault();
@@ -260,8 +264,13 @@ export class UIControls {
       if (!button) return;
       const isActiveDesktop = activeEl === container;
       container.classList.toggle('fullscreen-active', isActiveDesktop);
-      button.textContent = isActiveDesktop ? (button.dataset.exitLabel || 'exit') : (button.dataset.fullLabel || 'full');
-      button.setAttribute('aria-label', isActiveDesktop ? 'exit fullscreen' : 'enter fullscreen');
+      button.textContent = isActiveDesktop
+        ? button.dataset.exitLabel || this.translate('join.fullscreenExit', 'exit')
+        : button.dataset.fullLabel || this.translate('join.fullscreenEnter', 'full');
+      const ariaLabel = isActiveDesktop
+        ? this.translate('join.fullscreenExitAria', 'exit fullscreen')
+        : this.translate('join.fullscreenEnterAria', 'enter fullscreen');
+      button.setAttribute('aria-label', ariaLabel);
     });
   }
 
@@ -690,7 +699,9 @@ export class UIControls {
     }
 
     const copied = await this.copyCurrentURL();
-    this.updateCopyState(targetButton, copied ? 'copied' : 'copy failed', copied);
+    const successMessage = this.translate('join.copySuccess', 'Link copied');
+    const errorMessage = this.translate('join.copyError', 'Copy failed');
+    this.updateCopyState(targetButton, copied ? successMessage : errorMessage, copied);
   }
 
   async copyCurrentURL() {
@@ -724,7 +735,7 @@ export class UIControls {
 
   updateCopyState(button, message, isSuccess) {
     const label = button.querySelector('.placeholder-text');
-    const defaultText = button.dataset.defaultText || 'press to copy call link';
+    const defaultText = button.dataset.defaultText || this.translate('join.copyPrompt', 'press to copy call link');
 
     if (label) {
       label.textContent = message;
@@ -1061,10 +1072,10 @@ export class UIControls {
         left: 50%;
         transform: translate(-50%, -50%);
         background: #262626;
-        color: #d9d9d9;
+        color: #ffffff;
         padding: 30px;
         border-radius: 12px;
-        border: 2px solid #d9d9d9;
+        border: 2px solid #ffffff;
         z-index: 1000;
         text-align: center;
         font-family: 'Alfa Slab One', cursive;
@@ -1077,7 +1088,7 @@ export class UIControls {
           Для участия в звонке необходимо разрешить доступ к камере и микрофону.
         </p>
         <button id="permissionRetryBtn" style="
-          background: #d9d9d9;
+          background: #ffffff;
           color: #262626;
           border: none;
           border-radius: 24px;
@@ -1089,15 +1100,38 @@ export class UIControls {
         ">Разрешить доступ</button>
       `;
       document.body.appendChild(prompt);
-      const retryBtn = document.getElementById('permissionRetryBtn');
-      if (retryBtn) {
-        retryBtn.addEventListener('click', () => {
-          this.hidePermissionPrompt();
-          if (window.requestMediaRetry) {
-            window.requestMediaRetry();
-          }
-        });
-      }
+    }
+    const title = this.translate('join.permission.title', 'Camera and microphone are blocked');
+    const body = this.translate(
+      'join.permission.body',
+      'Please allow access to your camera and microphone in the browser settings and try again.',
+    );
+    const retryLabel = this.translate('join.permission.retry', 'TRY AGAIN');
+    prompt.innerHTML = `
+        <h3 style="margin: 0 0 20px 0; font-size: 24px;">${title}</h3>
+        <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.4;">
+          ${body}
+        </p>
+        <button id="permissionRetryBtn" style="
+          background: #ffffff;
+          color: #262626;
+          border: none;
+          border-radius: 24px;
+          padding: 12px 24px;
+          font-family: 'Alfa Slab One', cursive;
+          font-size: 18px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        ">${retryLabel}</button>
+      `;
+    const retryBtn = document.getElementById('permissionRetryBtn');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => {
+        this.hidePermissionPrompt();
+        if (window.requestMediaRetry) {
+          window.requestMediaRetry();
+        }
+      });
     }
     prompt.style.display = 'block';
   }
@@ -1108,7 +1142,18 @@ export class UIControls {
       prompt.style.display = 'none';
     }
   }
+
+  translate(key, fallback) {
+    if (typeof window !== 'undefined' && typeof window.__ === 'function') {
+      const value = window.__(key);
+      if (value && value !== key) {
+        return value;
+      }
+    }
+    return fallback;
+  }
 }
+
 
 
 

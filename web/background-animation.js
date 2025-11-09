@@ -1,6 +1,6 @@
 const BASE_PARTICLES = 46;
 const LINK_DISTANCE = 180;
-const SPEED = 0.12;
+const SPEED = 0.01;
 
 function createParticle(width, height, scale = 1) {
   return {

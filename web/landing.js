@@ -1,6 +1,16 @@
 const canvas = document.getElementById("backgroundCanvas");
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+const t = (key, fallback, params) => {
+  if (typeof window !== 'undefined' && typeof window.__ === 'function') {
+    const value = window.__(key, params);
+    if (value && value !== key) {
+      return value;
+    }
+  }
+  return fallback;
+};
+
 async function startBackground() {
   if (!canvas || prefersReducedMotion) return;
   const module = await import('./background-animation.js');
@@ -42,7 +52,7 @@ function toggleSubmitting(state) {
     createButton.disabled = state;
   }
   if (state) {
-    setStatus('Creating a call...');
+    setStatus(t('landing.status.creating', 'Creating a call...'));
   }
 }
 
@@ -89,25 +99,31 @@ async function handleSubmit(event) {
       const data = await response.json().catch(() => ({}));
       const errorCode = data?.error || response.status;
       if (response.status === 429) {
-        throw new Error('Too many requests. Please try again in a minute.');
+        throw new Error(t('landing.status.tooMany', 'Too many requests. Please try again in a minute.'));
       }
       if (response.status === 400) {
-        throw new Error('Check the Telegram ID - the server responded with 400.');
+        throw new Error(t('landing.status.badRequest', 'Check the Telegram ID - the server responded with 400.'));
       }
-      throw new Error(`Call creation failed (${errorCode}).`);
+      throw new Error(
+        t('landing.status.createFailed', `Call creation failed (${errorCode}).`, { code: errorCode }),
+      );
     }
 
     const data = await response.json();
     if (!data?.joinUrl || !data?.code) {
-      throw new Error('Unexpected response: join link or code is missing.');
+      throw new Error(
+        t('landing.status.unexpected', 'Unexpected response: join link or code is missing.'),
+      );
     }
 
     const joinUrl = data.joinUrl;
     const copied = await copyToClipboard(joinUrl);
     if (copied) {
-      setStatus('Call link copied. Redirecting you to the session...');
+      setStatus(
+        t('landing.status.copySuccess', 'Call link copied. Redirecting you to the session...'),
+      );
     } else {
-      setStatus('Redirecting you to the session...');
+      setStatus(t('landing.status.redirecting', 'Redirecting you to the session...'));
     }
 
     setTimeout(() => {
@@ -115,7 +131,10 @@ async function handleSubmit(event) {
     }, 50);
   } catch (error) {
     console.error('[landing] create call failed', error);
-    setStatus(error.message || 'Could not create the call.', 'error');
+    setStatus(
+      error.message || t('landing.status.couldNotCreate', 'Could not create the call.'),
+      'error',
+    );
   } finally {
     toggleSubmitting(false);
   }
