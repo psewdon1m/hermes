@@ -2,9 +2,10 @@
 node -e "const { createServer } = require('http'); const { createReadStream, statSync } = require('fs'); const { extname, join } = require('path'); const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' }; createServer((req, res) => { const url = new URL(req.url, 'http://localhost'); let pathname = decodeURIComponent(url.pathname); if (pathname === '/') pathname = '/index.html'; else if (pathname === '/join') pathname = '/join.html'; const file = join(process.cwd(), pathname); try { const stat = statSync(file); if (stat.isDirectory()) throw new Error('dir'); const ext = extname(file); res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream' }); createReadStream(file).pipe(res); } catch (e) { res.writeHead(404); res.end('Not found'); } }).listen(3000, () => console.log('http://localhost:3000 (use /join for the call UI)'));"
 
 Sample API call:
-curl -X POST "https://call.tgcall.us/api/call/create" ^
+curl -X POST "https://example.com/api/call/create" ^
   -H "Content-Type: application/json" ^
   -d "{\"initiator_telegram_id\":\"123456789\"}"
 
 ������ cach dockera:
 sudo docker system prune -a --volumes
+

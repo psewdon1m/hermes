@@ -1,6 +1,6 @@
-# Hermes API Usage
+﻿# Hermes API Usage
 
-This document lists the public HTTP endpoints exposed by the Hermes API service and how to call them. All routes are rooted at the API base URL, defined by the `CALL_API_BASE` environment variable of the consumer (defaults to `https://call.tgcall.us`).
+This document lists the public HTTP endpoints exposed by the Hermes API service and how to call them. All routes are rooted at the API base URL, defined by the `CALL_API_BASE` environment variable of the consumer (defaults to `https://example.com`).
 
 ## General Requirements
 
@@ -30,7 +30,7 @@ Creates a new call session and returns the data required for the initiator.
   {
     "callId": "c_ab12cd34ef56",
     "code": "A1B2C3",
-    "joinUrl": "https://call.tgcall.us/join?code=Z8sK1L0PqR4TuWxy",
+    "joinUrl": "https://example.com/join?code=Z8sK1L0PqR4TuWxy",
     "joinCode": "Z8sK1L0PqR4TuWxy",
     "joinToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
@@ -72,7 +72,7 @@ Trades a previously issued call code for a join link intended for the answering 
 
   ```json
   {
-    "joinUrl": "https://call.tgcall.us/join?code=Z8sK1L0PqR4TuWxy",
+    "joinUrl": "https://example.com/join?code=Z8sK1L0PqR4TuWxy",
     "joinCode": "Z8sK1L0PqR4TuWxy",
     "joinToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
@@ -119,19 +119,19 @@ Exchanges a join token (JWT) or short code for connection parameters used by the
     "callId": "c_ab12cd34ef56",
     "role": "offerer",
     "iceServers": [
-      { "urls": ["stun:call.tgcall.us:3478"] },
+      { "urls": ["stun:example.com:3478"] },
       {
-        "urls": ["turn:call.tgcall.us:3478?transport=udp"],
+        "urls": ["turn:example.com:3478?transport=udp"],
         "username": "1730227200:user",
         "credential": "base64-hmac"
       },
       {
-        "urls": ["turns:call.tgcall.us:5349?transport=tcp"],
+        "urls": ["turns:example.com:5349?transport=tcp"],
         "username": "1730227200:user",
         "credential": "base64-hmac"
       }
     ],
-    "wsUrl": "wss://call.tgcall.us/ws",
+    "wsUrl": "wss://example.com/ws",
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
   ```
@@ -167,3 +167,4 @@ Simple health probe endpoint.
 ---
 
 For additional architectural details see `docs/technical-passport.md`. Contact the backend team before exposing new endpoints or altering request/response contracts.
+

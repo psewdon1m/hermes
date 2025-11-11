@@ -9,7 +9,7 @@ import { allocateJoinCode } from '../lib/joinTokens.js';
 export const callRouter = express.Router();
 
 const {
-  API_ORIGIN = 'https://call.tgcall.us',
+  API_ORIGIN = 'https://example.com',
   JWT_SECRET,
   JOIN_TOKEN_TTL_SECONDS = '86400', // 24 часа живёт токен присоединения
 } = process.env;
@@ -105,4 +105,5 @@ callRouter.post('/resolve', async (req, res) => {
     return internal(res);
   }
 });
+
 

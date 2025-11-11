@@ -11,7 +11,7 @@ export function createApp() {
   const app = express();
 
   // Консервативный CORS: разрешаем только продовый фронтенд
-  const ALLOW_ORIGIN = ['https://call.tgcall.us'];
+  const ALLOW_ORIGIN = ['https://example.com'];
   app.use(cors({ origin: ALLOW_ORIGIN, credentials: false }));
 
   // Подключаем JSON body parser и логирование запросов
@@ -54,4 +54,5 @@ export function createApp() {
 
   return app;
 }
+
 

@@ -7,9 +7,9 @@ import { resolveJoinCode } from '../lib/joinTokens.js';
 export const joinRouter = express.Router();
 
 const {
-  DOMAIN = 'call.tgcall.us',
-  WS_PUBLIC = 'wss://call.tgcall.us/ws',
-  TURN_DOMAIN = 'call.tgcall.us',
+  DOMAIN = 'example.com',
+  WS_PUBLIC = 'wss://example.com/ws',
+  TURN_DOMAIN = 'example.com',
   TURN_SECRET,
 } = process.env;
 
@@ -94,4 +94,5 @@ joinRouter.post('/', async (req, res) => {
     return res.status(500).json({ error: 'internal_error' });
   }
 });
+
 

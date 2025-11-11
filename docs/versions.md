@@ -2,6 +2,8 @@
 ## Не изменять содержание файла versions.md без реального пуша новой версии на удаленный репозиторий и без явного указания сделать это в моем сообщении
 
 - 2.41 (2025-11-09 19:17): added landing/join i18n layer, refined CTA layout, slowed background animation, refreshed control palette.
+- 2.42 (2025-11-11 15:11): switched configs/docs/templates to example.com, added env sample + helper scripts, polished landing/join localisation.
+- 2.41 (2025-11-09 19:17): added landing/join i18n layer, refined CTA layout, slowed background animation, refreshed control palette.
 - 2.40 (2025-11-06 22:05): reworked landing CTA layout, rebalanced join overlay colors, refreshed no-camera/screen icons.
 - 2.39 (2025-11-06 21:56): tweaked landing gradient/cta shadow, bumped OG cache buster, and tightened mobile controls.
 - 2.38 (2025-11-06 21:19): added bot inline copy helper, refreshed join/mobile palette, updated icon set.
