@@ -1,4 +1,2 @@
 .env
-log-output/
-docs/codex.md
-docs/git_managment.md
+log-output/observer.log
