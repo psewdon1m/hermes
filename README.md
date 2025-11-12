@@ -13,12 +13,18 @@ Hermes is a self-hosted WebRTC stack for private peer-to-peer video calls. The r
 - **Telegram bot** (Aiogram + httpx) exposes `/start` and `/createCall`, generates short join links, and supports inline sharing with copy helpers.
 - **Logger** subscribes to `logs:*`, prints colorised output, and persists everything under `log-output/observer.log`.
 
-Documentation lives under `docs/`. Start with `docs/start_here.md` for the onboarding checklist, then explore:
+## Required reading order
 
-- `docs/api_usage.md` - HTTP contract and error semantics.
-- `docs/project_passport.md` - Russian technical passport for the whole platform.
-- `docs/directory_tree.md` - current repository structure.
-- `docs/versions.md` - changelog for the web client and supporting scripts.
+> This sequence is mandatory for every contributor and every automated assistant (Codex, agents, scripts, etc.). Do **not** open source directories or other files until every item below is read.
+
+1. `README.md` (this file) — architecture, services, deployment model.
+2. `docs/project_passport.md` — Russian technical passport covering business context and platform requirements.
+3. `docs/api_usage.md` — REST contract, payload formats, rate limits, and token semantics.
+4. `docs/directory_tree.md` — authoritative repository map with key entry points per service.
+5. `docs/codex.md` — communication rules (Russian responses, review etiquette, interaction constraints).
+6. `docs/git_managment.md` — workflow expectations, documentation sync requirements, release hygiene.
+7. `docs/versions.md` — changelog of client assets and supporting scripts.
+8. Only after **all** Markdown files under `docs/` are read may you proceed to any other paths (e.g., `api/`, `signal/`, `bot/`, `web/`).
 
 ## Getting started
 
