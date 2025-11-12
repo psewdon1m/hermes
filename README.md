@@ -13,7 +13,7 @@ Hermes is a self-hosted WebRTC stack for private peer-to-peer video calls. The r
 - **Telegram bot** (Aiogram + httpx) exposes `/start` and `/createCall`, generates short join links, and supports inline sharing with copy helpers.
 - **Logger** subscribes to `logs:*`, prints colorised output, and persists everything under `log-output/observer.log`.
 
-Documentation lives under `docs/`:
+Documentation lives under `docs/`. Start with `docs/start_here.md` for the onboarding checklist, then explore:
 
 - `docs/api_usage.md` - HTTP contract and error semantics.
 - `docs/project_passport.md` - Russian technical passport for the whole platform.

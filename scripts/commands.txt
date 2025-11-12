@@ -6,6 +6,6 @@ curl -X POST "https://example.com/api/call/create" ^
   -H "Content-Type: application/json" ^
   -d "{\"initiator_telegram_id\":\"123456789\"}"
 
-������ cach dockera:
+clear cach dockera:
 sudo docker system prune -a --volumes
 

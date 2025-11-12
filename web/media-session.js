@@ -41,7 +41,15 @@ export class MediaSession {
     this.pendingRemoteOffer = null; // Store remote offer when PC is not ready
     this.localTracksReady = false; // Flag indicating local tracks are ready for negotiation
     this.status = 'idle'; // Detailed status tracking
-    this.transceivers = new Map(); // Store transceivers by kind for easy access
+    this.SLOT_VIDEO_MAIN = 'video:camera';
+    this.SLOT_VIDEO_SCREEN = 'video:screen';
+    this.SLOT_AUDIO_MAIN = 'audio:main';
+    this.transceiverDefs = [
+      { slot: this.SLOT_VIDEO_MAIN, kind: 'video', direction: 'sendrecv' },
+      { slot: this.SLOT_AUDIO_MAIN, kind: 'audio', direction: 'sendrecv' },
+      { slot: this.SLOT_VIDEO_SCREEN, kind: 'video', direction: 'inactive' }
+    ];
+    this.transceivers = new Map(); // Store transceivers by slot for easy access
     this.stallRetryCount = 0; // Counter for outbound stall retries
     this.politeStallTimer = null; // Timer for polite-side stall recovery
     this.politeStallRetry = 0; // Counter for polite stall retries
@@ -53,6 +61,7 @@ export class MediaSession {
     this.screenShareStream = null; // Active screen share stream
     this.currentCameraFacing = 'user'; // Track preferred camera facing
     this.videoDevices = new Map(); // Cache video deviceIds by facing
+    this.recoveryInProgress = false; // Guard for rebuild-driven renegotiations
   }
 
   async updateVideoDevices(stream) {
@@ -305,36 +314,46 @@ export class MediaSession {
       this.checkPendingRemoteOffer();
       return false;
     }
+    const resolveSlotForTrack = (track) => {
+      if (!track) return null;
+      if (track.__hermesSlot) return track.__hermesSlot;
+      if (track.kind === 'audio') return this.SLOT_AUDIO_MAIN;
+      if (track.kind === 'video') return this.SLOT_VIDEO_MAIN;
+      return null;
+    };
     
     let needsNegotiation = false;
 
     const attachmentTasks = liveTracks.map(track => {
-      // Use stored transceiver reference
-      const transceiver = this.transceivers.get(track.kind);
+      const requestedSlot = resolveSlotForTrack(track);
+      const slot = requestedSlot || (track.kind === 'audio' ? this.SLOT_AUDIO_MAIN : this.SLOT_VIDEO_MAIN);
+      const transceiver = slot ? this.transceivers.get(slot) : null;
       
       if (transceiver && transceiver.sender) {
         try {
-          if (typeof transceiver.direction === 'string' && transceiver.direction !== 'sendrecv') {
+          if (typeof transceiver.setDirection === 'function') {
+            if (transceiver.currentDirection !== 'sendrecv') {
+              transceiver.setDirection('sendrecv');
+              needsNegotiation = true;
+              this.log('[media] transceiver.setDirection applied', slot, 'sendrecv');
+            }
+          } else if (typeof transceiver.direction === 'string' && transceiver.direction !== 'sendrecv') {
             transceiver.direction = 'sendrecv';
             needsNegotiation = true;
-            this.log('[media] transceiver direction normalized', track.kind, '-> sendrecv');
-          } else if (typeof transceiver.setDirection === 'function' && transceiver.currentDirection && transceiver.currentDirection !== 'sendrecv') {
-            transceiver.setDirection('sendrecv');
-            needsNegotiation = true;
-            this.log('[media] transceiver.setDirection applied', track.kind, 'sendrecv');
+            this.log('[media] transceiver direction normalized', slot, '-> sendrecv');
           }
         } catch (err) {
-          this.log('[media] transceiver direction adjust ERR', track.kind, err?.message || err);
+          this.log('[media] transceiver direction adjust ERR', slot, err?.message || err);
         }
 
-        // Replace track in existing sender
         if (typeof transceiver.sender.replaceTrack === 'function') {
           return transceiver.sender.replaceTrack(track)
             .then(() => {
-              this.log('[media] replaceTrack', track.kind, 'currentDirection=', transceiver.currentDirection);
+              track.__hermesSlot = slot;
+              this.log('[media] replaceTrack', slot, 'currentDirection=', transceiver.currentDirection ?? transceiver.direction ?? null);
             })
             .catch(err => {
-              this.log('[media] replaceTrack ERR', track.kind, err?.message || err);
+              this.log('[media] replaceTrack ERR', slot, err?.message || err);
             });
         }
         return Promise.resolve();
@@ -342,10 +361,10 @@ export class MediaSession {
         // Fallback to addTrack if no stored transceiver
         try {
           this.pc.addTrack(track, this.localStream);
-          this.log('[media] addTrack fallback', track.kind);
+          this.log('[media] addTrack fallback', slot || track.kind);
           needsNegotiation = true;
         } catch (err) {
-          this.log('[media] addTrack fallback ERR', track.kind, err?.message || err);
+          this.log('[media] addTrack fallback ERR', slot || track.kind, err?.message || err);
         }
         return Promise.resolve();
       }
@@ -388,6 +407,7 @@ export class MediaSession {
   schedulePoliteStallRecovery() {
     if (!this.signaling?.polite) return;
     if (this.politeStallTimer) return;
+    if (this.recoveryInProgress) return;
     if (this.politeStallRetry >= 3) {
       this.log('[media] outbound stalled (polite): retry limit reached');
       this.notifyStallFailure();
@@ -400,6 +420,7 @@ export class MediaSession {
       this.politeStallTimer = null;
       if (!this.signaling?.polite) return;
       if (!this.localTracksReady || !this.pc) return;
+      if (this.recoveryInProgress || this.makingOffer || this.pc.signalingState !== 'stable') return;
       this.log('[media] outbound stalled (polite): attempting renegotiation');
       this.requestNegotiation('polite stall recovery');
     }, delay);
@@ -556,12 +577,16 @@ export class MediaSession {
     } catch {}
 
     // Pre-create bidirectional m-lines and store references
-    try {
-      const videoTransceiver = this.pc.addTransceiver('video', { direction: 'sendrecv' });
-      const audioTransceiver = this.pc.addTransceiver('audio', { direction: 'sendrecv' });
-      this.transceivers.set('video', videoTransceiver);
-      this.transceivers.set('audio', audioTransceiver);
-    } catch {}
+    this.transceivers = new Map();
+    this.transceiverDefs.forEach((def) => {
+      try {
+        const tx = this.pc.addTransceiver(def.kind, { direction: def.direction });
+        tx.__hermesSlot = def.slot;
+        this.transceivers.set(def.slot, tx);
+      } catch (err) {
+        this.log('[media] addTransceiver ERR', def.slot, err?.message || err);
+      }
+    });
 
     // Attach local tracks (if available)
     if (this.localStream && this.localStream.getTracks().length > 0) {
@@ -709,9 +734,14 @@ export class MediaSession {
     this.log('[media] rebuild PC and renegotiate');
     this.setStatus('recovering', 'rebuilding PC');
     this.lastRebuildTime = now;
-    await this.tryRollback();
-    this.safeClosePC();
-    this.newPC();
+    this.recoveryInProgress = true;
+    try {
+      await this.tryRollback();
+      this.safeClosePC();
+      this.newPC();
+    } finally {
+      this.recoveryInProgress = false;
+    }
     if (this.signaling.otherPeer) {
       await this.startNegotiation();
     }
@@ -744,10 +774,22 @@ export class MediaSession {
       this.pendingNegotiation = true;
       return;
     }
+
+    if (this.recoveryInProgress) {
+      this.log('[media] startNegotiation deferred: recovering');
+      this.pendingNegotiation = true;
+      return;
+    }
     
     // Don't send offer until local tracks are ready
     if (!this.localTracksReady) {
       this.log('[media] startNegotiation skipped: local tracks not ready');
+      this.pendingNegotiation = true;
+      return;
+    }
+
+    if (this.pc.signalingState !== 'stable') {
+      this.log('[media] startNegotiation deferred: signalingState=', this.pc.signalingState);
       this.pendingNegotiation = true;
       return;
     }
@@ -776,9 +818,20 @@ export class MediaSession {
     }
   }
 
+  canStartNegotiation() {
+    return !!(
+      this.pc &&
+      this.localTracksReady &&
+      this.signaling.otherPeer &&
+      !this.makingOffer &&
+      this.pc.signalingState === 'stable' &&
+      !this.recoveryInProgress
+    );
+  }
+
   // Check and execute pending negotiation
   checkPendingNegotiation() {
-    if (this.pendingNegotiation && this.pc && this.localTracksReady && this.signaling.otherPeer && !this.makingOffer) {
+    if (this.pendingNegotiation && this.canStartNegotiation()) {
       this.log('[media] executing pending negotiation');
       this.pendingNegotiation = false;
       this.startNegotiation();
@@ -787,7 +840,9 @@ export class MediaSession {
         hasPC: !!this.pc, 
         localTracksReady: this.localTracksReady,
         hasOtherPeer: !!this.signaling.otherPeer, 
-        makingOffer: this.makingOffer 
+        makingOffer: this.makingOffer,
+        signalingState: this.pc?.signalingState || 'none',
+        recovering: this.recoveryInProgress
       });
     }
   }
@@ -806,22 +861,49 @@ export class MediaSession {
   requestNegotiation(reason) {
     this.log('[media] requestNegotiation', reason);
     this.pendingNegotiation = true;
-    if (this.pc && this.pc.signalingState === 'stable') {
-      this.startNegotiation();
-    }
+    this.checkPendingNegotiation();
   }
 
-  getVideoSender() {
-    if (!this.pc || !this.pc.getSenders) return null;
+  getSenderForSlot(slot) {
+    if (!slot) return null;
+    const transceiver = this.transceivers.get(slot);
+    if (transceiver && transceiver.sender) {
+      return transceiver.sender;
+    }
+    return null;
+  }
+
+  setTransceiverDirection(slot, direction) {
+    const transceiver = this.transceivers.get(slot);
+    if (!transceiver || !direction) return;
     try {
-      return this.pc.getSenders().find(sender => sender.track && sender.track.kind === 'video') || null;
-    } catch {
-      return null;
+      if (typeof transceiver.setDirection === 'function') {
+        if (transceiver.currentDirection !== direction) {
+          transceiver.setDirection(direction);
+        }
+      } else if (typeof transceiver.direction === 'string' && transceiver.direction !== direction) {
+        transceiver.direction = direction;
+      }
+    } catch (err) {
+      this.log('[media] transceiver direction set ERR', slot, err?.message || err);
     }
   }
 
-  async switchVideoSource(track, reason = 'video source change') {
+  async clearSenderSlot(slot) {
+    const sender = this.getSenderForSlot(slot);
+    if (sender && typeof sender.replaceTrack === 'function') {
+      try {
+        await sender.replaceTrack(null);
+      } catch (err) {
+        this.log('[media] clear slot replaceTrack ERR', slot, err?.message || err);
+      }
+    }
+    this.setTransceiverDirection(slot, 'inactive');
+  }
+
+  async switchVideoSource(track, reason = 'video source change', options = {}) {
     if (!track) return false;
+    const { slot = track.kind === 'audio' ? this.SLOT_AUDIO_MAIN : this.SLOT_VIDEO_MAIN, preservePrevious = false } = options || {};
     if (!this.localStream) {
       this.localStream = new MediaStream();
     }
@@ -845,7 +927,7 @@ export class MediaSession {
     }
 
     try {
-      const sender = this.getVideoSender();
+      const sender = this.getSenderForSlot(slot);
       if (sender && sender.replaceTrack) {
         await sender.replaceTrack(track);
       } else if (this.pc) {
@@ -856,11 +938,13 @@ export class MediaSession {
       this.log('[media] switchVideoSource ERR replace', err?.message || err);
     }
 
+    track.__hermesSlot = slot;
+    this.setTransceiverDirection(slot, 'sendrecv');
     this.localTracksReady = true;
     this.requestNegotiation(reason);
 
     removedTracks.forEach((oldTrack) => {
-      if (oldTrack && oldTrack !== track) {
+      if (oldTrack && oldTrack !== track && !preservePrevious) {
         try { oldTrack.stop(); } catch {}
       }
     });
@@ -1041,6 +1125,7 @@ export class MediaSession {
       this.cameraTrackBackup = this.localStream?.getVideoTracks?.()[0] || this.cameraTrackBackup || null;
       if (this.cameraTrackBackup) {
         this.cameraTrackBackup.enabled = true;
+        this.cameraTrackBackup.__hermesSlot = this.SLOT_VIDEO_MAIN;
       }
 
       displayTrack.onended = () => {
@@ -1057,7 +1142,12 @@ export class MediaSession {
           }
         });
       } catch {}
-      await this.switchVideoSource(displayTrack, 'screen-share start');
+      await this.switchVideoSource(displayTrack, 'screen-share start', {
+        slot: this.SLOT_VIDEO_SCREEN,
+        preservePrevious: true
+      });
+      this.setTransceiverDirection(this.SLOT_VIDEO_SCREEN, 'sendrecv');
+      await this.clearSenderSlot(this.SLOT_VIDEO_MAIN);
       this.log('[media] screen share started', displayTrack.label || '');
       if (window.setScreenShareState) {
         window.setScreenShareState(true);
@@ -1066,7 +1156,23 @@ export class MediaSession {
       }
       return true;
     } catch (err) {
-      this.log('[media] screen share start ERR', err?.name || err?.message || String(err));
+      if (this.screenShareStream) {
+        try {
+          this.screenShareStream.getTracks().forEach(t => t.stop());
+        } catch {}
+      }
+      this.screenShareStream = null;
+      await this.clearSenderSlot(this.SLOT_VIDEO_SCREEN);
+      if (err?.name === 'NotAllowedError') {
+        this.log('[media] screen share start ERR NotAllowedError (user denied)');
+      } else {
+        this.log('[media] screen share start ERR', err?.name || err?.message || String(err));
+      }
+      if (window.setScreenShareState) {
+        window.setScreenShareState(false);
+      } else if (window.uiControls) {
+        window.uiControls.updateScreenState(false);
+      }
       return false;
     }
   }
@@ -1097,7 +1203,9 @@ export class MediaSession {
     if (cameraTrack) {
       try {
         cameraTrack.enabled = true;
-        await this.switchVideoSource(cameraTrack, 'screen-share stop');
+        await this.switchVideoSource(cameraTrack, 'screen-share stop', {
+          slot: this.SLOT_VIDEO_MAIN
+        });
         restored = true;
       } catch (err) {
         this.log('[media] restore camera after screen share ERR', err?.message || err);
@@ -1112,6 +1220,7 @@ export class MediaSession {
       }
     }
 
+    await this.clearSenderSlot(this.SLOT_VIDEO_SCREEN);
     this.cameraTrackBackup = null;
     if (window.setScreenShareState) {
       window.setScreenShareState(false);
